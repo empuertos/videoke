@@ -12,7 +12,7 @@
     * { box-sizing:border-box; margin:0; padding:0; }
     html,body { width:100%;height:100%;overflow:hidden;background:#0a0512;color:#fff;
       font-family:-apple-system,'Segoe UI',Roboto,sans-serif;user-select:none; }
-    #ytContainer { position:fixed;inset:0;width:100vw;height:100vh; }
+    #ytContainer { position:fixed;inset:0;width:100vw;height:100vh;z-index:1; }
     #ytPlayer { width:100%;height:100%; }
     canvas#fx { position:fixed;inset:0;pointer-events:none;z-index:30; }
 
@@ -216,7 +216,6 @@
       flex-shrink:0;
       display:flex;align-items:center;justify-content:center;
     }
-    .toggle-bar-btn:hover { background:rgba(255,215,0,0.2); }
 
     #countdown { position:fixed;inset:0;z-index:200;
       display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -245,25 +244,55 @@
     .cd-queue-item .cd-song { font-size:10px;color:var(--dim);
       margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
+    /* ===== ERROR OVERLAY (full screen, hides iframe) ===== */
     #errorOverlay {
-      position:fixed;inset:0;z-index:300;
+      position:fixed;inset:0;z-index:900;
       display:none;flex-direction:column;align-items:center;justify-content:center;
-      background:rgba(50,0,0,0.95);backdrop-filter:blur(30px);
-      animation:fadeIn 0.3s;
+      background:radial-gradient(ellipse at center,#4a0010 0%,#0a0512 100%);
+      text-align:center;padding:40px;
     }
-    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-    #errorOverlay .icon { font-size:100px;margin-bottom:20px; }
+    #errorOverlay.show { display:flex; }
+    #errorOverlay .icon {
+      font-size:140px;
+      filter:drop-shadow(0 0 40px rgba(255,46,85,0.8));
+      animation:errPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes errPulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
     #errorOverlay .title {
-      font-size:48px;font-weight:900;color:#ff6b6b;
-      letter-spacing:-1px;margin-bottom:12px;
+      font-size:64px;font-weight:900;
+      color:#ff6b6b;letter-spacing:-2px;
+      margin-top:20px;
+      text-shadow:0 0 30px rgba(255,107,107,0.5);
     }
     #errorOverlay .msg {
       font-size:24px;color:#c0c0d0;
-      text-align:center;max-width:80vw;line-height:1.4;
+      text-align:center;max-width:80vw;
+      line-height:1.5;margin-top:20px;
+    }
+    #errorOverlay .song-title {
+      font-size:18px;color:#888;
+      margin-top:10px;font-style:italic;
     }
     #errorOverlay .sub {
-      margin-top:30px;font-size:16px;color:#888;
-      letter-spacing:2px;text-transform:uppercase;
+      margin-top:40px;
+      font-size:18px;color:var(--gold);
+      letter-spacing:3px;text-transform:uppercase;
+      font-weight:700;
+      animation:pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    #errorOverlay .countdown-num {
+      margin-top:20px;
+      font-size:80px;font-weight:900;
+      background:linear-gradient(135deg,#ff2e55,#ff8a00);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
 
     #hostControls { position:fixed;top:70px;right:30px;z-index:60;
@@ -397,8 +426,10 @@
   <div id="errorOverlay">
     <div class="icon">⛔</div>
     <div class="title">HINDI MA-PLAY</div>
-    <div class="msg" id="errorMsg">Hindi pinapayagan ng video owner na i-embed sa ibang website.</div>
-    <div class="sub">Lilipat sa susunod na kanta...</div>
+    <div class="msg">Hindi pinapayagan ng video owner na i-embed sa ibang website.</div>
+    <div class="song-title" id="errorSongTitle"></div>
+    <div class="sub">Lilipat sa susunod na kanta sa</div>
+    <div class="countdown-num" id="errorCountdown">3</div>
   </div>
 
   <div id="hostControls">
@@ -436,7 +467,7 @@
     let lastNowPlaying = null;
     let forceRetryTimer = null;
     let autoHideTimer = null;
-    let errorTimer = null;
+    let errorCountdownTimer = null;
     let barPinned = localStorage.getItem('videoke:barPinned') === '1';
 
     function debugLog(msg, type = '') {
@@ -577,20 +608,35 @@
       }
     }
 
-    function showErrorOverlay(msg) {
-      const overlay = document.getElementById('errorOverlay');
-      document.getElementById('errorMsg').textContent = msg ||
-        'Hindi pinapayagan ng video owner na i-embed sa ibang website.';
-      overlay.style.display = 'flex';
-      clearTimeout(errorTimer);
-      errorTimer = setTimeout(() => {
-        overlay.style.display = 'none';
-      }, 3000);
+    // ===== ERROR OVERLAY =====
+    function showErrorOverlay(songTitle, errorMsg) {
+      debugLog('Showing error overlay: ' + errorMsg, 'err');
+
+      // ⬇️ PINAKA-IMPORTANTE: Itago ang YouTube iframe
+      document.getElementById('ytContainer').style.display = 'none';
+
+      // I-set ang error message
+      document.getElementById('errorOverlay').classList.add('show');
+      document.getElementById('errorSongTitle').textContent = songTitle ? `"${songTitle}"` : '';
+      document.getElementById('errorCountdown').textContent = '3';
+
+      // Countdown bago mag-skip
+      let remaining = 3;
+      clearInterval(errorCountdownTimer);
+      errorCountdownTimer = setInterval(() => {
+        remaining--;
+        document.getElementById('errorCountdown').textContent = remaining;
+        if (remaining <= 0) {
+          clearInterval(errorCountdownTimer);
+        }
+      }, 1000);
     }
 
     function hideErrorOverlay() {
-      clearTimeout(errorTimer);
-      document.getElementById('errorOverlay').style.display = 'none';
+      clearInterval(errorCountdownTimer);
+      document.getElementById('errorOverlay').classList.remove('show');
+      // Ipakita ulit ang YouTube iframe
+      document.getElementById('ytContainer').style.display = 'block';
     }
 
     const startScreen = document.getElementById('startScreen');
@@ -658,7 +704,6 @@
 
     socket.on('videoBlacklisted', ({ videoId, title }) => {
       debugLog('✗ Blacklisted: ' + (title || videoId), 'warn');
-      showErrorOverlay(`Hindi ma-play: "${(title || '').substring(0, 50)}" — tinanggal sa queue.`);
     });
 
     function generateQR(url) {
@@ -738,8 +783,8 @@
               2: 'Invalid video ID',
               5: 'HTML5 player error',
               100: 'Video not found o deleted na.',
-              101: 'Hindi pinapayagan ng owner na i-embed. Subukan ibang version.',
-              150: 'Hindi pinapayagan ng owner na i-embed. Subukan ibang version.'
+              101: 'Hindi pinapayagan ng owner na i-embed.',
+              150: 'Hindi pinapayagan ng owner na i-embed.'
             };
             const msg = errMsgs[e.data] || ('Error ' + e.data);
             debugLog('YT error: ' + msg, 'err');
@@ -748,18 +793,22 @@
               const failedId = currentVideoId;
               const failedTitle = document.getElementById('nsSong')?.textContent || '';
 
-              // Show error overlay
-              if (e.data === 101 || e.data === 150 || e.data === 100) {
-                showErrorOverlay(msg);
-              }
+              // ⬇️ Ipakita ang custom error overlay (HINDI na nakikita ang YouTube error)
+              showErrorOverlay(failedTitle, msg);
 
-              // Report sa backend para i-blacklist
+              // I-report sa backend para i-blacklist
               socket.emit('videoFailed', {
                 videoId: failedId,
                 title: failedTitle
               });
 
               currentVideoId = null;
+
+              // Auto-skip pagkatapos ng 3 seconds
+              setTimeout(() => {
+                hideErrorOverlay();
+                socket.emit('skip');
+              }, 3000);
             }
           }
         }
@@ -807,11 +856,13 @@
       if (lastCommand && lastCommand.song && lastCommand.song.videoId) {
         hide(document.getElementById('idleScreen'));
         hide(document.getElementById('countdown'));
+        hideErrorOverlay();
         document.getElementById('nsSinger').textContent = lastCommand.song.singer || 'Guest';
         document.getElementById('nsSong').textContent = lastCommand.song.title || '';
         playVideo(lastCommand.song.videoId);
       } else if (lastNowPlaying) {
         hide(document.getElementById('idleScreen'));
+        hideErrorOverlay();
         document.getElementById('nsSinger').textContent = lastNowPlaying.singer || 'Guest';
         document.getElementById('nsSong').textContent = lastNowPlaying.title || '';
         playVideo(lastNowPlaying.videoId);
