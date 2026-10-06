@@ -42,23 +42,16 @@
       border-radius:12px;font-size:16px;color:#a0b0c0;letter-spacing:1px; }
     .tv-hint b { color:#60a5fa;font-weight:800; }
 
-    /* ===== IDLE SCREEN — FIXED LAYOUT ===== */
     #idleScreen {
       position:fixed;inset:0;z-index:500;display:none;
       flex-direction:row;align-items:center;justify-content:center;
       gap:20px;padding:30px;
       background:radial-gradient(ellipse at top left,#2a0a4a,#0a0512 60%);
     }
-    #idleScreen .left {
-      flex:1 1 0;min-width:0;max-width:30%;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;padding:20px;
-    }
-    #idleScreen .right {
-      flex:0 0 auto;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;padding:20px;
-    }
+    #idleScreen .left { flex:1 1 0;min-width:0;max-width:30%;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
+    #idleScreen .right { flex:0 0 auto;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
     #idleScreen .mic-big { font-size:110px;
       filter:drop-shadow(0 0 60px rgba(255,215,0,0.5));
       animation:float 4s ease-in-out infinite; }
@@ -70,61 +63,26 @@
     #idleScreen .hint { margin-top:20px;font-size:14px;color:#666;
       max-width:280px;text-align:center;line-height:1.6; }
 
-    /* ===== QR CARD ===== */
-    .qr-card {
-      background:rgba(255,255,255,0.04);
-      border:1px solid rgba(255,215,0,0.3);
-      border-radius:24px;
-      padding:20px;
-      text-align:center;
-      box-shadow:0 0 80px rgba(255,215,0,0.15);
-      backdrop-filter:blur(20px);
-    }
-    .qr-card .label {
-      font-size:12px;
-      letter-spacing:4px;
-      color:var(--gold);
-      margin-bottom:14px;
-      font-weight:600;
-    }
-    .qr-card .qr-wrap {
-      background:#fff;
-      padding:14px;
-      border-radius:16px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:268px;
-      height:268px;
-      overflow:hidden;
-    }
-    /* ⬇️ FIX: Ipakita lang ang canvas, itago ang img */
-    .qr-card .qr-wrap canvas {
-      display:block !important;
-      width:240px !important;
-      height:240px !important;
-    }
-    .qr-card .qr-wrap img {
-      display:none !important;
-    }
-    .qr-card .url {
-      margin-top:14px;
-      font-family:monospace;
-      font-size:10px;
-      padding:8px 12px;
-      background:rgba(0,0,0,0.4);
-      border-radius:10px;
-      word-break:break-all;
-      max-width:268px;
-      line-height:1.4;
-      color:#a0b0c0;
-    }
+    .qr-card { background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,215,0,0.3);border-radius:24px;
+      padding:20px;text-align:center;
+      box-shadow:0 0 80px rgba(255,215,0,0.15);backdrop-filter:blur(20px); }
+    .qr-card .label { font-size:12px;letter-spacing:4px;color:var(--gold);
+      margin-bottom:14px;font-weight:600; }
+    .qr-card .qr-wrap { background:#fff;padding:14px;border-radius:16px;
+      display:inline-flex;align-items:center;justify-content:center;
+      width:268px;height:268px;overflow:hidden; }
+    .qr-card .qr-wrap canvas { display:block !important;
+      width:240px !important;height:240px !important; }
+    .qr-card .qr-wrap img { display:none !important; }
+    .qr-card .url { margin-top:14px;font-family:monospace;font-size:10px;
+      padding:8px 12px;background:rgba(0,0,0,0.4);
+      border-radius:10px;word-break:break-all;
+      max-width:268px;line-height:1.4;color:#a0b0c0; }
 
     #idleQueue { flex:1 1 0;min-width:0;max-width:320px;
-      max-height:70vh;
-      background:rgba(0,0,0,0.5);
-      border:1px solid rgba(255,215,0,0.3);
-      border-radius:20px;padding:18px;
+      max-height:70vh;background:rgba(0,0,0,0.5);
+      border:1px solid rgba(255,215,0,0.3);border-radius:20px;padding:18px;
       backdrop-filter:blur(20px);overflow-y:auto; }
     #idleQueue::-webkit-scrollbar { width:4px; }
     #idleQueue::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
@@ -133,8 +91,7 @@
       width:320px;max-height:60vh;z-index:45;
       background:rgba(10,5,18,0.85);backdrop-filter:blur(20px);
       border:1px solid rgba(255,215,0,0.3);border-radius:16px;
-      padding:14px;display:none;
-      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+      padding:14px;display:none;box-shadow:0 20px 60px rgba(0,0,0,0.5);
       pointer-events:none; }
     #queuePanel.show { display:block; }
 
@@ -149,9 +106,6 @@
 
     .qp-list { display:flex;flex-direction:column;gap:6px;
       max-height:calc(60vh - 60px);overflow-y:auto; }
-    .qp-list::-webkit-scrollbar { width:4px; }
-    .qp-list::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
-
     .qp-item { display:flex;align-items:center;gap:8px;
       padding:8px 10px;background:rgba(255,255,255,0.04);
       border-left:3px solid rgba(255,255,255,0.15);
@@ -178,15 +132,13 @@
     #nowSinging .label { display:inline-block;font-size:12px;
       letter-spacing:4px;color:var(--gold);font-weight:700;
       padding:6px 14px;background:rgba(255,215,0,0.15);
-      border:1px solid rgba(255,215,0,0.4);
-      border-radius:20px;margin-bottom:12px; }
+      border:1px solid rgba(255,215,0,0.4);border-radius:20px;margin-bottom:12px; }
     #nowSinging .singer { font-size:56px;font-weight:900;
       text-shadow:0 4px 30px rgba(0,0,0,0.9);line-height:1.1; }
     #nowSinging .song { font-size:24px;color:#c0c0d0;margin-top:6px; }
 
     #countdown { position:fixed;inset:0;z-index:200;
-      display:none;flex-direction:column;
-      align-items:center;justify-content:center;
+      display:none;flex-direction:column;align-items:center;justify-content:center;
       background:rgba(5,0,15,0.96);backdrop-filter:blur(30px); }
     #countdown .upnext { font-size:18px;letter-spacing:8px;
       color:var(--gold);font-weight:700;margin-bottom:30px; }
@@ -194,19 +146,16 @@
       letter-spacing:-2px;text-align:center;max-width:90vw;line-height:1; }
     #countdown .song { font-size:32px;color:#a0a0c0;
       text-align:center;max-width:80vw;margin-top:12px; }
-    #countdown .number { font-size:220px;font-weight:900;
-      line-height:1;margin-top:60px;
+    #countdown .number { font-size:220px;font-weight:900;line-height:1;margin-top:60px;
       background:linear-gradient(135deg,#ff2e55,#ff8a00);
       -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;
-      animation:cdPulse 1s infinite; }
+      -webkit-text-fill-color:transparent;animation:cdPulse 1s infinite; }
     @keyframes cdPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
     .cd-queue { position:absolute;bottom:40px;left:50%;
       transform:translateX(-50%);display:flex;gap:12px;max-width:90vw; }
     .cd-queue-item { background:rgba(255,255,255,0.05);
-      border:1px solid rgba(255,255,255,0.1);
-      border-radius:10px;padding:8px 14px;font-size:12px;
-      color:#c0c0d0;text-align:center;
+      border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+      padding:8px 14px;font-size:12px;color:#c0c0d0;text-align:center;
       min-width:120px;max-width:200px; }
     .cd-queue-item .cd-num { display:block;font-size:10px;
       color:var(--gold);font-weight:700;margin-bottom:2px; }
@@ -216,8 +165,7 @@
       margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
     #scoringOverlay { position:fixed;inset:0;z-index:300;
-      display:none;flex-direction:column;
-      align-items:center;justify-content:center;
+      display:none;flex-direction:column;align-items:center;justify-content:center;
       text-align:center;padding:60px;
       background:radial-gradient(ellipse at center,rgba(42,10,74,0.98),rgba(5,0,15,0.99));
       backdrop-filter:blur(30px); }
@@ -231,30 +179,26 @@
     #scoringOverlay .hint { font-size:20px;color:var(--gold);
       margin-top:50px;letter-spacing:2px;animation:pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-    #scoringOverlay .votes { margin-top:40px;display:flex;
-      align-items:baseline;gap:14px; }
+    #scoringOverlay .votes { margin-top:40px;display:flex;align-items:baseline;gap:14px; }
     #scoringOverlay .vcount { font-size:96px;font-weight:900;
       color:#4ade80;transition:transform 0.2s; }
     #scoringOverlay .vcount.bump { transform:scale(1.3); }
     #scoringOverlay .vlabel { font-size:18px;color:var(--dim);
       letter-spacing:2px;text-transform:uppercase; }
-    #scoringOverlay .bar { margin-top:40px;width:500px;max-width:80vw;
-      height:6px;background:rgba(255,255,255,0.1);
-      border-radius:3px;overflow:hidden; }
+    #scoringOverlay .bar { margin-top:40px;width:500px;max-width:80vw;height:6px;
+      background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden; }
     #scoringOverlay .bar-fill { height:100%;
       background:linear-gradient(90deg,#ffd700,#ff2e55);width:100%; }
 
     #scoreReveal { position:fixed;inset:0;z-index:400;
-      display:none;flex-direction:column;
-      align-items:center;justify-content:center;
+      display:none;flex-direction:column;align-items:center;justify-content:center;
       text-align:center;padding:60px;
       background:radial-gradient(ellipse at center,rgba(42,10,74,0.98),rgba(5,0,15,0.99)); }
     #scoreReveal .label { font-size:16px;letter-spacing:8px;
       color:var(--gold);font-weight:700; }
     #scoreReveal .singer { font-size:56px;font-weight:900;margin-top:18px; }
     #scoreReveal .song { font-size:22px;color:#a0a0c0;margin-top:6px; }
-    #scoreReveal .scoreRow { margin-top:30px;display:flex;
-      align-items:baseline;gap:12px; }
+    #scoreReveal .scoreRow { margin-top:30px;display:flex;align-items:baseline;gap:12px; }
     #scoreReveal .big { font-size:200px;font-weight:900;
       line-height:1;letter-spacing:-8px;
       background:linear-gradient(135deg,#ffd700,#ff8a00,#ff2e55);
@@ -269,15 +213,22 @@
       background:linear-gradient(180deg,#ffd700,#ff8a00);
       border-radius:4px 4px 0 0;position:relative; }
     #scoreReveal .histo .lbl { position:absolute;bottom:-22px;
-      left:50%;transform:translateX(-50%);
-      font-size:11px;color:var(--dim); }
+      left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim); }
 
     #hostControls { position:fixed;top:30px;right:30px;z-index:60;
-      display:none;gap:10px; }
-    #hostControls button { width:56px;height:56px;
-      border-radius:50%;border:1px solid rgba(255,255,255,0.15);
+      display:none;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:400px; }
+    #hostControls button { min-width:56px;height:56px;padding:0 14px;
+      border-radius:28px;border:1px solid rgba(255,255,255,0.15);
       background:rgba(0,0,0,0.5);color:#fff;
-      font-size:22px;cursor:pointer;backdrop-filter:blur(20px); }
+      font-size:14px;cursor:pointer;backdrop-filter:blur(20px);
+      font-family:inherit;font-weight:700; }
+    #hostControls button:hover { background:rgba(255,46,85,0.8); }
+    #hostControls button.force-play {
+      background:linear-gradient(135deg,#22c55e,#16a34a);
+      border-color:#4ade80; }
+    #hostControls button.force-play:hover {
+      background:linear-gradient(135deg,#16a34a,#15803d); }
+
     #statsBadge { position:fixed;top:30px;left:30px;z-index:60;
       display:none;padding:10px 18px;background:rgba(0,0,0,0.6);
       border:1px solid rgba(255,215,0,0.3);border-radius:30px;
@@ -285,20 +236,33 @@
     #statsBadge b { color:#fff; }
     #langBtn { position:fixed;top:30px;right:100px;z-index:60;
       display:none;padding:10px 16px;background:rgba(0,0,0,0.6);
-      border:1px solid rgba(255,255,255,0.15);
-      border-radius:30px;color:#fff;cursor:pointer;
-      font-size:14px;backdrop-filter:blur(20px); }
+      border:1px solid rgba(255,255,255,0.15);border-radius:30px;
+      color:#fff;cursor:pointer;font-size:14px;backdrop-filter:blur(20px); }
 
-    #offlineBanner { position:fixed;top:90px;left:50%;
-      transform:translateX(-50%);z-index:70;
-      padding:10px 24px;background:rgba(255,46,85,0.9);
+    #offlineBanner { position:fixed;top:90px;left:50%;transform:translateX(-50%);
+      z-index:70;padding:10px 24px;background:rgba(255,46,85,0.9);
       color:#fff;border-radius:24px;font-size:14px;
       font-weight:600;display:none; }
     #offlineBanner.show { display:block; }
 
+    /* ===== DEBUG LOG PANEL ===== */
+    #debugLog {
+      position:fixed;bottom:10px;left:10px;z-index:9999;
+      background:rgba(0,0,0,0.85);
+      border:1px solid rgba(74,222,128,0.4);
+      border-radius:8px;padding:8px 10px;
+      font-family:monospace;font-size:10px;
+      color:#4ade80;max-width:340px;
+      max-height:180px;overflow-y:auto;
+      line-height:1.5;display:none;
+    }
+    #debugLog.show { display:block; }
+    #debugLog .debug-line { margin-bottom:2px; }
+    #debugLog .debug-line.err { color:#ff6b6b; }
+    #debugLog .debug-line.warn { color:#ffd700; }
+
     body.tv-mode { font-size:18px; }
     body.tv-mode #startScreen h1 { font-size:120px; }
-
     body.simple-mode canvas#fx { display:none !important; }
   </style>
 </head>
@@ -393,14 +357,18 @@
   </div>
 
   <div id="hostControls">
-    <button onclick="socket.emit('skip')" title="Skip">⏭</button>
-    <button onclick="socket.emit('stop')" title="Stop">⏹</button>
+    <button class="force-play" onclick="forcePlay()" title="Force play">▶ PLAY NOW</button>
+    <button onclick="socket.emit('skip')" title="Skip">⏭ SKIP</button>
+    <button onclick="socket.emit('stop')" title="Stop">⏹ STOP</button>
+    <button onclick="toggleDebug()" title="Debug">🐛</button>
   </div>
   <button id="langBtn" onclick="toggleLang()">🌐 FIL</button>
   <div id="statsBadge">
     👥 <b id="statSingers">0</b> · 🎵 <b id="statQueue">0</b> · ⏱️ <b id="statWait">0 min</b>
   </div>
   <div id="offlineBanner">⚠️ Walang internet</div>
+
+  <div id="debugLog"></div>
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
@@ -419,6 +387,28 @@
     let particles = [], rafId = null;
     let ytPlayer = null, ytReady = false, ytApiReady = false;
     let pendingPlay = null;
+    let lastCommand = null;
+    let lastNowPlaying = null;
+    let forceRetryTimer = null;
+
+    // ===== DEBUG LOG =====
+    function debugLog(msg, type = '') {
+      const el = document.getElementById('debugLog');
+      const t = new Date().toLocaleTimeString('en-PH', { hour12: false });
+      const line = document.createElement('div');
+      line.className = 'debug-line ' + type;
+      line.textContent = `[${t}] ${msg}`;
+      el.appendChild(line);
+      el.scrollTop = el.scrollHeight;
+      // Limit to 50 lines
+      while (el.children.length > 50) el.removeChild(el.firstChild);
+      console.log(`[VIDEOKE] ${msg}`);
+    }
+    function toggleDebug() {
+      document.getElementById('debugLog').classList.toggle('show');
+    }
+    debugLog('Boot started');
+    debugLog(`Backend: ${BACKEND_URL}`);
 
     function resizeCanvas() { fx.width = window.innerWidth; fx.height = window.innerHeight; }
     resizeCanvas();
@@ -520,19 +510,44 @@
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     }
 
-    // ===== START =====
+    // ===== START — with autoplay unlock =====
     const startScreen = document.getElementById('startScreen');
     function startVideoke() {
       if (started) return;
       started = true;
+      debugLog('START tapped');
       startScreen.style.display = 'none';
       goFullscreen();
 
-      show(document.getElementById('idleScreen'));
-
+      // ⬇️ CRITICAL: I-play muna ang YT player muted para ma-unlock autoplay
       if (ytReady && ytPlayer) {
-        try { ytPlayer.mute(); } catch (e) {}
+        try {
+          debugLog('Unlocking autoplay (muted play)');
+          ytPlayer.mute();
+          ytPlayer.playVideo();
+          // Pagkatapos ng 800ms, i-pause at i-unmute
+          setTimeout(() => {
+            try {
+              ytPlayer.pauseVideo();
+              ytPlayer.unMute();
+              debugLog('Autoplay unlocked ✓');
+            } catch (e) {}
+          }, 800);
+        } catch (e) {
+          debugLog('Unlock error: ' + e.message, 'err');
+        }
+      } else {
+        debugLog('YT not ready at start — will unlock later', 'warn');
       }
+
+      // I-replay ang last command kung meron
+      if (lastCommand && lastCommand.type !== 'idle' && lastCommand.type !== 'stop') {
+        debugLog('Replaying: ' + lastCommand.type);
+        setTimeout(() => handleCommand(lastCommand), 900);
+      } else {
+        show(document.getElementById('idleScreen'));
+      }
+
       if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
     }
     startScreen.addEventListener('click', startVideoke);
@@ -552,62 +567,51 @@
         case 'r': case 'R': socket.emit('resume'); break;
         case 's': case 'S': socket.emit('stop'); break;
         case 'l': case 'L': toggleLang(); break;
+        case 'd': case 'D': toggleDebug(); break;
       }
     });
 
     socket.on('connect', () => {
+      debugLog('Socket connected ✓');
       document.getElementById('offlineBanner').classList.remove('show');
     });
-    socket.on('connect_error', () => {
+    socket.on('disconnect', () => {
+      debugLog('Socket disconnected', 'err');
+    });
+    socket.on('connect_error', (err) => {
+      debugLog('Connection error: ' + err.message, 'err');
       document.getElementById('offlineBanner').textContent =
         '⚠️ Hindi maka-connect sa server.';
       document.getElementById('offlineBanner').classList.add('show');
     });
 
-    // ===== QR CODE GENERATION WITH FIX =====
+    // ===== QR =====
     function generateQR(url) {
       const el = document.getElementById('qrcode');
       if (!el) return;
       el.innerHTML = '';
 
       if (typeof QRCode === 'undefined') {
-        console.warn('QRCode library not loaded — using fallback image');
         const img = document.createElement('img');
         img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
         img.style.cssText = 'width:240px !important;height:240px !important;display:block !important;';
-        img.onerror = () => {
-          el.innerHTML = `<div style="padding:16px;color:#000;font-size:11px;
-            word-break:break-all;text-align:center;width:240px;">
-            <b>QR unavailable</b><br><br>
-            Buksan sa phone:<br>
-            <code style="font-size:10px;">${url}</code></div>`;
-        };
         el.appendChild(img);
         return;
       }
 
       try {
         new QRCode(el, {
-          text: url,
-          width: 240,
-          height: 240,
-          colorDark: '#000000',
-          colorLight: '#ffffff',
+          text: url, width: 240, height: 240,
+          colorDark: '#000000', colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.H
         });
-        // ⬇️ FIX: Alisin ang img element (qrcodejs generates both canvas and img)
         setTimeout(() => {
           const img = el.querySelector('img');
           if (img) img.remove();
         }, 50);
-        console.log('✓ QR code generated for:', url);
+        debugLog('QR generated ✓');
       } catch (e) {
-        console.error('QR generation failed:', e);
-        el.innerHTML = `<div style="padding:16px;color:#000;font-size:11px;
-          word-break:break-all;text-align:center;width:240px;">
-          <b>QR error</b><br><br>
-          Buksan sa phone:<br>
-          <code style="font-size:10px;">${url}</code></div>`;
+        debugLog('QR error: ' + e.message, 'err');
       }
     }
 
@@ -619,7 +623,6 @@
           generateQR(info.remoteUrl);
         })
         .catch((err) => {
-          console.warn('API info failed, using fallback:', err);
           const f = location.origin + '/remote.html';
           document.getElementById('urlText').textContent = f;
           generateQR(f);
@@ -627,22 +630,15 @@
     }
 
     function waitForQRCode(attempt = 1) {
-      if (typeof QRCode !== 'undefined') {
-        console.log('✓ QRCode library loaded');
-        initQRFlow();
-        return;
-      }
-      if (attempt > 8) {
-        console.warn('QRCode library not available after 8 attempts — using fallback');
-        initQRFlow();
-        return;
-      }
+      if (typeof QRCode !== 'undefined') { initQRFlow(); return; }
+      if (attempt > 8) { initQRFlow(); return; }
       setTimeout(() => waitForQRCode(attempt + 1), 400);
     }
     waitForQRCode();
 
     // ===== YT IFRAME =====
     function onYouTubeIframeAPIReady() {
+      debugLog('YouTube API ready');
       ytApiReady = true;
       ytPlayer = new YT.Player('ytPlayer', {
         height: '100%', width: '100%', videoId: '',
@@ -654,18 +650,35 @@
         },
         events: {
           onReady: () => {
+            debugLog('YT Player ready ✓');
             ytReady = true;
             if (pendingPlay) { playVideo(pendingPlay); pendingPlay = null; }
           },
           onStateChange: (e) => {
+            const states = ['ended','playing','paused','buffering','cued'];
+            const stateName = states[e.data] || e.data;
+            debugLog('YT state: ' + stateName);
             if (e.data === 0 && currentVideoId) {
+              debugLog('Song ended → next');
               socket.emit('songEnded');
               currentVideoId = null;
             }
           },
           onError: (e) => {
-            console.error('YT error:', e.data);
+            // Error codes:
+            // 2 = invalid param, 5 = HTML5 error, 100 = not found,
+            // 101 = embed not allowed, 150 = embed not allowed (same as 101)
+            const errMsgs = {
+              2: 'Invalid video ID',
+              5: 'HTML5 player error',
+              100: 'Video not found',
+              101: 'Embedding not allowed',
+              150: 'Embedding not allowed'
+            };
+            const msg = errMsgs[e.data] || ('Error ' + e.data);
+            debugLog('YT error: ' + msg, 'err');
             if (currentVideoId) {
+              debugLog('Auto-skip to next');
               socket.emit('songEnded');
               currentVideoId = null;
             }
@@ -674,10 +687,80 @@
       });
     }
 
+    // ===== PLAY VIDEO — mas robust na autoplay handling =====
     function playVideo(videoId) {
+      debugLog('playVideo: ' + videoId);
       currentVideoId = videoId;
-      if (!ytReady) { pendingPlay = videoId; return; }
-      ytPlayer.loadVideoById(videoId);
+      if (!ytReady) {
+        debugLog('YT not ready, pending', 'warn');
+        pendingPlay = videoId;
+        return;
+      }
+
+      try {
+        ytPlayer.loadVideoById(videoId);
+
+        // Monitor autoplay — kung hindi tumugtog after 2s, force muted play
+        clearTimeout(forceRetryTimer);
+        forceRetryTimer = setTimeout(() => {
+          if (!ytPlayer || !ytPlayer.getPlayerState) return;
+          const state = ytPlayer.getPlayerState();
+          // -1 = unstarted, 0 = ended, 5 = cued, 2 = paused
+          if (state !== 1 && state !== 3) {
+            debugLog('Autoplay blocked (state ' + state + ') — forcing muted', 'warn');
+            try {
+              ytPlayer.mute();
+              ytPlayer.playVideo();
+              // Unmute pag tumutugtog na
+              const check = setInterval(() => {
+                if (!ytPlayer || !ytPlayer.getPlayerState) {
+                  clearInterval(check);
+                  return;
+                }
+                if (ytPlayer.getPlayerState() === 1) {
+                  clearInterval(check);
+                  debugLog('Playing — unmuting');
+                  setTimeout(() => {
+                    try { ytPlayer.unMute(); } catch(e) {}
+                  }, 300);
+                }
+              }, 300);
+              setTimeout(() => clearInterval(check), 6000);
+            } catch (e) {
+              debugLog('Force play failed: ' + e.message, 'err');
+            }
+          } else {
+            debugLog('Playing ok (state ' + state + ')');
+          }
+        }, 2000);
+      } catch (e) {
+        debugLog('playVideo error: ' + e.message, 'err');
+      }
+    }
+
+    // ===== FORCE PLAY — para sa stuck state =====
+    function forcePlay() {
+      debugLog('FORCE PLAY tapped');
+      // Kung may lastCommand na play, i-replay
+      if (lastCommand && lastCommand.song && lastCommand.song.videoId) {
+        debugLog('Force replaying: ' + lastCommand.song.videoId);
+        hide(document.getElementById('idleScreen'));
+        hide(document.getElementById('countdown'));
+        showB(document.getElementById('nowSinging'));
+        document.getElementById('nsSinger').textContent = lastCommand.song.singer || 'Guest';
+        document.getElementById('nsSong').textContent = lastCommand.song.title || '';
+        playVideo(lastCommand.song.videoId);
+      } else if (lastNowPlaying) {
+        debugLog('Force playing nowPlaying: ' + lastNowPlaying.videoId);
+        hide(document.getElementById('idleScreen'));
+        showB(document.getElementById('nowSinging'));
+        document.getElementById('nsSinger').textContent = lastNowPlaying.singer || 'Guest';
+        document.getElementById('nsSong').textContent = lastNowPlaying.title || '';
+        playVideo(lastNowPlaying.videoId);
+      } else {
+        debugLog('Force play — walang kanta', 'warn');
+        socket.emit('skip');
+      }
     }
 
     function renderQueue(s) {
@@ -743,12 +826,15 @@
     function hide(el) { el.style.display = 'none'; }
     function showB(el) { el.style.display = 'block'; }
 
-    socket.on('command', (cmd) => {
+    function handleCommand(cmd) {
+      debugLog('CMD: ' + cmd.type + (cmd.song ? ' — ' + cmd.song.title : ''));
+
       switch (cmd.type) {
         case 'play':
           hide(document.getElementById('countdown'));
           hide(document.getElementById('idleScreen'));
           hide(document.getElementById('scoreReveal'));
+          hide(document.getElementById('scoringOverlay'));
           showB(document.getElementById('nowSinging'));
           document.getElementById('hostControls').style.display = 'flex';
           document.getElementById('statsBadge').style.display = 'block';
@@ -758,9 +844,12 @@
           playVideo(cmd.song.videoId);
           spawnFireworks(60);
           break;
+
         case 'countdown':
           hide(document.getElementById('nowSinging'));
           hide(document.getElementById('idleScreen'));
+          hide(document.getElementById('scoringOverlay'));
+          hide(document.getElementById('scoreReveal'));
           show(document.getElementById('countdown'));
           document.getElementById('hostControls').style.display = 'flex';
           document.getElementById('statsBadge').style.display = 'block';
@@ -770,33 +859,40 @@
           document.getElementById('cdNumber').textContent = cmd.seconds;
           announce(cmd.song.singer || 'Guest', cmd.song.title || '');
           break;
+
         case 'countdownTick':
           document.getElementById('cdNumber').textContent = cmd.seconds;
           break;
+
         case 'idle':
         case 'stop':
           if (ytReady) ytPlayer.stopVideo();
           currentVideoId = null;
           ['nowSinging','countdown','scoringOverlay','scoreReveal'].forEach(id =>
             hide(document.getElementById(id)));
-          document.getElementById('hostControls').style.display = 'none';
-          document.getElementById('statsBadge').style.display = 'none';
-          document.getElementById('langBtn').style.display = 'none';
+          document.getElementById('hostControls').style.display = 'flex';
+          document.getElementById('statsBadge').style.display = 'block';
+          document.getElementById('langBtn').style.display = 'block';
           document.getElementById('queuePanel').classList.remove('show');
-          show(document.getElementById('idleScreen'));
+          if (started) show(document.getElementById('idleScreen'));
           break;
+
         case 'pause':
           if (ytReady) ytPlayer.pauseVideo();
           break;
+
         case 'resume':
           if (ytReady) ytPlayer.playVideo();
           break;
+
         case 'seek':
           if (ytReady) ytPlayer.seekTo(cmd.seconds, true);
           break;
+
         case 'volume':
           if (ytReady) ytPlayer.setVolume(cmd.value);
           break;
+
         case 'scoring':
           ['nowSinging','countdown','idleScreen','scoreReveal'].forEach(id =>
             hide(document.getElementById(id)));
@@ -813,8 +909,10 @@
           }, 50);
           document.getElementById('queuePanel').classList.remove('show');
           break;
+
         case 'scoreReveal':
           hide(document.getElementById('scoringOverlay'));
+          hide(document.getElementById('idleScreen'));
           show(document.getElementById('scoreReveal'));
           document.getElementById('rvSinger').textContent = cmd.singer;
           document.getElementById('rvSong').textContent = cmd.title;
@@ -838,6 +936,17 @@
           }
           break;
       }
+    }
+
+    socket.on('command', (cmd) => {
+      if (cmd.type !== 'countdownTick') {
+        lastCommand = cmd;
+      }
+      if (!started) {
+        debugLog('CMD saved (not started): ' + cmd.type, 'warn');
+        return;
+      }
+      handleCommand(cmd);
     });
 
     socket.on('state', (s) => {
@@ -854,6 +963,7 @@
           setTimeout(() => el.classList.remove('bump'), 250);
         }
       }
+      lastNowPlaying = s.nowPlaying;
       renderQueue(s);
     });
 
