@@ -2,1144 +2,463 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a0512">
   <title>Videoke YouTube — Host</title>
-  <link rel="preconnect" href="https://www.youtube.com">
-  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
-  <link rel="preconnect" href="https://i.ytimg.com">
-  <link rel="preconnect" href="https://s.ytimg.com">
-  <link rel="dns-prefetch" href="https://www.youtube.com">
-  <link rel="dns-prefetch" href="https://i.ytimg.com">
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <script src="/i18n.js"></script>
   <script src="/config.js"></script>
   <style>
-    :root { --gold:#ffd700; --red:#ff2e55; --dim:#8888a0; --green:#4ade80; }
+    :root { --gold:#ffd700; --red:#ff2e55; --bg:#0a0512;
+      --card:#16101f; --dim:#8888a0; --green:#4ade80; }
     * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { width:100%;height:100%;overflow:hidden;background:#0a0512;color:#fff;
-      font-family:-apple-system,'Segoe UI',Roboto,sans-serif;user-select:none; }
-    #ytContainer { position:fixed;inset:0;width:100vw;height:100vh;z-index:1; }
-    #ytPlayer { width:100%;height:100%; }
-    canvas#fx { position:fixed;inset:0;pointer-events:none;z-index:30; }
+    body { background:var(--bg); color:#fff; overflow:hidden;
+      font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+      height:100vh; width:100vw; }
 
-    #loadSpinner { position:fixed;inset:0;z-index:15;
-      display:none;align-items:center;justify-content:center;
-      background:rgba(0,0,0,0.7);pointer-events:none; }
-    #loadSpinner.show { display:flex; }
-    #loadSpinner .spinner { width:60px;height:60px;
-      border:5px solid rgba(255,255,255,0.15);
-      border-top-color:#ffd700;border-radius:50%;
-      animation:spin 0.8s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    #playerWrap { position:fixed; inset:0;
+      background:#000; display:flex;
+      align-items:center; justify-content:center; }
+    #player { width:100%; height:100%; }
+    #player iframe { width:100%; height:100%; }
 
-    #startScreen { position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;cursor:pointer;text-align:center;
-      background:radial-gradient(ellipse at center,#2a0a4a 0%,#0a0512 100%); }
-    #startScreen .mic { font-size:140px;
-      filter:drop-shadow(0 0 40px rgba(255,215,0,0.6));
-      animation:float 3s ease-in-out infinite; }
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
-    #startScreen h1 { font-size:96px;font-weight:900;letter-spacing:-4px;margin-top:20px;
-      background:linear-gradient(135deg,#ffd700,#ff8a00);
+    /* Idle screen */
+    #idleScreen { position:fixed; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      background:radial-gradient(ellipse at center,#1a0033,#0a0512);
+      z-index:100; text-align:center; padding:40px; }
+    #idleScreen.hidden { display:none; }
+    #idleScreen .logo { font-size:72px; font-weight:900;
+      background:linear-gradient(135deg,#ffd700,#ff2e55);
       -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent; }
-    #startScreen .tag { font-size:20px;color:var(--dim);margin-top:12px;letter-spacing:4px; }
-    #startScreen .badge { font-size:12px;color:#ff6b6b;margin-top:8px;letter-spacing:2px;
-      padding:6px 14px;background:rgba(255,46,85,0.15);
-      border:1px solid rgba(255,46,85,0.4);border-radius:20px; }
-    #startScreen .cta { margin-top:50px;padding:20px 60px;
-      background:linear-gradient(135deg,#ff2e55,#ff0044);border-radius:60px;
-      font-size:22px;font-weight:700;letter-spacing:2px;
-      animation:pulseCta 2s infinite;box-shadow:0 20px 60px rgba(255,46,85,0.5); }
-    @keyframes pulseCta { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
-    .tv-hint { margin-top:30px;padding:14px 24px;
-      background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);
-      border-radius:12px;font-size:16px;color:#a0b0c0;letter-spacing:1px; }
-    .tv-hint b { color:#60a5fa;font-weight:800; }
+      -webkit-text-fill-color:transparent;
+      margin-bottom:20px; letter-spacing:-2px; }
+    #idleScreen .sub { font-size:20px; color:#a0a0b0;
+      margin-bottom:40px; font-weight:500; }
 
-    #idleScreen { position:fixed;inset:0;z-index:500;display:none;
-      flex-direction:row;align-items:center;justify-content:center;
-      gap:20px;padding:30px;
-      background:radial-gradient(ellipse at top left,#2a0a4a,#0a0512 60%); }
-    #idleScreen .left { flex:1 1 0;min-width:0;max-width:34%;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
-    #idleScreen .right { flex:0 0 auto;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
-    #idleScreen .mic-big { font-size:110px;
-      filter:drop-shadow(0 0 60px rgba(255,215,0,0.5));
-      animation:float 4s ease-in-out infinite; }
-    #idleScreen h1 { font-size:56px;font-weight:900;letter-spacing:-3px;margin-top:16px;
-      background:linear-gradient(135deg,#ffd700,#ff8a00);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent; }
-    #idleScreen .sub { font-size:18px;color:var(--dim);margin-top:12px;letter-spacing:4px; }
-    #idleScreen .hint { margin-top:20px;font-size:14px;color:#666;
-      max-width:280px;text-align:center;line-height:1.6; }
+    /* QR overlay */
+    #qrOverlay { margin-top:20px;
+      padding:30px; background:rgba(0,0,0,0.6);
+      border:2px solid var(--gold);
+      border-radius:24px; backdrop-filter:blur(20px);
+      box-shadow:0 0 60px rgba(255,215,0,0.3); }
+    #qrOverlay.hidden { display:none; }
+    #qrOverlay .title { font-size:22px; font-weight:800;
+      color:var(--gold); margin-bottom:16px; }
+    #qrImg { width:260px; height:260px;
+      background:#fff; padding:12px; border-radius:16px;
+      display:block; }
+    #qrCode { font-family:monospace;
+      font-size:40px; font-weight:900; color:var(--gold);
+      letter-spacing:10px; margin-top:16px;
+      text-shadow:0 0 20px rgba(255,215,0,0.6); }
+    #qrUrl { font-size:11px; color:#8888a0;
+      margin-top:10px; word-break:break-all; max-width:280px; }
 
-    .qr-card { background:rgba(255,255,255,0.04);
-      border:1px solid rgba(255,215,0,0.3);border-radius:24px;
-      padding:20px;text-align:center;
-      box-shadow:0 0 80px rgba(255,215,0,0.15);backdrop-filter:blur(20px); }
-    .qr-card .label { font-size:12px;letter-spacing:4px;color:var(--gold);
-      margin-bottom:14px;font-weight:600; }
-    .qr-card .qr-wrap { background:#fff;padding:14px;border-radius:16px;
-      display:inline-flex;align-items:center;justify-content:center;
-      width:268px;height:268px;overflow:hidden; }
-    .qr-card .qr-wrap canvas { display:block !important;
-      width:240px !important;height:240px !important; }
-    .qr-card .qr-wrap img { display:none !important; }
-    .qr-card .url { margin-top:14px;font-family:monospace;font-size:10px;
-      padding:8px 12px;background:rgba(0,0,0,0.4);
-      border-radius:10px;word-break:break-all;
-      max-width:268px;line-height:1.4;color:#a0b0c0; }
+    /* Now playing HUD */
+    #nowHud { position:fixed; top:20px; left:20px; right:20px;
+      z-index:50; padding:16px 24px;
+      background:linear-gradient(135deg,rgba(0,0,0,0.85),rgba(42,10,74,0.85));
+      border:1px solid rgba(255,215,0,0.3);
+      border-radius:16px; backdrop-filter:blur(20px);
+      display:none; align-items:center; gap:16px; }
+    #nowHud.show { display:flex; }
+    #nowHud .icon { font-size:32px; }
+    #nowHud .info { flex:1; min-width:0; }
+    #nowHud .label { font-size:11px; font-weight:700;
+      color:var(--gold); letter-spacing:3px; margin-bottom:2px; }
+    #nowHud .singer { font-size:24px; font-weight:800;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #nowHud .song { font-size:14px; color:#c0c0d0;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      margin-top:2px; }
 
-    #idleQueue { flex:1 1 0;min-width:0;max-width:320px;
-      max-height:70vh;background:rgba(0,0,0,0.5);
-      border:1px solid rgba(255,215,0,0.3);border-radius:20px;padding:18px;
-      backdrop-filter:blur(20px);overflow-y:auto; }
-    #idleQueue::-webkit-scrollbar { width:4px; }
-    #idleQueue::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
+    /* Next up HUD */
+    #nextHud { position:fixed; bottom:20px; right:20px;
+      z-index:50; padding:12px 20px;
+      background:rgba(0,0,0,0.75);
+      border:1px solid rgba(255,46,85,0.4);
+      border-radius:12px; backdrop-filter:blur(20px);
+      display:none; max-width:360px; }
+    #nextHud.show { display:block; }
+    #nextHud .label { font-size:10px; font-weight:700;
+      color:#ff6b6b; letter-spacing:2px; margin-bottom:4px; }
+    #nextHud .singer { font-size:14px; font-weight:700;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #nextHud .song { font-size:12px; color:#a0a0b0;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      margin-top:2px; }
 
-    /* ===== START PLAYING BUTTON ===== */
-    #startPlayingBtn {
-      position:fixed;
-      bottom:40px;
-      left:50%;
-      transform:translateX(-50%);
-      z-index:600;
-      padding:20px 50px;
-      font-size:22px;
-      font-weight:900;
-      letter-spacing:2px;
-      color:#fff;
-      background:linear-gradient(135deg,#ff2e55,#ff0044);
-      border:2px solid rgba(255,215,0,0.5);
-      border-radius:60px;
-      cursor:pointer;
-      box-shadow:0 20px 60px rgba(255,46,85,0.6),
-                  0 0 40px rgba(255,215,0,0.3);
-      display:none;
-      font-family:inherit;
-      animation:startPulse 1.5s ease-in-out infinite;
-    }
-    #startPlayingBtn.show { display:block; }
-    #startPlayingBtn:hover {
-      background:linear-gradient(135deg,#ff0044,#cc0033);
-      transform:translateX(-50%) scale(1.05);
-    }
-    #startPlayingBtn:active { transform:translateX(-50%) scale(0.95); }
-    @keyframes startPulse {
-      0%, 100% {
-        box-shadow:0 20px 60px rgba(255,46,85,0.6),
-                   0 0 40px rgba(255,215,0,0.3);
-      }
-      50% {
-        box-shadow:0 20px 80px rgba(255,46,85,0.9),
-                   0 0 60px rgba(255,215,0,0.6);
-      }
+    /* Countdown overlay */
+    #countdown { position:fixed; inset:0; z-index:200;
+      display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,0.7); backdrop-filter:blur(10px); }
+    #countdown.show { display:flex; }
+    #countdown .num { font-size:200px; font-weight:900;
+      color:var(--gold);
+      text-shadow:0 0 60px rgba(255,215,0,0.8);
+      animation:pulse 1s ease-in-out infinite; }
+    @keyframes pulse {
+      0%,100% { transform:scale(1); opacity:1; }
+      50% { transform:scale(1.1); opacity:0.7; }
     }
 
-    #topBar { position:fixed;top:0;left:0;right:0;z-index:45;
-      min-height:56px;padding:8px 16px;
-      background:linear-gradient(180deg, rgba(10,5,18,0.95), rgba(10,5,18,0.75));
-      backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,0.2);
-      display:none;align-items:center;gap:12px; }
-    #topBar.show { display:flex; }
-
-    .ns-section { display:flex;align-items:center;gap:10px;
-      padding-right:14px;border-right:1px solid rgba(255,215,0,0.2);
-      flex-shrink:0;max-width:320px; }
-    .ns-mic { font-size:20px; }
-    .ns-info { min-width:0;overflow:hidden; }
-    .ns-label { font-size:8px;letter-spacing:2px;
-      color:var(--gold);font-weight:700;text-transform:uppercase; }
-    .ns-singer { font-size:16px;font-weight:800;color:#fff;line-height:1.1;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .ns-song { font-size:12px;color:#c0c0d0;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px; }
-
-    .q-section { flex:1;display:flex;align-items:center;gap:8px;min-width:0; }
-    .q-label { display:flex;align-items:center;gap:6px;
-      padding:5px 12px;background:rgba(255,215,0,0.12);
-      border:1px solid rgba(255,215,0,0.35);border-radius:14px;flex-shrink:0; }
-    .q-label .q-icon { font-size:14px; }
-    .q-label .q-title { font-size:10px;font-weight:800;letter-spacing:2px;
-      color:var(--gold);text-transform:uppercase; }
-    .q-label .q-count { background:var(--red);color:#fff;
-      font-size:10px;font-weight:800;padding:2px 7px;
-      border-radius:8px;min-width:20px;text-align:center; }
-
-    .qp-list { display:flex;flex-direction:row;gap:6px;
-      overflow-x:auto;flex:1;padding-bottom:2px; }
-    .qp-list::-webkit-scrollbar { height:3px; }
-    .qp-list::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
-
-    .qp-item { display:flex;align-items:center;gap:6px;
-      padding:6px 12px;background:rgba(255,255,255,0.06);
-      border-left:3px solid rgba(255,255,255,0.15);
-      border-radius:8px;font-size:11px;flex-shrink:0;
-      max-width:260px;min-width:180px; }
-    .qp-item.first {
-      background:linear-gradient(135deg,rgba(255,215,0,0.25),rgba(255,138,0,0.1));
-      border-left-color:var(--gold);box-shadow:0 0 15px rgba(255,215,0,0.15); }
-    .qp-item .qp-num { font-size:11px;font-weight:800;color:var(--dim);
-      min-width:14px;text-align:center; }
-    .qp-item.first .qp-num { color:var(--gold); }
-    .qp-item .qp-info { min-width:0;overflow:hidden;flex:1; }
-    .qp-item .qp-singer { font-size:11px;font-weight:700;color:#fff;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .qp-item .qp-song { font-size:10px;color:#c0c0d0;
-      overflow:hidden;display:-webkit-box;
-      -webkit-line-clamp:2;-webkit-box-orient:vertical;
-      line-height:1.2;max-width:220px; }
-    .qp-item .qp-wait { font-size:10px;color:var(--gold);font-weight:700;
-      margin-left:6px;flex-shrink:0; }
-    .qp-empty { color:var(--dim);font-size:11px;font-style:italic;padding:6px; }
-
-    .toggle-bar-btn { width:36px;height:36px;border-radius:50%;
-      border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.4);
-      color:#fff;cursor:pointer;font-size:16px;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;transition:all 0.15s; }
-    .toggle-bar-btn:hover { background:rgba(255,215,0,0.2); }
-
-    #fullQueueModal { position:fixed;top:68px;right:20px;
-      width:540px;max-width:90vw;max-height:80vh;z-index:500;
-      background:rgba(10,5,18,0.96);backdrop-filter:blur(30px);
-      border:1px solid rgba(255,215,0,0.3);border-radius:16px;
-      box-shadow:0 20px 60px rgba(0,0,0,0.7);
-      padding:18px;display:none;flex-direction:column;
-      animation:slideInRight 0.3s; }
-    #fullQueueModal.show { display:flex; }
-    @keyframes slideInRight {
-      from { transform: translateX(30px); opacity:0; }
-      to { transform: translateX(0); opacity:1; }
-    }
-    .fq-header { display:flex;align-items:center;gap:10px;
-      padding-bottom:14px;margin-bottom:14px;
-      border-bottom:1px solid rgba(255,215,0,0.2);flex-shrink:0; }
-    .fq-icon { font-size:20px; }
-    .fq-title { flex:1;font-size:14px;font-weight:800;
-      letter-spacing:2px;color:var(--gold);text-transform:uppercase; }
-    .fq-count { background:var(--red);color:#fff;
-      font-size:12px;font-weight:800;padding:3px 10px;
-      border-radius:12px;min-width:26px;text-align:center; }
-    .fq-close { width:36px;height:36px;border-radius:50%;
-      border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.4);
-      color:#fff;cursor:pointer;font-size:18px;
-      display:flex;align-items:center;justify-content:center; }
-    .fq-close:hover { background:rgba(255,46,85,0.8); }
-    .fq-list { display:flex;flex-direction:column;gap:8px;
-      overflow-y:auto;flex:1;padding-right:6px; }
-    .fq-list::-webkit-scrollbar { width:5px; }
-    .fq-list::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:3px; }
-    .fq-item { display:flex;align-items:center;gap:12px;
-      padding:12px 14px;background:rgba(255,255,255,0.04);
-      border-left:4px solid rgba(255,255,255,0.15);
-      border-radius:10px;transition:all 0.2s; }
-    .fq-item.first {
-      background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,138,0,0.08));
-      border-left-color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,0.15); }
-    .fq-item .fq-num { font-size:20px;font-weight:900;color:var(--dim);
-      min-width:32px;text-align:center;font-family:monospace; }
-    .fq-item.first .fq-num { color:var(--gold); }
-    .fq-item .fq-info { flex:1;min-width:0; }
-    .fq-item .fq-singer { font-size:16px;font-weight:800;color:#fff;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .fq-item .fq-song { font-size:13px;color:#c0c0d0;margin-top:3px;
-      line-height:1.3;overflow:hidden;display:-webkit-box;
-      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
-    .fq-item .fq-wait { font-size:11px;color:var(--gold);font-weight:700;
-      padding:4px 10px;background:rgba(255,215,0,0.1);
-      border:1px solid rgba(255,215,0,0.3);border-radius:12px;
-      white-space:nowrap;flex-shrink:0; }
-    .fq-empty { text-align:center;padding:40px 20px;
-      color:var(--dim);font-size:14px;font-style:italic; }
-
-    #countdown { position:fixed;inset:0;z-index:200;
-      display:none;flex-direction:column;align-items:center;justify-content:center;
-      background:rgba(5,0,15,0.96);backdrop-filter:blur(30px); }
-    #countdown .upnext { font-size:18px;letter-spacing:8px;
-      color:var(--gold);font-weight:700;margin-bottom:30px; }
-    #countdown .singer { font-size:84px;font-weight:900;
-      letter-spacing:-2px;text-align:center;max-width:90vw;line-height:1; }
-    #countdown .song { font-size:32px;color:#a0a0c0;
-      text-align:center;max-width:80vw;margin-top:12px; }
-    #countdown .number { font-size:220px;font-weight:900;line-height:1;margin-top:60px;
-      background:linear-gradient(135deg,#ff2e55,#ff8a00);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;animation:cdPulse 1s infinite; }
-    @keyframes cdPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
-    .cd-queue { position:absolute;bottom:40px;left:50%;
-      transform:translateX(-50%);display:flex;gap:12px;max-width:90vw; }
-    .cd-queue-item { background:rgba(255,255,255,0.05);
-      border:1px solid rgba(255,255,255,0.1);border-radius:10px;
-      padding:8px 14px;font-size:12px;color:#c0c0d0;text-align:center;
-      min-width:120px;max-width:200px; }
-    .cd-queue-item .cd-num { display:block;font-size:10px;
-      color:var(--gold);font-weight:700;margin-bottom:2px; }
-    .cd-queue-item .cd-name { font-size:12px;font-weight:600;color:#fff;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .cd-queue-item .cd-song { font-size:10px;color:var(--dim);
-      margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-
-    #errorOverlay { position:fixed;inset:0;z-index:900;
-      display:none;flex-direction:column;align-items:center;justify-content:center;
-      background:radial-gradient(ellipse at center,#4a0010 0%,#0a0512 100%);
-      text-align:center;padding:40px; }
-    #errorOverlay.show { display:flex; }
-    #errorOverlay .icon { font-size:140px;
-      filter:drop-shadow(0 0 40px rgba(255,46,85,0.8));
-      animation:errPulse 1.5s ease-in-out infinite; }
-    @keyframes errPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    #errorOverlay .title { font-size:64px;font-weight:900;
-      color:#ff6b6b;letter-spacing:-2px;margin-top:20px;
-      text-shadow:0 0 30px rgba(255,107,107,0.5); }
-    #errorOverlay .msg { font-size:24px;color:#c0c0d0;
-      text-align:center;max-width:80vw;line-height:1.5;margin-top:20px; }
-    #errorOverlay .song-title { font-size:18px;color:#888;
-      margin-top:10px;font-style:italic; }
-    #errorOverlay .sub { margin-top:40px;font-size:18px;color:var(--gold);
-      letter-spacing:3px;text-transform:uppercase;font-weight:700;
-      animation:pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-    #errorOverlay .countdown-num { margin-top:20px;
-      font-size:80px;font-weight:900;
-      background:linear-gradient(135deg,#ff2e55,#ff8a00);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent; }
-
-    #hostControls { position:fixed;top:80px;right:30px;z-index:60;
-      display:none;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:400px; }
-    #hostControls button { min-width:56px;height:56px;padding:0 14px;
-      border-radius:28px;border:1px solid rgba(255,255,255,0.15);
-      background:rgba(0,0,0,0.5);color:#fff;
-      font-size:14px;cursor:pointer;backdrop-filter:blur(20px);
-      font-family:inherit;font-weight:700; }
-    #hostControls button:hover { background:rgba(255,46,85,0.8); }
-    #hostControls button.force-play {
-      background:linear-gradient(135deg,#22c55e,#16a34a);
-      border-color:#4ade80; }
-
-    #statsBadge { position:fixed;top:80px;left:30px;z-index:60;
-      display:none;padding:8px 16px;background:rgba(0,0,0,0.55);
-      border:1px solid rgba(255,215,0,0.3);border-radius:30px;
-      font-size:13px;color:var(--gold);backdrop-filter:blur(20px); }
-    #statsBadge b { color:#fff; }
-
-    #langBtn { position:fixed;top:80px;right:100px;z-index:60;
-      display:none;padding:8px 14px;background:rgba(0,0,0,0.5);
-      border:1px solid rgba(255,255,255,0.15);border-radius:30px;
-      color:#fff;cursor:pointer;font-size:13px;backdrop-filter:blur(20px); }
-
-    #offlineBanner { position:fixed;top:80px;left:50%;transform:translateX(-50%);
-      z-index:70;padding:8px 20px;background:rgba(255,46,85,0.9);
-      color:#fff;border-radius:20px;font-size:13px;
-      font-weight:600;display:none; }
-    #offlineBanner.show { display:block; }
-
-    #debugLog {
-      position:fixed;bottom:10px;left:10px;z-index:9999;
-      background:rgba(0,0,0,0.85);
-      border:1px solid rgba(74,222,128,0.4);
-      border-radius:8px;padding:8px 10px;
-      font-family:monospace;font-size:10px;
-      color:#4ade80;max-width:340px;
-      max-height:180px;overflow-y:auto;
-      line-height:1.5;display:none;
-    }
-    #debugLog.show { display:block; }
-    #debugLog .debug-line { margin-bottom:2px; }
-    #debugLog .debug-line.err { color:#ff6b6b; }
-    #debugLog .debug-line.warn { color:#ffd700; }
-
-    body.tv-mode { font-size:18px; }
-    body.tv-mode #startScreen h1 { font-size:120px; }
-    body.simple-mode canvas#fx { display:none !important; }
+    /* Connection status */
+    #connStatus { position:fixed; top:20px; right:20px;
+      z-index:60; padding:8px 16px;
+      background:rgba(0,0,0,0.7);
+      border-radius:20px; font-size:12px;
+      display:flex; align-items:center; gap:6px; }
+    #connDot { width:8px; height:8px; border-radius:50%;
+      background:var(--green); box-shadow:0 0 10px var(--green); }
+    #connDot.offline { background:var(--red); box-shadow:0 0 10px var(--red); }
   </style>
 </head>
 <body>
-  <div id="ytContainer"><div id="ytPlayer"></div></div>
-  <canvas id="fx"></canvas>
+  <div id="playerWrap"><div id="player"></div></div>
 
-  <div id="loadSpinner"><div class="spinner"></div></div>
-
-  <div id="startScreen" tabindex="0">
-    <div class="mic">🎤</div>
-    <h1>VIDEOKE</h1>
-    <div class="tag" id="startTag">Professional Karaoke</div>
-    <div class="badge">▶ Powered by YouTube</div>
-    <div class="cta" id="startCta">TAP TO START</div>
-    <div class="tv-hint" id="tvHint">
-      📺 Sa TV remote: pindutin ang <b>OK</b> o <b>Enter</b>
-    </div>
-  </div>
-
+  <!-- Idle screen with QR -->
   <div id="idleScreen">
-    <div class="left">
-      <div class="mic-big">🎤</div>
-      <h1>VIDEOKE</h1>
-      <div class="sub" id="idleSub">Ready to Sing</div>
-      <div class="hint" id="idleHint">I-scan ang QR code para mag-reserve</div>
+    <div class="logo">🎤 VIDEoke</div>
+    <div class="sub">Kantahan na! I-scan ang QR code para sumali.</div>
+    <div id="qrOverlay" class="hidden">
+      <div class="title">📱 I-scan para sumali sa Videoke</div>
+      <img id="qrImg" src="" alt="QR Code">
+      <div id="qrCode">------</div>
+      <div id="qrUrl"></div>
     </div>
-    <div class="right">
-      <div class="qr-card">
-        <div class="label" id="qrLabel">📱 SCAN TO JOIN</div>
-        <div class="qr-wrap" id="qrcode"></div>
-        <div class="url" id="urlText">Loading...</div>
-      </div>
-    </div>
-    <div id="idleQueue">
-      <div style="display:flex;align-items:center;gap:8px;
-        margin-bottom:10px;padding-bottom:10px;
-        border-bottom:1px solid rgba(255,215,0,0.2);">
-        <span style="font-size:14px">📋</span>
-        <span style="flex:1;font-size:11px;font-weight:700;
-          letter-spacing:2px;color:var(--gold);text-transform:uppercase;
-          white-space:nowrap;">SUSUNOD NA KANTA</span>
-        <span id="idleQpCount" style="background:var(--red);
-          color:#fff;font-size:10px;font-weight:700;padding:2px 8px;
-          border-radius:10px;min-width:22px;text-align:center;">0</span>
-      </div>
-      <div id="idleQpList" style="display:flex;flex-direction:column;gap:4px;">
-        <div class="qp-empty">Walang naka-reserve</div>
-      </div>
+    <div id="noPartyMsg" style="margin-top:20px;color:#8888a0;font-size:14px">
+      ⏳ Hintayin ang host na mag-start ng party...
     </div>
   </div>
 
-  <!-- ⬇️ START PLAYING BUTTON -->
-  <button id="startPlayingBtn" onclick="startPlaying()">
-    ▶ SIMULAN ANG VIDEOKE
-  </button>
-
-  <div id="topBar">
-    <div class="ns-section">
-      <span class="ns-mic">🎤</span>
-      <div class="ns-info">
-        <div class="ns-label">NOW SINGING</div>
-        <div class="ns-singer" id="nsSinger">—</div>
-        <div class="ns-song" id="nsSong">—</div>
-      </div>
-    </div>
-    <div class="q-section">
-      <div class="q-label">
-        <span class="q-icon">📋</span>
-        <span class="q-title">SUSUNOD</span>
-        <span class="q-count" id="qpCount">0</span>
-      </div>
-      <div class="qp-list" id="qpList">
-        <div class="qp-empty">Walang naka-reserve</div>
-      </div>
-    </div>
-    <button class="toggle-bar-btn" onclick="toggleFullQueue()" id="expandBtn" title="View all">📋</button>
-  </div>
-
-  <div id="fullQueueModal">
-    <div class="fq-header">
-      <span class="fq-icon">📋</span>
-      <span class="fq-title">LAHAT NG NAKA-RESERVE</span>
-      <span class="fq-count" id="fqCount">0</span>
-      <button class="fq-close" onclick="toggleFullQueue()">✕</button>
-    </div>
-    <div class="fq-list" id="fqList">
-      <div class="fq-empty">Walang naka-reserve</div>
+  <!-- Now playing HUD -->
+  <div id="nowHud">
+    <div class="icon">🎤</div>
+    <div class="info">
+      <div class="label">NOW SINGING</div>
+      <div class="singer" id="nowSinger">—</div>
+      <div class="song" id="nowSong">—</div>
     </div>
   </div>
 
+  <!-- Next up HUD -->
+  <div id="nextHud">
+    <div class="label">NEXT UP</div>
+    <div class="singer" id="nextSinger">—</div>
+    <div class="song" id="nextSong">—</div>
+  </div>
+
+  <!-- Countdown -->
   <div id="countdown">
-    <div class="upnext" id="cdLabel">UP NEXT</div>
-    <div class="singer" id="cdSinger">—</div>
-    <div class="song" id="cdSong">—</div>
-    <div class="number" id="cdNumber">3</div>
-    <div class="cd-queue" id="cdQueue"></div>
+    <div class="num" id="countdownNum">3</div>
   </div>
 
-  <div id="errorOverlay">
-    <div class="icon">⛔</div>
-    <div class="title">HINDI MA-PLAY</div>
-    <div class="msg">Hindi pinapayagan ng video owner na i-embed sa ibang website.</div>
-    <div class="song-title" id="errorSongTitle"></div>
-    <div class="sub">Lilipat sa susunod na kanta sa</div>
-    <div class="countdown-num" id="errorCountdown">3</div>
+  <!-- Connection status -->
+  <div id="connStatus">
+    <span id="connDot"></span>
+    <span id="connText">Connected</span>
   </div>
 
-  <div id="hostControls">
-    <button class="force-play" onclick="forcePlay()" title="Force play">▶ PLAY NOW</button>
-    <button onclick="socket.emit('skip')" title="Skip">⏭ SKIP</button>
-    <button onclick="socket.emit('stop')" title="Stop">⏹ STOP</button>
-    <button onclick="toggleDebug()" title="Debug">🐛</button>
-  </div>
-  <button id="langBtn" onclick="toggleLang()">🌐 FIL</button>
-  <div id="statsBadge">
-    👥 <b id="statSingers">0</b> · 🎵 <b id="statQueue">0</b> · ⏱️ <b id="statWait">0 min</b>
-  </div>
-  <div id="offlineBanner">⚠️ Walang internet</div>
-
-  <div id="debugLog"></div>
-
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
     const BACKEND_URL = window.VIDEOKE_CONFIG?.BACKEND_URL || 'http://localhost:3000';
+    const API = BACKEND_URL;
+
+    let ytPlayer = null;
+    let ytReady = false;
+    let currentVideoId = null;
+    let playerCheckInterval = null;
+    let errorCheckTimeout = null;
+
+    // =====================================================
+    // SOCKET
+    // =====================================================
     const socket = io(BACKEND_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 20,
       reconnectionDelay: 2000
     });
 
-    const fx = document.getElementById('fx');
-    const ctx = fx.getContext('2d');
-    let started = false, currentVideoId = null;
-    let particles = [], rafId = null;
-    let ytPlayer = null, ytReady = false, ytApiReady = false;
-    let pendingPlay = null;
-    let lastCommand = null;
-    let lastNowPlaying = null;
-    let lastState = null;
-    let forceRetryTimer = null;
-    let errorCountdownTimer = null;
-    let songEndedFired = false;
-    let endPollTimer = null;
-    let cueTimeout = null;
-
-    function debugLog(msg, type = '') {
-      const el = document.getElementById('debugLog');
-      const t = new Date().toLocaleTimeString('en-PH', { hour12: false });
-      const line = document.createElement('div');
-      line.className = 'debug-line ' + type;
-      line.textContent = `[${t}] ${msg}`;
-      el.appendChild(line);
-      el.scrollTop = el.scrollHeight;
-      while (el.children.length > 50) el.removeChild(el.firstChild);
-      console.log(`[VIDEOKE] ${msg}`);
-    }
-    function toggleDebug() {
-      document.getElementById('debugLog').classList.toggle('show');
-    }
-    function showSpinner() { document.getElementById('loadSpinner').classList.add('show'); }
-    function hideSpinner() { document.getElementById('loadSpinner').classList.remove('show'); }
-    debugLog('Boot started');
-
-    function resizeCanvas() { fx.width = window.innerWidth; fx.height = window.innerHeight; }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    const COLORS = ['#ffd700','#ff2e55','#ff8a00','#4ade80','#60a5fa','#c084fc'];
-    function spawnConfetti(count = 80) {
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          x: Math.random() * fx.width, y: -20 - Math.random() * 100,
-          vx: (Math.random() - 0.5) * 4, vy: Math.random() * 3 + 2,
-          size: Math.random() * 12 + 6,
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          rotation: Math.random() * 360, rotSpeed: (Math.random() - 0.5) * 10,
-          life: 1, decay: 0.008 + Math.random() * 0.005
-        });
-      }
-      if (!rafId) animate();
-    }
-    function spawnFireworks(count = 60) {
-      const cx = fx.width / 2, cy = fx.height / 2;
-      for (let i = 0; i < count; i++) {
-        const angle = (Math.PI * 2 * i) / count;
-        const speed = 6 + Math.random() * 6;
-        particles.push({
-          x: cx, y: cy,
-          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-          size: 6, color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          rotation: 0, rotSpeed: 0, life: 1, decay: 0.012
-        });
-      }
-      if (!rafId) animate();
-    }
-    function animate() {
-      ctx.clearRect(0, 0, fx.width, fx.height);
-      particles = particles.filter(p => p.life > 0);
-      for (const p of particles) {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.15;
-        p.rotation += p.rotSpeed; p.life -= p.decay;
-        ctx.save();
-        ctx.globalAlpha = p.life;
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation * Math.PI / 180);
-        ctx.fillStyle = p.color;
-        if (p.size > 8) ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.5);
-        else { ctx.beginPath(); ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2); ctx.fill(); }
-        ctx.restore();
-      }
-      if (particles.length > 0) rafId = requestAnimationFrame(animate);
-      else { rafId = null; ctx.clearRect(0, 0, fx.width, fx.height); }
-    }
-
-    function announce(singer, song) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const lang = getLang() === 'fil' ? 'fil-PH' : 'en-US';
-      const text = getLang() === 'fil'
-        ? `Susunod na kakanta, ${singer}, sa kantang ${song}`
-        : `Up next, ${singer}, singing ${song}`;
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = lang; u.rate = 0.95; u.pitch = 1.05;
-      const voices = window.speechSynthesis.getVoices();
-      const v = voices.find(v => v.lang.startsWith(lang.substring(0, 2)));
-      if (v) u.voice = v;
-      window.speechSynthesis.speak(u);
-    }
-
-    function applyLang() {
-      document.getElementById('startTag').textContent = t('tagline');
-      document.getElementById('startCta').textContent = t('tapStart');
-      document.getElementById('idleSub').textContent = t('readyToSing');
-      document.getElementById('idleHint').textContent = t('scanHint');
-      document.getElementById('qrLabel').textContent = '📱 ' + t('scanToJoin');
-      document.getElementById('cdLabel').textContent = t('upNext');
-      document.getElementById('langBtn').textContent = '🌐 ' + (getLang() === 'fil' ? 'FIL' : 'EN');
-    }
-    function toggleLang() { setLang(getLang() === 'fil' ? 'en' : 'fil'); applyLang(); }
-    window.addEventListener('langchange', applyLang);
-    applyLang();
-
-    function detectTV() {
-      const ua = navigator.userAgent.toLowerCase();
-      const tvKeywords = ['smart-tv','smarttv','tizen','webos','googletv','appletv','viera','bravia','firetv'];
-      const isTV = tvKeywords.some(k => ua.includes(k));
-      const isBigScreen = window.innerWidth >= 1280 && !('ontouchstart' in window);
-      return { isTV, isBigScreen };
-    }
-    const tvInfo = detectTV();
-    if (tvInfo.isTV || tvInfo.isBigScreen) document.body.classList.add('tv-mode');
-
-    function goFullscreen() {
-      const el = document.documentElement;
-      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    }
-
-    function toggleFullQueue() {
-      const modal = document.getElementById('fullQueueModal');
-      modal.classList.toggle('show');
-      if (modal.classList.contains('show')) {
-        renderFullQueue(lastState);
-      }
-    }
-
-    function renderFullQueue(s) {
-      if (!s) return;
-      const list = document.getElementById('fqList');
-      const count = document.getElementById('fqCount');
-      const queue = s.queue || [];
-      count.textContent = queue.length;
-      if (queue.length === 0) {
-        list.innerHTML = '<div class="fq-empty">Walang naka-reserve</div>';
-        return;
-      }
-      list.innerHTML = queue.map((q, i) => `
-        <div class="fq-item ${i === 0 ? 'first' : ''}">
-          <div class="fq-num">${i + 1}</div>
-          <div class="fq-info">
-            <div class="fq-singer">${escapeHtml(q.singer)}</div>
-            <div class="fq-song">${escapeHtml(q.title || q.videoId)}</div>
-          </div>
-          ${q.waitText ? `<div class="fq-wait">⏱️ ${q.waitText}</div>` : ''}
-        </div>
-      `).join('');
-    }
-
-    function showErrorOverlay(songTitle, errorMsg) {
-      debugLog('Showing error overlay: ' + errorMsg, 'err');
-      hideSpinner();
-      document.getElementById('ytContainer').style.display = 'none';
-      document.getElementById('errorOverlay').classList.add('show');
-      document.getElementById('errorSongTitle').textContent = songTitle ? `"${songTitle}"` : '';
-      document.getElementById('errorCountdown').textContent = '3';
-      let remaining = 3;
-      clearInterval(errorCountdownTimer);
-      errorCountdownTimer = setInterval(() => {
-        remaining--;
-        document.getElementById('errorCountdown').textContent = remaining;
-        if (remaining <= 0) clearInterval(errorCountdownTimer);
-      }, 1000);
-    }
-
-    function hideErrorOverlay() {
-      clearInterval(errorCountdownTimer);
-      document.getElementById('errorOverlay').classList.remove('show');
-      document.getElementById('ytContainer').style.display = 'block';
-    }
-
-    function handleVideoEnded() {
-      if (songEndedFired) return;
-      songEndedFired = true;
-      debugLog('▶ Video ended → next song');
-      stopEndPolling();
-      hideSpinner();
-      currentVideoId = null;
-      socket.emit('songEnded');
-    }
-
-    function startEndPolling() {
-      stopEndPolling();
-      endPollTimer = setInterval(() => {
-        if (!currentVideoId || !ytReady || !ytPlayer || !ytPlayer.getCurrentTime) return;
-        try {
-          const state = ytPlayer.getPlayerState();
-          const current = ytPlayer.getCurrentTime();
-          const duration = ytPlayer.getDuration();
-          if (state === 0) { handleVideoEnded(); return; }
-          if (duration > 5 && current >= duration - 1.5 && state === 1) {
-            const endedId = currentVideoId;
-            setTimeout(() => {
-              if (currentVideoId === endedId && !songEndedFired) {
-                try {
-                  const s = ytPlayer.getPlayerState();
-                  if (s === 0 || s === 1) handleVideoEnded();
-                } catch (e) {}
-              }
-            }, 1500);
-          }
-        } catch (e) {}
-      }, 1500);
-    }
-
-    function stopEndPolling() {
-      if (endPollTimer) { clearInterval(endPollTimer); endPollTimer = null; }
-    }
-
-    const startScreen = document.getElementById('startScreen');
-    function startVideoke() {
-      if (started) return;
-      started = true;
-      debugLog('START tapped');
-      startScreen.style.display = 'none';
-      goFullscreen();
-
-      if (ytReady && ytPlayer) {
-        try {
-          ytPlayer.mute();
-          ytPlayer.playVideo();
-          setTimeout(() => {
-            try {
-              ytPlayer.pauseVideo();
-              ytPlayer.unMute();
-            } catch (e) {}
-          }, 500);
-        } catch (e) {}
-      }
-
-      // ⬇️ Sa start, LAGING idle screen (walang auto-play)
-      show(document.getElementById('idleScreen'));
-
-      if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
-    }
-    startScreen.addEventListener('click', startVideoke);
-
-    document.addEventListener('keydown', (e) => {
-      if (!started) {
-        if (e.key === 'Enter' || e.key === ' ' ||
-            e.keyCode === 13 || e.keyCode === 23 || e.keyCode === 66) {
-          e.preventDefault();
-          startVideoke();
-        }
-        return;
-      }
-      switch (e.key) {
-        case 'ArrowRight': case 'n': case 'N': socket.emit('skip'); break;
-        case ' ': case 'p': case 'P': e.preventDefault(); socket.emit('pause'); break;
-        case 'r': case 'R': socket.emit('resume'); break;
-        case 's': case 'S': socket.emit('stop'); break;
-        case 'l': case 'L': toggleLang(); break;
-        case 'd': case 'D': toggleDebug(); break;
-        case 'q': case 'Q': toggleFullQueue(); break;
-      }
-    });
-
     socket.on('connect', () => {
-      debugLog('Socket connected ✓');
-      document.getElementById('offlineBanner').classList.remove('show');
+      document.getElementById('connDot').classList.remove('offline');
+      document.getElementById('connText').textContent = 'Connected';
+      socket.emit('registerHost');
     });
-    socket.on('disconnect', () => debugLog('Socket disconnected', 'err'));
-    socket.on('connect_error', (err) => {
-      debugLog('Connection error: ' + err.message, 'err');
-      document.getElementById('offlineBanner').textContent = '⚠️ Hindi maka-connect sa server.';
-      document.getElementById('offlineBanner').classList.add('show');
-    });
-
-    socket.on('videoBlacklisted', ({ videoId, title }) => {
-      debugLog('✗ Blacklisted: ' + (title || videoId), 'warn');
+    socket.on('disconnect', () => {
+      document.getElementById('connDot').classList.add('offline');
+      document.getElementById('connText').textContent = 'Disconnected';
     });
 
-    function generateQR(url) {
-      const el = document.getElementById('qrcode');
-      if (!el) return;
-      el.innerHTML = '';
-      if (typeof QRCode === 'undefined') {
-        const img = document.createElement('img');
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
-        img.style.cssText = 'width:240px !important;height:240px !important;display:block !important;';
-        el.appendChild(img);
-        return;
-      }
-      try {
-        new QRCode(el, {
-          text: url, width: 240, height: 240,
-          colorDark: '#000000', colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H
-        });
-        setTimeout(() => {
-          const img = el.querySelector('img');
-          if (img) img.remove();
-        }, 50);
-      } catch (e) {}
-    }
-
-    function initQRFlow() {
-      fetch(BACKEND_URL + '/api/info')
-        .then(r => r.json())
-        .then(info => {
-          document.getElementById('urlText').textContent = info.remoteUrl;
-          generateQR(info.remoteUrl);
-        })
-        .catch(() => {
-          const f = location.origin + '/remote.html';
-          document.getElementById('urlText').textContent = f;
-          generateQR(f);
-        });
-    }
-
-    function waitForQRCode(attempt = 1) {
-      if (typeof QRCode !== 'undefined') { initQRFlow(); return; }
-      if (attempt > 8) { initQRFlow(); return; }
-      setTimeout(() => waitForQRCode(attempt + 1), 400);
-    }
-    waitForQRCode();
-
+    // =====================================================
+    // YOUTUBE IFRAME API
+    // =====================================================
     function onYouTubeIframeAPIReady() {
-      debugLog('YouTube API ready');
-      ytApiReady = true;
-      ytPlayer = new YT.Player('ytPlayer', {
-        height: '100%', width: '100%', videoId: '',
+      ytPlayer = new YT.Player('player', {
+        height: '100%',
+        width: '100%',
+        videoId: '',
         playerVars: {
-          autoplay: 0, controls: 0, rel: 0,
-          modestbranding: 1, fs: 0, disablekb: 1,
-          iv_load_policy: 3, playsinline: 1,
-          enablejsapi: 1,
-          origin: window.location.origin,
-          host: 'https://www.youtube-nocookie.com'
+          autoplay: 0,
+          controls: 1,
+          modestbranding: 1,
+          rel: 0,
+          fs: 1,
+          playsinline: 1,
+          iv_load_policy: 3
         },
         events: {
           onReady: () => {
-            debugLog('YT Player ready ✓');
             ytReady = true;
-            if (pendingPlay) { playVideo(pendingPlay); pendingPlay = null; }
+            console.log('✓ YouTube player ready');
           },
-          onStateChange: (e) => {
-            const states = ['ended','playing','paused','buffering','cued'];
-            debugLog('YT state: ' + (states[e.data] || e.data));
-            if (e.data === 1) hideSpinner();
-            if (e.data === 0 && currentVideoId && !songEndedFired) {
-              handleVideoEnded();
-            }
-          },
-          onError: (e) => {
-            const errMsgs = {
-              2: 'Invalid video ID', 5: 'HTML5 player error',
-              100: 'Video not found o deleted na.',
-              101: 'Hindi pinapayagan ng owner na i-embed.',
-              150: 'Hindi pinapayagan ng owner na i-embed.'
-            };
-            const msg = errMsgs[e.data] || ('Error ' + e.data);
-            debugLog('YT error: ' + msg, 'err');
-            stopEndPolling();
-            hideSpinner();
-
-            if (currentVideoId) {
-              const failedId = currentVideoId;
-              const failedTitle = document.getElementById('nsSong')?.textContent || '';
-              showErrorOverlay(failedTitle, msg);
-              socket.emit('videoFailed', { videoId: failedId, title: failedTitle });
-              currentVideoId = null;
-              songEndedFired = true;
-              setTimeout(() => {
-                hideErrorOverlay();
-                socket.emit('skip');
-              }, 3000);
-            }
-          }
+          onStateChange: onPlayerStateChange,
+          onError: onPlayerError
         }
       });
     }
 
-    function preloadVideo(videoId) {
-      if (!ytReady || !ytPlayer || !ytPlayer.cueVideoById) return;
-      if (videoId === currentVideoId) return;
-      try {
-        debugLog('Preloading: ' + videoId);
-        ytPlayer.cueVideoById(videoId);
-      } catch (e) {
-        debugLog('Preload failed: ' + e.message, 'warn');
+    function onPlayerStateChange(event) {
+      const state = event.data;
+      // YT.PlayerState.ENDED = 0
+      if (state === 0 && currentVideoId) {
+        console.log('♪ Song ended');
+        socket.emit('songEnded');
       }
     }
 
-    function playVideo(videoId) {
-      debugLog('playVideo: ' + videoId);
-      hideErrorOverlay();
-      showSpinner();
-      currentVideoId = videoId;
-      songEndedFired = false;
+    function onPlayerError(event) {
+      const code = event.data;
+      console.error('✗ Player error:', code);
+      if (!currentVideoId) return;
 
-      if (!ytReady) {
-        debugLog('YT not ready, pending', 'warn');
-        pendingPlay = videoId;
+      // 2=invalid param, 5=HTML5 error, 100=not found, 101/150=embedding disabled
+      if ([2, 5, 100, 101, 150].includes(code)) {
+        console.log('🚫 Blacklisting:', currentVideoId);
+        socket.emit('videoFailed', {
+          videoId: currentVideoId,
+          title: document.getElementById('nowSong').textContent || ''
+        });
+      }
+    }
+
+    // =====================================================
+    // SOCKET EVENTS — COMMANDS
+    // =====================================================
+    socket.on('command', cmd => {
+      console.log('📡 Command:', cmd);
+      switch (cmd.type) {
+        case 'play':
+          playVideo(cmd.song);
+          break;
+        case 'countdown':
+          showCountdown(cmd.seconds || 3, cmd.song);
+          break;
+        case 'countdownTick':
+          updateCountdown(cmd.seconds);
+          break;
+        case 'pause':
+          if (ytPlayer && ytReady) ytPlayer.pauseVideo();
+          break;
+        case 'resume':
+          if (ytPlayer && ytReady) ytPlayer.playVideo();
+          break;
+        case 'stop':
+          stopVideo();
+          break;
+        case 'seek':
+          if (ytPlayer && ytReady) ytPlayer.seekTo(cmd.seconds, true);
+          break;
+        case 'volume':
+          if (ytPlayer && ytReady) ytPlayer.setVolume(cmd.value);
+          break;
+        case 'idle':
+          showIdle();
+          break;
+      }
+    });
+
+    socket.on('state', s => {
+      updateQueueHud(s);
+      if (s.nowPlaying) {
+        updateNowHud(s.nowPlaying);
+      } else if (!currentVideoId) {
+        showIdle();
+      }
+
+      // Update QR visibility based on party status
+      if (typeof s.partyActive === 'boolean') {
+        updatePartyVisibility(s.partyActive);
+      }
+    });
+
+    socket.on('partyStatus', ({ active, code }) => {
+      updateQR(active, code);
+      updatePartyVisibility(active);
+    });
+
+    socket.on('partyChanged', ({ active }) => {
+      if (active) {
+        fetch(API + '/api/party')
+          .then(r => r.json())
+          .then(d => {
+            updateQR(d.active, d.code);
+            updatePartyVisibility(true);
+          })
+          .catch(() => {});
+      } else {
+        updateQR(false, null);
+        updatePartyVisibility(false);
+      }
+    });
+
+    socket.on('kicked', () => { /* Host ignores */ });
+
+    // =====================================================
+    // VIDEO PLAYBACK
+    // =====================================================
+    function playVideo(song) {
+      if (!song || !song.videoId) return;
+      if (!ytPlayer || !ytReady) {
+        console.warn('Player not ready yet, retrying...');
+        setTimeout(() => playVideo(song), 500);
         return;
       }
 
-      try {
-        ytPlayer.loadVideoById(videoId);
-        clearTimeout(cueTimeout);
-        cueTimeout = setTimeout(() => hideSpinner(), 3000);
+      currentVideoId = song.videoId;
+      updateNowHud(song);
+      hideIdle();
 
-        setTimeout(() => startEndPolling(), 500);
+      console.log('▶ Playing:', song.videoId, '-', song.title);
+      ytPlayer.loadVideoById(song.videoId);
+      ytPlayer.setVolume(80);
+      ytPlayer.playVideo();
 
-        clearTimeout(forceRetryTimer);
-        forceRetryTimer = setTimeout(() => {
-          if (!ytPlayer || !ytPlayer.getPlayerState) return;
+      // Auto-check kung may error after 6 seconds
+      clearTimeout(errorCheckTimeout);
+      errorCheckTimeout = setTimeout(() => {
+        if (!ytReady || !ytPlayer) return;
+        try {
           const state = ytPlayer.getPlayerState();
-          if (state !== 1 && state !== 3) {
-            debugLog('Autoplay blocked — forcing muted', 'warn');
-            try {
-              ytPlayer.mute();
-              ytPlayer.playVideo();
-              const check = setInterval(() => {
-                if (!ytPlayer || !ytPlayer.getPlayerState) {
-                  clearInterval(check); return;
-                }
-                if (ytPlayer.getPlayerState() === 1) {
-                  clearInterval(check);
-                  hideSpinner();
-                  setTimeout(() => { try { ytPlayer.unMute(); } catch(e) {} }, 300);
-                }
-              }, 200);
-              setTimeout(() => clearInterval(check), 4000);
-            } catch (e) {}
+          // -1 = unstarted, 5 = cued; meaning hindi pa nag-play
+          if (state === -1 || state === 5) {
+            console.log('⚠️ Video hindi nag-play, flag as failed');
+            socket.emit('videoFailed', {
+              videoId: currentVideoId,
+              title: song.title || ''
+            });
           }
-        }, 1500);
-      } catch (e) {
-        debugLog('playVideo error: ' + e.message, 'err');
-        hideSpinner();
-      }
+        } catch (e) {}
+      }, 6000);
     }
 
-    // ⬇️ START PLAYING — para sa SIMULAN button
-    function startPlaying() {
-      debugLog('▶ START PLAYING tapped');
-      // Hide idle screen at trigger ang backend
-      hide(document.getElementById('idleScreen'));
-      document.getElementById('startPlayingBtn').classList.remove('show');
-      socket.emit('startPlaying');
+    function stopVideo() {
+      currentVideoId = null;
+      if (ytPlayer && ytReady) ytPlayer.stopVideo();
+      document.getElementById('nowHud').classList.remove('show');
+      showIdle();
     }
 
-    function forcePlay() {
-      debugLog('FORCE PLAY tapped');
-      // Kung may lastCommand play, i-replay
-      if (lastCommand && lastCommand.song && lastCommand.song.videoId) {
-        hide(document.getElementById('idleScreen'));
-        hide(document.getElementById('countdown'));
-        hideErrorOverlay();
-        document.getElementById('startPlayingBtn').classList.remove('show');
-        document.getElementById('nsSinger').textContent = lastCommand.song.singer || 'Guest';
-        document.getElementById('nsSong').textContent = lastCommand.song.title || '';
-        playVideo(lastCommand.song.videoId);
-      } else if (lastNowPlaying) {
-        hide(document.getElementById('idleScreen'));
-        hideErrorOverlay();
-        document.getElementById('startPlayingBtn').classList.remove('show');
-        document.getElementById('nsSinger').textContent = lastNowPlaying.singer || 'Guest';
-        document.getElementById('nsSong').textContent = lastNowPlaying.title || '';
-        playVideo(lastNowPlaying.videoId);
+    // =====================================================
+    // HUD UPDATES
+    // =====================================================
+    function updateNowHud(song) {
+      if (!song) return;
+      document.getElementById('nowSinger').textContent = song.singer || '—';
+      document.getElementById('nowSong').textContent = song.title || song.videoId || '—';
+      document.getElementById('nowHud').classList.add('show');
+    }
+
+    function updateQueueHud(state) {
+      const next = state.queue && state.queue[0];
+      if (next) {
+        document.getElementById('nextSinger').textContent = next.singer || '—';
+        document.getElementById('nextSong').textContent = next.title || next.videoId || '—';
+        document.getElementById('nextHud').classList.add('show');
       } else {
-        // Trigger manual start
-        socket.emit('startPlaying');
+        document.getElementById('nextHud').classList.remove('show');
       }
     }
 
-    function renderQueue(s) {
-      const { queue, nowPlaying } = s;
-      const bar = document.getElementById('topBar');
-      const list = document.getElementById('qpList');
-      const count = document.getElementById('qpCount');
+    // =====================================================
+    // COUNTDOWN
+    // =====================================================
+    function showCountdown(seconds, song) {
+      updateNowHud(song);
+      document.getElementById('countdownNum').textContent = seconds;
+      document.getElementById('countdown').classList.add('show');
+    }
 
-      if (nowPlaying) bar.classList.add('show');
-      else bar.classList.remove('show');
-
-      count.textContent = queue.length;
-
-      if (queue.length === 0) {
-        list.innerHTML = '<div class="qp-empty">Walang naka-reserve</div>';
+    function updateCountdown(seconds) {
+      if (seconds <= 0) {
+        document.getElementById('countdown').classList.remove('show');
       } else {
-        list.innerHTML = queue.slice(0, 10).map((q, i) => `
-          <div class="qp-item ${i === 0 ? 'first' : ''}">
-            <div class="qp-num">${i + 1}</div>
-            <div class="qp-info">
-              <div class="qp-singer">${escapeHtml(q.singer)}</div>
-              <div class="qp-song">${escapeHtml(q.title || q.videoId)}</div>
-            </div>
-            ${q.waitText ? `<div class="qp-wait">${q.waitText}</div>` : ''}
-          </div>
-        `).join('') + (queue.length > 10
-          ? `<div class="qp-item" style="border-left-color:transparent">
-               <div class="qp-info"><div class="qp-singer">+${queue.length - 10} pa</div></div>
-             </div>`
-          : '');
-      }
-
-      const idleList = document.getElementById('idleQpList');
-      const idleCount = document.getElementById('idleQpCount');
-      idleCount.textContent = queue.length;
-
-      if (queue.length === 0) {
-        idleList.innerHTML = '<div class="qp-empty">Walang naka-reserve</div>';
-      } else {
-        idleList.innerHTML = queue.slice(0, 10).map((q, i) => `
-          <div style="display:flex;padding:8px 10px;border-radius:8px;
-            background:${i === 0 ? 'linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,138,0,0.08))' : 'rgba(255,255,255,0.05)'};
-            border-left:3px solid ${i === 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)'};
-            margin-bottom:4px;align-items:center;gap:6px;">
-            <div style="font-size:11px;font-weight:800;
-              color:${i === 0 ? 'var(--gold)' : 'var(--dim)'};
-              min-width:22px;text-align:center;">${i + 1}</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:12px;font-weight:700;
-                color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                ${escapeHtml(q.singer)}
-              </div>
-              <div style="font-size:10px;color:var(--dim);
-                margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                ${escapeHtml(q.title || q.videoId)}
-              </div>
-            </div>
-            ${q.waitText ? `<div style="font-size:10px;
-              color:var(--gold);font-weight:700;margin-left:6px;">
-              ${q.waitText}</div>` : ''}
-          </div>
-        `).join('');
-      }
-
-      const cdQueue = document.getElementById('cdQueue');
-      const nextThree = queue.slice(0, 3);
-      if (nextThree.length === 0) cdQueue.innerHTML = '';
-      else {
-        cdQueue.innerHTML = nextThree.map((q, i) => `
-          <div class="cd-queue-item">
-            <span class="cd-num">SUSUNOD ${i + 1}</span>
-            <div class="cd-name">${escapeHtml(q.singer)}</div>
-            <div class="cd-song">${escapeHtml(q.title || q.videoId)}</div>
-          </div>
-        `).join('');
-      }
-
-      if (queue.length > 0 && queue[0].videoId) {
-        preloadVideo(queue[0].videoId);
-      }
-
-      // ⬇️ SHOW START BUTTON kung may queue at walang tumutugtog
-      const startBtn = document.getElementById('startPlayingBtn');
-      if (!nowPlaying && queue.length > 0) {
-        startBtn.classList.add('show');
-      } else {
-        startBtn.classList.remove('show');
-      }
-
-      const modal = document.getElementById('fullQueueModal');
-      if (modal && modal.classList.contains('show')) {
-        renderFullQueue(s);
+        document.getElementById('countdownNum').textContent = seconds;
       }
     }
 
-    function show(el) { el.style.display = 'flex'; }
-    function hide(el) { el.style.display = 'none'; }
+    // =====================================================
+    // IDLE SCREEN
+    // =====================================================
+    function showIdle() {
+      document.getElementById('idleScreen').classList.remove('hidden');
+    }
+    function hideIdle() {
+      document.getElementById('idleScreen').classList.add('hidden');
+    }
 
-    function handleCommand(cmd) {
-      debugLog('CMD: ' + cmd.type);
+    // =====================================================
+    // QR CODE
+    // =====================================================
+    function updateQR(active, code) {
+      const overlay = document.getElementById('qrOverlay');
+      const noPartyMsg = document.getElementById('noPartyMsg');
 
-      switch (cmd.type) {
-        case 'play':
-          document.getElementById('startPlayingBtn').classList.remove('show');
-          hide(document.getElementById('countdown'));
-          hide(document.getElementById('idleScreen'));
-          hideErrorOverlay();
-          document.getElementById('topBar').classList.add('show');
-          document.getElementById('nsSinger').textContent = cmd.song.singer || 'Guest';
-          document.getElementById('nsSong').textContent = cmd.song.title || '';
-          playVideo(cmd.song.videoId);
-          spawnFireworks(40);
-          break;
+      if (!active || !code) {
+        overlay.classList.add('hidden');
+        noPartyMsg.style.display = 'block';
+        return;
+      }
 
-        case 'countdown':
-          document.getElementById('startPlayingBtn').classList.remove('show');
-          hide(document.getElementById('idleScreen'));
-          hideErrorOverlay();
-          show(document.getElementById('countdown'));
-          document.getElementById('cdSinger').textContent = cmd.song.singer || 'Guest';
-          document.getElementById('cdSong').textContent = cmd.song.title || '';
-          document.getElementById('cdNumber').textContent = cmd.seconds;
-          announce(cmd.song.singer || 'Guest', cmd.song.title || '');
-          if (cmd.song.videoId) preloadVideo(cmd.song.videoId);
-          break;
+      const url = window.location.origin + '/remote.html?party=' + code;
+      document.getElementById('qrImg').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' +
+        encodeURIComponent(url);
+      document.getElementById('qrCode').textContent = code;
+      document.getElementById('qrUrl').textContent = url;
+      overlay.classList.remove('hidden');
+      noPartyMsg.style.display = 'none';
+    }
 
-        case 'countdownTick':
-          document.getElementById('cdNumber').textContent = cmd.seconds;
-          break;
-
-        case 'idle':
-        case 'stop':
-          if (ytReady) ytPlayer.stopVideo();
-          stopEndPolling();
-          hideSpinner();
-          currentVideoId = null;
-          songEndedFired = false;
-          hide(document.getElementById('countdown'));
-          hideErrorOverlay();
-          document.getElementById('topBar').classList.remove('show');
-          document.getElementById('startPlayingBtn').classList.remove('show');
-          if (started) show(document.getElementById('idleScreen'));
-          break;
-
-        case 'pause':
-          if (ytReady) ytPlayer.pauseVideo();
-          break;
-        case 'resume':
-          if (ytReady) ytPlayer.playVideo();
-          break;
-        case 'seek':
-          if (ytReady) ytPlayer.seekTo(cmd.seconds, true);
-          break;
-        case 'volume':
-          if (ytReady) ytPlayer.setVolume(cmd.value);
-          break;
+    function updatePartyVisibility(active) {
+      if (!active) {
+        document.getElementById('nowHud').classList.remove('show');
+        document.getElementById('nextHud').classList.remove('show');
       }
     }
 
-    socket.on('command', (cmd) => {
-      if (cmd.type !== 'countdownTick') lastCommand = cmd;
-      if (!started) return;
-      handleCommand(cmd);
-    });
+    // =====================================================
+    // INITIAL LOAD
+    // =====================================================
+    fetch(API + '/api/party')
+      .then(r => r.json())
+      .then(d => {
+        updateQR(d.active, d.code);
+        updatePartyVisibility(d.active);
+      })
+      .catch(() => {
+        document.getElementById('noPartyMsg').textContent =
+          '⚠️ Hindi ma-connect sa backend.';
+      });
 
-    socket.on('state', (s) => {
-      lastState = s;
-      if (s.stats) {
-        document.getElementById('statSingers').textContent = s.stats.singerCount || 0;
-        document.getElementById('statQueue').textContent = s.stats.queueLength || 0;
-        document.getElementById('statWait').textContent = s.stats.totalWaitText || '0 min';
-      }
-      lastNowPlaying = s.nowPlaying;
-      renderQueue(s);
-    });
-
-    function escapeHtml(s) {
-      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
+    // Re-check party status every 30 seconds (in case nawala ang socket event)
+    setInterval(() => {
+      fetch(API + '/api/party')
+        .then(r => r.json())
+        .then(d => updateQR(d.active, d.code))
+        .catch(() => {});
+    }, 30000);
   </script>
 </body>
 </html>
