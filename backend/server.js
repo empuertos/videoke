@@ -211,6 +211,8 @@ const searchCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
 const hdCache = new Map();
 const HD_CACHE_TTL = 30 * 60 * 1000;
+const ytInfoCache = new Map();
+const YT_INFO_TTL = 5 * 60 * 1000;
 
 let queue = [];
 let nowPlaying = null;
@@ -476,21 +478,27 @@ app.get('/api/info', (req, res) => {
   });
 });
 
-// ===== IMPROVED YT-INFO with fallbacks =====
+// ===== YT-INFO with CACHE + fallbacks =====
 app.get('/api/yt-info/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
   if (!/^[\w-]{11}$/.test(videoId))
     return res.status(400).json({ error: 'Invalid ID' });
 
+  // ⬇️ CACHE CHECK
+  const cached = ytInfoCache.get(videoId);
+  if (cached && Date.now() - cached.at < YT_INFO_TTL) {
+    return res.json(cached.data);
+  }
+
   let title = '';
   let author = '';
 
-  // Attempt 1: oEmbed with longer timeout
+  // Attempt 1: oEmbed
   try {
     const r = await fetch(
       `https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`,
       {
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(6000),
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
       }
     );
@@ -498,19 +506,16 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
       const data = await r.json();
       title = (data.title || '').trim();
       author = (data.author_name || '').trim();
-      console.log(`✓ oEmbed OK: ${title.substring(0, 50)}`);
-    } else {
-      console.log(`oEmbed HTTP ${r.status}`);
     }
   } catch (e) {
     console.log('oEmbed failed:', e.message);
   }
 
-  // Attempt 2: fetch YouTube page title (fallback)
+  // Attempt 2: page title fetch
   if (!title) {
     try {
       const r = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(5000),
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
         }
@@ -520,34 +525,34 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
         const m = html.match(/<meta property="og:title" content="([^"]+)"/) ||
                   html.match(/<meta name="title" content="([^"]+)"/) ||
                   html.match(/<title>([^<]+)<\/title>/);
-        if (m && m[1]) {
-          title = m[1].replace(' - YouTube', '').trim();
-          console.log(`✓ Page title OK: ${title.substring(0, 50)}`);
-        }
+        if (m && m[1]) title = m[1].replace(' - YouTube', '').trim();
       }
     } catch (e) {
       console.log('Page title fetch failed:', e.message);
     }
   }
 
-  // Final fallback — guaranteed may title
-  if (!title) {
-    title = `YouTube Video (${videoId})`;
-    console.log(`Using fallback title for ${videoId}`);
-  }
+  if (!title) title = `YouTube Video (${videoId})`;
 
   const isHD = await checkMaxRes(videoId);
   const isFailed = !!failedVideos[videoId];
 
-  res.json({
-    videoId,
-    title,
-    author,
+  const responseData = {
+    videoId, title, author,
     isHD: isHD === true,
     titleHD: hasHDKeyword(title),
     previouslyFailed: isFailed,
     thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`
-  });
+  };
+
+  // ⬇️ SAVE TO CACHE
+  ytInfoCache.set(videoId, { data: responseData, at: Date.now() });
+  if (ytInfoCache.size > 200) {
+    const entries = [...ytInfoCache.entries()].sort((a, b) => a[1].at - b[1].at);
+    entries.slice(0, 50).forEach(([k]) => ytInfoCache.delete(k));
+  }
+
+  res.json(responseData);
 });
 
 app.get('/api/search', async (req, res) => {
@@ -607,7 +612,7 @@ app.get('/api/search', async (req, res) => {
   if (results.length === 0 && beforeDur > 0) {
     return res.json({
       results: [],
-      error: 'Walang karaoke sa duration range na ito. Subukan i-adjust ang filters.',
+      error: 'Walang karaoke sa duration range na ito.',
       noResults: true,
       hdOnly, minDuration, maxDuration, filterChannels
     });
@@ -624,11 +629,9 @@ app.get('/api/search', async (req, res) => {
     results = await batchCheckHD(results);
     results = results.map(v => ({ ...v, isHD: v.isHD === true || v.titleHD === true }));
     const hdFiltered = results.filter(v => v.isHD === true);
-
     if (hdFiltered.length > 0) {
       results = hdFiltered;
     } else {
-      console.log('No HD results — returning all with HD warning');
       results = results.map(v => ({ ...v, noHDMatch: true }));
     }
   } else {
@@ -756,6 +759,7 @@ function broadcastState() {
   });
 }
 
+// ===== PLAY NEXT — 3 seconds countdown for faster flow =====
 function playNext() {
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
   nowPlaying = queue.shift() || null;
@@ -765,8 +769,8 @@ function playNext() {
     return;
   }
   broadcastState();
-  io.emit('command', { type: 'countdown', song: nowPlaying, seconds: 5 });
-  let r = 5;
+  io.emit('command', { type: 'countdown', song: nowPlaying, seconds: 3 });
+  let r = 3;
   countdownTimer = setInterval(() => {
     r--;
     io.emit('command', { type: 'countdownTick', seconds: r });
@@ -814,7 +818,7 @@ io.on('connection', (socket) => {
     if (queue.some(q => q.videoId === vid && q.singer === s))
       return socket.emit('error', 'Naka-reserve na ang kantang ito');
 
-    // ⬇️ GUARANTEED TITLE
+    // GUARANTEED TITLE
     let cleanTitle = String(title || '').trim();
     if (!cleanTitle || cleanTitle === 'YouTube Video' || cleanTitle === '—' ||
         cleanTitle === 'Loading...') {
