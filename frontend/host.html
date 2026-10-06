@@ -119,15 +119,15 @@
   <!-- Idle screen with QR -->
   <div id="idleScreen">
     <div class="logo">🎤 VIDEoke</div>
-    <div class="sub">Kantahan na! I-scan ang QR code para sumali.</div>
+    <div class="sub">Let's sing! Scan the QR code to join.</div>
     <div id="qrOverlay" class="hidden">
-      <div class="title">📱 I-scan para sumali sa Videoke</div>
+      <div class="title">📱 Scan to join Videoke</div>
       <img id="qrImg" src="" alt="QR Code">
       <div id="qrCode">------</div>
       <div id="qrUrl"></div>
     </div>
     <div id="noPartyMsg" style="margin-top:20px;color:#8888a0;font-size:14px">
-      ⏳ Hintayin ang host na mag-start ng party...
+      ⏳ Waiting for the host to start the party...
     </div>
   </div>
 
@@ -335,15 +335,15 @@
       ytPlayer.setVolume(80);
       ytPlayer.playVideo();
 
-      // Auto-check kung may error after 6 seconds
+      // Auto-check for errors after 6 seconds
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         if (!ytReady || !ytPlayer) return;
         try {
           const state = ytPlayer.getPlayerState();
-          // -1 = unstarted, 5 = cued; meaning hindi pa nag-play
+          // -1 = unstarted, 5 = cued; meaning it hasn't played yet
           if (state === -1 || state === 5) {
-            console.log('⚠️ Video hindi nag-play, flag as failed');
+            console.log('⚠️ Video did not play, flagging as failed');
             socket.emit('videoFailed', {
               videoId: currentVideoId,
               title: song.title || ''
@@ -449,10 +449,10 @@
       })
       .catch(() => {
         document.getElementById('noPartyMsg').textContent =
-          '⚠️ Hindi ma-connect sa backend.';
+          '⚠️ Cannot connect to backend.';
       });
 
-    // Re-check party status every 30 seconds (in case nawala ang socket event)
+    // Re-check party status every 30 seconds (in case a socket event was missed)
     setInterval(() => {
       fetch(API + '/api/party')
         .then(r => r.json())
