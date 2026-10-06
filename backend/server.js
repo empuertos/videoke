@@ -12,6 +12,9 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
+// =====================================================
+// SOCKET.IO SETUP (may CORS na)
+// =====================================================
 const io = new Server(server, {
   cors: {
     origin: FRONTEND_URL === '*' ? true : FRONTEND_URL.split(',').map(s => s.trim()),
@@ -25,6 +28,9 @@ const io = new Server(server, {
   maxHttpBufferSize: 1e6
 });
 
+// =====================================================
+// DATA FOLDER SETUP
+// =====================================================
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); }
@@ -38,8 +44,8 @@ const FAILED_FILE = path.join(DATA_DIR, 'failed-videos.json');
 app.use(express.json({ limit: '10mb' }));
 
 // =====================================================
-// ⬇️ CORS MIDDLEWARE para sa Express HTTP routes
-// (fetch, /api/admin/login, /api/yt-info, etc.)
+// ⬇️ CORS MIDDLEWARE para sa EXPRESS HTTP ROUTES
+// (IMPORTANTE: ito ang nag-fix ng "Failed to fetch")
 // =====================================================
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
@@ -47,14 +53,12 @@ app.use((req, res, next) => {
     ? ['*']
     : FRONTEND_URL.split(',').map(s => s.trim());
 
-  // Check kung allowed ang origin
   let allowOrigin = null;
   if (FRONTEND_URL === '*') {
     allowOrigin = origin || '*';
   } else if (allowedOrigins.includes(origin)) {
     allowOrigin = origin;
   } else if (!origin) {
-    // Same-origin o direct request (walang origin header)
     allowOrigin = allowedOrigins[0] || '*';
   }
 
@@ -66,7 +70,6 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-token');
   res.setHeader('Access-Control-Max-Age', '86400');
 
-  // Preflight request
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);
   }
@@ -203,6 +206,7 @@ async function checkMaxRes(videoId) {
 // API ROUTES
 // =====================================================
 
+// Root — health check
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
@@ -213,8 +217,10 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
+// Info endpoint
 app.get('/api/info', (req, res) => {
   const frontendBase = process.env.FRONTEND_URL?.split(',')[0]?.trim()
     || req.headers.origin
@@ -227,7 +233,7 @@ app.get('/api/info', (req, res) => {
   });
 });
 
-// ⬇️ YT-INFO with cache
+// YT-INFO with cache
 app.get('/api/yt-info/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
   if (!/^[\w-]{11}$/.test(videoId))
@@ -241,6 +247,7 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
   let title = '';
   let author = '';
 
+  // Attempt 1: oEmbed
   try {
     const r = await fetch(
       `https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`,
@@ -254,8 +261,32 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
       title = (data.title || '').trim();
       author = (data.author_name || '').trim();
     }
-  } catch (e) {}
+  } catch (e) {
+    console.log('oEmbed failed:', e.message);
+  }
 
+  // Attempt 2: YouTube page title fetch
+  if (!title) {
+    try {
+      const r = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+        signal: AbortSignal.timeout(5000),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+        }
+      });
+      if (r.ok) {
+        const html = await r.text();
+        const m = html.match(/<meta property="og:title" content="([^"]+)"/) ||
+                  html.match(/<meta name="title" content="([^"]+)"/) ||
+                  html.match(/<title>([^<]+)<\/title>/);
+        if (m && m[1]) title = m[1].replace(' - YouTube', '').trim();
+      }
+    } catch (e) {
+      console.log('Page title fetch failed:', e.message);
+    }
+  }
+
+  // Fallback
   if (!title) title = `YouTube Video (${videoId})`;
 
   const isHD = await checkMaxRes(videoId);
@@ -270,20 +301,31 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
   };
 
   ytInfoCache.set(videoId, { data: responseData, at: Date.now() });
+  if (ytInfoCache.size > 200) {
+    const entries = [...ytInfoCache.entries()].sort((a, b) => a[1].at - b[1].at);
+    entries.slice(0, 50).forEach(([k]) => ytInfoCache.delete(k));
+  }
+
   res.json(responseData);
 });
 
+// History
 app.get('/api/history', (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 50, 500);
   res.json(history.slice(-limit).reverse());
 });
 
+// Favorites
 app.get('/api/favorites', (req, res) => res.json(favorites));
+
+// Trending
 app.get('/api/trending', (req, res) => res.json(getTrendingStats()));
+
+// Failed videos list
 app.get('/api/failed-videos', (req, res) => res.json(Object.values(failedVideos)));
 
 // =====================================================
-// ADMIN
+// ADMIN MIDDLEWARE
 // =====================================================
 function authAdmin(req, res, next) {
   const token = req.headers['x-admin-token'] || req.query.token;
@@ -292,6 +334,7 @@ function authAdmin(req, res, next) {
   next();
 }
 
+// Admin login
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body || {};
   if (password !== ADMIN_PASSWORD)
@@ -301,6 +344,7 @@ app.post('/api/admin/login', (req, res) => {
   res.json({ token });
 });
 
+// Clear history
 app.post('/api/admin/clear-history', authAdmin, (req, res) => {
   history = []; saveJSON(HISTORY_FILE, history);
   stats.totalPlayed = 0;
@@ -309,17 +353,21 @@ app.post('/api/admin/clear-history', authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// Clear failed videos
 app.post('/api/admin/clear-failed', authAdmin, (req, res) => {
   failedVideos = {};
   saveJSON(FAILED_FILE, failedVideos);
+  console.log('Cleared failed videos list');
   res.json({ ok: true });
 });
 
+// Kick all guests
 app.post('/api/admin/kick-all', authAdmin, (req, res) => {
   io.emit('kicked', 'Admin action');
   res.json({ ok: true });
 });
 
+// Force stop
 app.post('/api/admin/stop', authAdmin, (req, res) => {
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = null;
@@ -329,6 +377,7 @@ app.post('/api/admin/stop', authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// Clear trending
 app.post('/api/admin/clear-trending', authAdmin, (req, res) => {
   trending = {};
   saveTrending();
@@ -384,10 +433,10 @@ function playNext() {
 }
 
 // =====================================================
-// SOCKET.IO
+// SOCKET.IO CONNECTION HANDLER
 // =====================================================
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+  console.log('Client connected:', socket.id, 'Total:', io.engine.clientsCount);
 
   socket.emit('state', {
     queue: [],
@@ -402,7 +451,7 @@ io.on('connection', (socket) => {
   socket.emit('trending', getTrendingStats());
   broadcastState();
 
-  // Sync command base sa state
+  // Sync command base sa current state
   if (!nowPlaying) {
     socket.emit('command', { type: 'idle' });
   } else if (countdownTimer) {
@@ -411,6 +460,7 @@ io.on('connection', (socket) => {
     socket.emit('command', { type: 'play', song: nowPlaying });
   }
 
+  // Add song
   socket.on('addSong', ({ videoId, singer, title }) => {
     const vid = parseYouTubeUrl(videoId) || videoId;
     if (!vid || !/^[\w-]{11}$/.test(vid))
@@ -445,11 +495,13 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
+  // Remove song
   socket.on('removeSong', (id) => {
     queue = queue.filter(s => s.id !== id);
     broadcastState();
   });
 
+  // Move song up/down
   socket.on('moveSong', ({ id, direction }) => {
     const i = queue.findIndex(s => s.id === id);
     if (i < 0) return;
@@ -459,6 +511,7 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
+  // Toggle favorite
   socket.on('toggleFavorite', ({ videoId, title }) => {
     const idx = favorites.findIndex(f => f.videoId === videoId);
     if (idx >= 0) favorites.splice(idx, 1);
@@ -471,6 +524,7 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
+  // Video failed (auto-blacklist)
   socket.on('videoFailed', ({ videoId, title }) => {
     if (!videoId) return;
     failedVideos[videoId] = {
@@ -479,6 +533,7 @@ io.on('connection', (socket) => {
       failedAt: Date.now()
     };
     saveJSON(FAILED_FILE, failedVideos);
+    console.log(`✗ Blacklisted: ${videoId} — ${title}`);
 
     queue = queue.filter(q => q.videoId !== videoId);
     if (nowPlaying && nowPlaying.videoId === videoId) {
@@ -489,13 +544,18 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
+  // Manual start
   socket.on('startPlaying', () => {
     if (nowPlaying || countdownTimer) return;
     if (queue.length === 0) return;
+    console.log('▶ Manual start triggered');
     playNext();
   });
 
+  // Skip
   socket.on('skip', playNext);
+
+  // Stop
   socket.on('stop', () => {
     if (countdownTimer) clearInterval(countdownTimer);
     countdownTimer = null;
@@ -503,6 +563,8 @@ io.on('connection', (socket) => {
     io.emit('command', { type: 'stop' });
     broadcastState();
   });
+
+  // Pause / Resume
   socket.on('pause', () => io.emit('command', { type: 'pause' }));
   socket.on('resume', () => io.emit('command', { type: 'resume' }));
   socket.on('seek', s => io.emit('command', { type: 'seek', seconds: Number(s) || 0 }));
@@ -511,6 +573,7 @@ io.on('connection', (socket) => {
     value: Math.max(0, Math.min(100, Number(v) || 0))
   }));
 
+  // Song ended → next
   socket.on('songEnded', () => {
     if (nowPlaying) {
       const entry = {
@@ -528,13 +591,14 @@ io.on('connection', (socket) => {
     playNext();
   });
 
+  // Disconnect
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('Client disconnected:', socket.id, 'Total:', io.engine.clientsCount);
   });
 });
 
 // =====================================================
-// START
+// START SERVER
 // =====================================================
 server.listen(PORT, () => {
   console.log('');
