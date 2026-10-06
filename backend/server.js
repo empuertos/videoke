@@ -12,20 +12,20 @@ const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
 // =====================================================
-// SECURE ADMIN PASSWORD (Walang default)
+// SECURE ADMIN PASSWORD
 // =====================================================
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) {
   console.error('');
   console.error('  ❌ FATAL ERROR: ADMIN_PASSWORD is not set!');
   console.error('  👉 Please set ADMIN_PASSWORD in Render Environment Variables.');
-  console.error('  🛑 Server shutting down to prevent unauthorized access.');
+  console.error('  🛑 Server shutting down.');
   console.error('');
   process.exit(1);
 }
 
 // =====================================================
-// SOCKET.IO SETUP (may CORS na)
+// SOCKET.IO SETUP
 // =====================================================
 const io = new Server(server, {
   cors: {
@@ -41,7 +41,7 @@ const io = new Server(server, {
 });
 
 // =====================================================
-// DATA FOLDER SETUP
+// DATA FOLDER
 // =====================================================
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) {
@@ -52,11 +52,12 @@ const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
 const FAVORITES_FILE = path.join(DATA_DIR, 'favorites.json');
 const TRENDING_FILE = path.join(DATA_DIR, 'trending.json');
 const FAILED_FILE = path.join(DATA_DIR, 'failed-videos.json');
+const PARTY_FILE = path.join(DATA_DIR, 'party.json');
 
 app.use(express.json({ limit: '10mb' }));
 
 // =====================================================
-// CORS MIDDLEWARE para sa EXPRESS HTTP ROUTES
+// CORS MIDDLEWARE
 // =====================================================
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
@@ -65,13 +66,9 @@ app.use((req, res, next) => {
     : FRONTEND_URL.split(',').map(s => s.trim());
 
   let allowOrigin = null;
-  if (FRONTEND_URL === '*') {
-    allowOrigin = origin || '*';
-  } else if (allowedOrigins.includes(origin)) {
-    allowOrigin = origin;
-  } else if (!origin) {
-    allowOrigin = allowedOrigins[0] || '*';
-  }
+  if (FRONTEND_URL === '*') allowOrigin = origin || '*';
+  else if (allowedOrigins.includes(origin)) allowOrigin = origin;
+  else if (!origin) allowOrigin = allowedOrigins[0] || '*';
 
   if (allowOrigin) {
     res.setHeader('Access-Control-Allow-Origin', allowOrigin);
@@ -81,16 +78,14 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-token');
   res.setHeader('Access-Control-Max-Age', '86400');
 
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
 // =====================================================
 // HELPERS
 // =====================================================
-function loadJSON(f, def = []) {
+function loadJSON(f, def = null) {
   try { return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : def; }
   catch { return def; }
 }
@@ -113,11 +108,48 @@ const HD_KEYWORDS = [
   /\bhd\b/i, /\b4k\b/i, /\b1080p?\b/i, /\b720p?\b/i,
   /\bfull\s*hd\b/i, /\buhd\b/i, /\bhigh\s*definition\b/i
 ];
-
 function hasHDKeyword(title) {
   if (!title) return false;
   return HD_KEYWORDS.some(re => re.test(title));
 }
+
+// =====================================================
+// PARTY CODE SYSTEM
+// =====================================================
+// Characters excluding 0/O, 1/I/L to avoid confusion
+const PARTY_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function generatePartyCode() {
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += PARTY_CHARS[Math.floor(Math.random() * PARTY_CHARS.length)];
+  }
+  return code;
+}
+
+let party = loadJSON(PARTY_FILE, { code: null, startedAt: null });
+if (!party || typeof party !== 'object') party = { code: null, startedAt: null };
+
+function saveParty() { saveJSON(PARTY_FILE, party); }
+
+function startNewParty() {
+  party.code = generatePartyCode();
+  party.startedAt = Date.now();
+  saveParty();
+  io.emit('partyChanged', { active: true });
+  broadcastState();
+  return party.code;
+}
+
+function endParty() {
+  party.code = null;
+  party.startedAt = null;
+  saveParty();
+  io.emit('partyChanged', { active: false });
+  broadcastState();
+}
+
+function isPartyActive() { return !!party.code; }
 
 // =====================================================
 // STATE
@@ -130,10 +162,10 @@ const YT_INFO_TTL = 5 * 60 * 1000;
 let queue = [];
 let nowPlaying = null;
 let countdownTimer = null;
-let history = loadJSON(HISTORY_FILE);
-let favorites = loadJSON(FAVORITES_FILE, []);
-let trending = loadJSON(TRENDING_FILE, {});
-let failedVideos = loadJSON(FAILED_FILE, {});
+let history = loadJSON(HISTORY_FILE, []) || [];
+let favorites = loadJSON(FAVORITES_FILE, []) || [];
+let trending = loadJSON(TRENDING_FILE, {}) || {};
+let failedVideos = loadJSON(FAILED_FILE, {}) || {};
 let stats = { totalPlayed: history.length, startedAt: Date.now() };
 const adminTokens = new Map();
 
@@ -217,21 +249,19 @@ async function checkMaxRes(videoId) {
 // API ROUTES
 // =====================================================
 
-// Root — health check
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     service: 'videoke-backend',
     timestamp: Date.now(),
     frontend: FRONTEND_URL,
+    partyActive: isPartyActive(),
     clients: io.engine.clientsCount
   });
 });
 
-// Health check
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
-// Info endpoint
 app.get('/api/info', (req, res) => {
   const frontendBase = process.env.FRONTEND_URL?.split(',')[0]?.trim()
     || req.headers.origin
@@ -240,25 +270,45 @@ app.get('/api/info', (req, res) => {
     frontendBase,
     hostUrl: `${frontendBase}/host.html`,
     remoteUrl: `${frontendBase}/remote.html`,
-    backendUrl: req.protocol + '://' + req.get('host')
+    backendUrl: req.protocol + '://' + req.get('host'),
+    partyActive: isPartyActive()
   });
 });
 
-// YT-INFO with cache
+// ⭐ Party status (public — para sa host display)
+app.get('/api/party', (req, res) => {
+  const frontendBase = process.env.FRONTEND_URL?.split(',')[0]?.trim()
+    || req.headers.origin
+    || `http://localhost:${PORT}`;
+  res.json({
+    active: isPartyActive(),
+    code: party.code,  // Ipinapakita lang ito para makapag-generate ng QR ang host
+    startedAt: party.startedAt,
+    remoteUrl: party.code ? `${frontendBase}/remote.html?party=${party.code}` : null
+  });
+});
+
+// ⭐ Verify party code
+app.get('/api/verify-party', (req, res) => {
+  const { code } = req.query;
+  if (!party.code) return res.json({ valid: false, reason: 'no_party' });
+  if (!code || String(code).toUpperCase() !== party.code) {
+    return res.json({ valid: false, reason: 'invalid' });
+  }
+  res.json({ valid: true, startedAt: party.startedAt });
+});
+
 app.get('/api/yt-info/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
   if (!/^[\w-]{11}$/.test(videoId))
     return res.status(400).json({ error: 'Invalid ID' });
 
   const cached = ytInfoCache.get(videoId);
-  if (cached && Date.now() - cached.at < YT_INFO_TTL) {
-    return res.json(cached.data);
-  }
+  if (cached && Date.now() - cached.at < YT_INFO_TTL) return res.json(cached.data);
 
   let title = '';
   let author = '';
 
-  // Attempt 1: oEmbed
   try {
     const r = await fetch(
       `https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`,
@@ -272,11 +322,8 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
       title = (data.title || '').trim();
       author = (data.author_name || '').trim();
     }
-  } catch (e) {
-    console.log('oEmbed failed:', e.message);
-  }
+  } catch (e) { console.log('oEmbed failed:', e.message); }
 
-  // Attempt 2: YouTube page title fetch
   if (!title) {
     try {
       const r = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
@@ -292,12 +339,9 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
                   html.match(/<title>([^<]+)<\/title>/);
         if (m && m[1]) title = m[1].replace(' - YouTube', '').trim();
       }
-    } catch (e) {
-      console.log('Page title fetch failed:', e.message);
-    }
+    } catch (e) { console.log('Page title fetch failed:', e.message); }
   }
 
-  // Fallback
   if (!title) title = `YouTube Video (${videoId})`;
 
   const isHD = await checkMaxRes(videoId);
@@ -320,19 +364,13 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
   res.json(responseData);
 });
 
-// History
 app.get('/api/history', (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 50, 500);
   res.json(history.slice(-limit).reverse());
 });
 
-// Favorites
 app.get('/api/favorites', (req, res) => res.json(favorites));
-
-// Trending
 app.get('/api/trending', (req, res) => res.json(getTrendingStats()));
-
-// Failed videos list
 app.get('/api/failed-videos', (req, res) => res.json(Object.values(failedVideos)));
 
 // =====================================================
@@ -346,20 +384,32 @@ function authAdmin(req, res, next) {
 }
 
 // =====================================================
-// ADMIN ROUTES (Naka-GET na lahat para sa frontend)
+// ADMIN ROUTES
 // =====================================================
 
-// Admin login (GET)
 app.get('/api/admin/login', (req, res) => {
   const { password } = req.query || {};
   if (password !== ADMIN_PASSWORD)
     return res.status(401).json({ error: 'Maling password' });
   const token = crypto.randomBytes(24).toString('hex');
   adminTokens.set(token, Date.now() + 4 * 60 * 60 * 1000);
-  res.json({ token });
+  res.json({ token, partyActive: isPartyActive(), partyCode: party.code });
 });
 
-// Clear history (GET)
+// ⭐ Start new party (generate new code)
+app.get('/api/admin/start-party', authAdmin, (req, res) => {
+  const code = startNewParty();
+  console.log('🎉 New Party started. Code:', code);
+  res.json({ ok: true, code, startedAt: party.startedAt });
+});
+
+// ⭐ End current party
+app.get('/api/admin/end-party', authAdmin, (req, res) => {
+  endParty();
+  console.log('🚫 Party ended.');
+  res.json({ ok: true });
+});
+
 app.get('/api/admin/clear-history', authAdmin, (req, res) => {
   history = []; saveJSON(HISTORY_FILE, history);
   stats.totalPlayed = 0;
@@ -368,21 +418,17 @@ app.get('/api/admin/clear-history', authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Clear failed videos (GET)
 app.get('/api/admin/clear-failed', authAdmin, (req, res) => {
   failedVideos = {};
   saveJSON(FAILED_FILE, failedVideos);
-  console.log('Cleared failed videos list');
   res.json({ ok: true });
 });
 
-// Kick all guests (GET)
 app.get('/api/admin/kick-all', authAdmin, (req, res) => {
   io.emit('kicked', 'Admin action');
   res.json({ ok: true });
 });
 
-// Force stop (GET)
 app.get('/api/admin/stop', authAdmin, (req, res) => {
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = null;
@@ -392,7 +438,6 @@ app.get('/api/admin/stop', authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Clear trending (GET)
 app.get('/api/admin/clear-trending', authAdmin, (req, res) => {
   trending = {};
   saveTrending();
@@ -414,6 +459,7 @@ function broadcastState() {
   io.emit('state', {
     queue: queueWithWait,
     nowPlaying,
+    partyActive: isPartyActive(),
     stats: {
       totalPlayed: stats.totalPlayed,
       queueLength: queue.length,
@@ -453,9 +499,13 @@ function playNext() {
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id, 'Total:', io.engine.clientsCount);
 
+  socket.partyVerified = false;
+  socket.isHost = false;
+
   socket.emit('state', {
     queue: [],
     nowPlaying,
+    partyActive: isPartyActive(),
     stats: {
       totalPlayed: stats.totalPlayed,
       queueLength: queue.length,
@@ -466,17 +516,40 @@ io.on('connection', (socket) => {
   socket.emit('trending', getTrendingStats());
   broadcastState();
 
-  // Sync command base sa current state
-  if (!nowPlaying) {
-    socket.emit('command', { type: 'idle' });
-  } else if (countdownTimer) {
-    socket.emit('command', { type: 'countdown', song: nowPlaying, seconds: 3 });
-  } else {
-    socket.emit('command', { type: 'play', song: nowPlaying });
-  }
+  if (!nowPlaying) socket.emit('command', { type: 'idle' });
+  else if (countdownTimer) socket.emit('command', { type: 'countdown', song: nowPlaying, seconds: 3 });
+  else socket.emit('command', { type: 'play', song: nowPlaying });
 
-  // Add song
+  // ⭐ Host declares itself (para makita ang QR code)
+  socket.on('registerHost', () => {
+    socket.isHost = true;
+    socket.emit('partyStatus', { active: isPartyActive(), code: party.code });
+  });
+
+  // ⭐ Guest joins party with code
+  socket.on('joinParty', ({ code }) => {
+    if (!party.code) {
+      socket.partyVerified = false;
+      return socket.emit('partyJoined', { ok: false, reason: 'no_party' });
+    }
+    if (!code || String(code).toUpperCase() !== party.code) {
+      socket.partyVerified = false;
+      return socket.emit('partyJoined', { ok: false, reason: 'invalid' });
+    }
+    socket.partyVerified = true;
+    socket.emit('partyJoined', { ok: true });
+    console.log(`✓ Socket ${socket.id} verified for party ${party.code}`);
+  });
+
+  // ⭐ Add song (requires party verification + active party)
   socket.on('addSong', ({ videoId, singer, title }) => {
+    if (!isPartyActive()) {
+      return socket.emit('error', '🚫 Walang aktibong party ngayon.');
+    }
+    if (!socket.partyVerified && !socket.isHost) {
+      return socket.emit('error', '🚫 Kailangan mong mag-scan ng bagong QR code para makapag-reserve.');
+    }
+
     const vid = parseYouTubeUrl(videoId) || videoId;
     if (!vid || !/^[\w-]{11}$/.test(vid))
       return socket.emit('error', 'Hindi valid na YouTube link');
@@ -510,13 +583,11 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
-  // Remove song
   socket.on('removeSong', (id) => {
     queue = queue.filter(s => s.id !== id);
     broadcastState();
   });
 
-  // Move song up/down
   socket.on('moveSong', ({ id, direction }) => {
     const i = queue.findIndex(s => s.id === id);
     if (i < 0) return;
@@ -526,7 +597,6 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
-  // Toggle favorite
   socket.on('toggleFavorite', ({ videoId, title }) => {
     const idx = favorites.findIndex(f => f.videoId === videoId);
     if (idx >= 0) favorites.splice(idx, 1);
@@ -539,7 +609,6 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
-  // Video failed (auto-blacklist)
   socket.on('videoFailed', ({ videoId, title }) => {
     if (!videoId) return;
     failedVideos[videoId] = {
@@ -551,26 +620,20 @@ io.on('connection', (socket) => {
     console.log(`✗ Blacklisted: ${videoId} — ${title}`);
 
     queue = queue.filter(q => q.videoId !== videoId);
-    if (nowPlaying && nowPlaying.videoId === videoId) {
-      nowPlaying = null;
-    }
+    if (nowPlaying && nowPlaying.videoId === videoId) nowPlaying = null;
 
     io.emit('videoBlacklisted', { videoId, title });
     broadcastState();
   });
 
-  // Manual start
   socket.on('startPlaying', () => {
     if (nowPlaying || countdownTimer) return;
     if (queue.length === 0) return;
-    console.log('▶ Manual start triggered');
     playNext();
   });
 
-  // Skip
   socket.on('skip', playNext);
 
-  // Stop
   socket.on('stop', () => {
     if (countdownTimer) clearInterval(countdownTimer);
     countdownTimer = null;
@@ -579,7 +642,6 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
-  // Pause / Resume
   socket.on('pause', () => io.emit('command', { type: 'pause' }));
   socket.on('resume', () => io.emit('command', { type: 'resume' }));
   socket.on('seek', s => io.emit('command', { type: 'seek', seconds: Number(s) || 0 }));
@@ -588,16 +650,14 @@ io.on('connection', (socket) => {
     value: Math.max(0, Math.min(100, Number(v) || 0))
   }));
 
-  // Song ended → next
   socket.on('songEnded', () => {
     if (nowPlaying) {
-      const entry = {
+      history.push({
         singer: nowPlaying.singer,
         title: nowPlaying.title,
         videoId: nowPlaying.videoId,
         playedAt: Date.now()
-      };
-      history.push(entry);
+      });
       saveJSON(HISTORY_FILE, history);
       stats.totalPlayed = history.length;
       nowPlaying = null;
@@ -606,7 +666,6 @@ io.on('connection', (socket) => {
     playNext();
   });
 
-  // Disconnect
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id, 'Total:', io.engine.clientsCount);
   });
@@ -617,12 +676,13 @@ io.on('connection', (socket) => {
 // =====================================================
 server.listen(PORT, () => {
   console.log('');
-  console.log('  🎤  VIDEoke BACKEND — Secured');
+  console.log('  🎤  VIDEoke BACKEND — Party Code System');
   console.log('  ═══════════════════════════════════════════════');
   console.log('  🚀  Port:         ' + PORT);
   console.log('  🌐  Frontend URL: ' + FRONTEND_URL);
-  console.log('  🔐  Admin pass:   [HIDDEN - Set in Render Env Vars]');
+  console.log('  🔐  Admin pass:   [HIDDEN]');
   console.log('  🎵  History:      ' + history.length);
   console.log('  ⛔  Failed:       ' + Object.keys(failedVideos).length);
+  console.log('  🎉  Party:        ' + (isPartyActive() ? 'ACTIVE (' + party.code + ')' : 'INACTIVE'));
   console.log('');
 });
