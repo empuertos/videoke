@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <title>Videoke YouTube — Host</title>
-  <script src="/lib/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="/i18n.js"></script>
   <script src="/config.js"></script>
   <style>
@@ -42,45 +42,63 @@
       border-radius:12px;font-size:16px;color:#a0b0c0;letter-spacing:1px; }
     .tv-hint b { color:#60a5fa;font-weight:800; }
 
-    #idleScreen { position:fixed;inset:0;z-index:500;display:none;
-      flex-direction:row;
+    /* ===== IDLE SCREEN — FIXED LAYOUT ===== */
+    #idleScreen {
+      position:fixed;inset:0;z-index:500;display:none;
+      flex-direction:row;align-items:center;justify-content:center;
+      gap:20px;padding:30px;
       background:radial-gradient(ellipse at top left,#2a0a4a,#0a0512 60%);
-      padding-right:420px; }
-    #idleScreen .left { flex:1;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;padding:60px; }
-    #idleScreen .right { flex:1;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;padding:60px;
-      border-left:1px solid rgba(255,255,255,0.06); }
-    #idleScreen .mic-big { font-size:140px;
+    }
+    #idleScreen .left {
+      flex:1 1 0;min-width:0;max-width:34%;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;padding:20px;
+    }
+    #idleScreen .right {
+      flex:0 0 auto;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;padding:20px;
+    }
+    #idleScreen .mic-big { font-size:120px;
       filter:drop-shadow(0 0 60px rgba(255,215,0,0.5));
       animation:float 4s ease-in-out infinite; }
-    #idleScreen h1 { font-size:72px;font-weight:900;letter-spacing:-3px;margin-top:16px;
+    #idleScreen h1 { font-size:64px;font-weight:900;letter-spacing:-3px;margin-top:16px;
       background:linear-gradient(135deg,#ffd700,#ff8a00);
       -webkit-background-clip:text;background-clip:text;
       -webkit-text-fill-color:transparent; }
-    #idleScreen .sub { font-size:24px;color:var(--dim);margin-top:12px;letter-spacing:4px; }
-    #idleScreen .hint { margin-top:30px;font-size:16px;color:#666;
-      max-width:400px;text-align:center;line-height:1.6; }
+    #idleScreen .sub { font-size:20px;color:var(--dim);margin-top:12px;letter-spacing:4px; }
+    #idleScreen .hint { margin-top:20px;font-size:14px;color:#666;
+      max-width:320px;text-align:center;line-height:1.6; }
 
     .qr-card { background:rgba(255,255,255,0.04);
       border:1px solid rgba(255,215,0,0.3);border-radius:24px;
-      padding:32px;text-align:center;
+      padding:20px;text-align:center;
       box-shadow:0 0 80px rgba(255,215,0,0.15);
       backdrop-filter:blur(20px); }
-    .qr-card .label { font-size:14px;letter-spacing:4px;color:var(--gold);
-      margin-bottom:20px;font-weight:600; }
-    .qr-card .qr-wrap { background:#fff;padding:16px;
-      border-radius:16px;display:inline-block; }
-    .qr-card .url { margin-top:20px;font-family:monospace;font-size:16px;
-      padding:12px 20px;background:rgba(0,0,0,0.4);
-      border-radius:10px;word-break:break-all; }
+    .qr-card .label { font-size:12px;letter-spacing:4px;color:var(--gold);
+      margin-bottom:14px;font-weight:600; }
+    .qr-card .qr-wrap { background:#fff;padding:14px;
+      border-radius:16px;display:inline-block;
+      min-width:260px;min-height:260px;
+      display:flex;align-items:center;justify-content:center; }
+    .qr-card .qr-wrap canvas,
+    .qr-card .qr-wrap img {
+      display:block !important;
+      width:240px !important;height:240px !important;
+    }
+    .qr-card .url { margin-top:14px;font-family:monospace;font-size:11px;
+      padding:8px 12px;background:rgba(0,0,0,0.4);
+      border-radius:10px;word-break:break-all;
+      max-width:280px;line-height:1.4;color:#a0b0c0; }
 
-    #idleQueue { position:absolute;top:50%;right:60px;
-      transform:translateY(-50%);width:340px;max-height:70vh;
+    #idleQueue { flex:1 1 0;min-width:0;max-width:340px;
+      max-height:70vh;
       background:rgba(0,0,0,0.5);
       border:1px solid rgba(255,215,0,0.3);
-      border-radius:20px;padding:20px;
+      border-radius:20px;padding:18px;
       backdrop-filter:blur(20px);overflow-y:auto; }
+    #idleQueue::-webkit-scrollbar { width:4px; }
+    #idleQueue::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
 
     #queuePanel { position:fixed;top:100px;right:30px;
       width:320px;max-height:60vh;z-index:45;
@@ -94,6 +112,7 @@
     .qp-header { display:flex;align-items:center;gap:8px;
       margin-bottom:10px;padding-bottom:10px;
       border-bottom:1px solid rgba(255,215,0,0.2); }
+    .qp-icon { font-size:16px; }
     .qp-title { flex:1;font-size:11px;font-weight:700;
       letter-spacing:3px;color:var(--gold);text-transform:uppercase; }
     .qp-count { background:var(--red);color:#fff;font-size:11px;
@@ -101,6 +120,9 @@
 
     .qp-list { display:flex;flex-direction:column;gap:6px;
       max-height:calc(60vh - 60px);overflow-y:auto; }
+    .qp-list::-webkit-scrollbar { width:4px; }
+    .qp-list::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
+
     .qp-item { display:flex;align-items:center;gap:8px;
       padding:8px 10px;background:rgba(255,255,255,0.04);
       border-left:3px solid rgba(255,255,255,0.15);
@@ -247,7 +269,6 @@
 
     body.tv-mode { font-size:18px; }
     body.tv-mode #startScreen h1 { font-size:120px; }
-    body.tv-mode #idleScreen h1 { font-size:110px; }
 
     body.simple-mode canvas#fx { display:none !important; }
   </style>
@@ -277,7 +298,7 @@
     <div class="right">
       <div class="qr-card">
         <div class="label" id="qrLabel">📱 SCAN TO JOIN</div>
-        <div class="qr-wrap"><div id="qrcode"></div></div>
+        <div class="qr-wrap" id="qrcode"></div>
         <div class="url" id="urlText">Loading...</div>
       </div>
     </div>
@@ -470,6 +491,7 @@
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     }
 
+    // ===== START =====
     const startScreen = document.getElementById('startScreen');
     function startVideoke() {
       if (started) return;
@@ -513,22 +535,83 @@
       document.getElementById('offlineBanner').classList.add('show');
     });
 
-    fetch(BACKEND_URL + '/api/info')
-      .then(r => r.json())
-      .then(info => {
-        document.getElementById('urlText').textContent = info.remoteUrl;
-        new QRCode(document.getElementById('qrcode'), {
-          text: info.remoteUrl, width: 280, height: 280,
-          colorDark: '#000000', colorLight: '#ffffff',
+    // ===== QR CODE GENERATION WITH FALLBACK =====
+    function generateQR(url) {
+      const el = document.getElementById('qrcode');
+      if (!el) return;
+      el.innerHTML = '';
+
+      // Check kung loaded ang QRCode library
+      if (typeof QRCode === 'undefined') {
+        console.warn('QRCode library not loaded — using fallback image');
+        const img = document.createElement('img');
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
+        img.style.width = '240px';
+        img.style.height = '240px';
+        img.style.display = 'block';
+        img.onerror = () => {
+          el.innerHTML = `<div style="padding:16px;color:#000;font-size:11px;
+            word-break:break-all;text-align:center;width:240px;">
+            <b>QR unavailable</b><br><br>
+            Buksan sa phone:<br>
+            <code style="font-size:10px;">${url}</code></div>`;
+        };
+        el.appendChild(img);
+        return;
+      }
+
+      try {
+        new QRCode(el, {
+          text: url,
+          width: 240,
+          height: 240,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.H
         });
-      })
-      .catch(() => {
-        const f = location.origin + '/remote.html';
-        document.getElementById('urlText').textContent = f;
-        new QRCode(document.getElementById('qrcode'), { text: f, width: 280, height: 280 });
-      });
+        console.log('✓ QR code generated for:', url);
+      } catch (e) {
+        console.error('QR generation failed:', e);
+        el.innerHTML = `<div style="padding:16px;color:#000;font-size:11px;
+          word-break:break-all;text-align:center;width:240px;">
+          <b>QR error</b><br><br>
+          Buksan sa phone:<br>
+          <code style="font-size:10px;">${url}</code></div>`;
+      }
+    }
 
+    function initQRFlow() {
+      fetch(BACKEND_URL + '/api/info')
+        .then(r => r.json())
+        .then(info => {
+          document.getElementById('urlText').textContent = info.remoteUrl;
+          generateQR(info.remoteUrl);
+        })
+        .catch((err) => {
+          console.warn('API info failed, using fallback:', err);
+          const f = location.origin + '/remote.html';
+          document.getElementById('urlText').textContent = f;
+          generateQR(f);
+        });
+    }
+
+    // Hintayin maging ready ang QRCode library
+    function waitForQRCode(attempt = 1) {
+      if (typeof QRCode !== 'undefined') {
+        console.log('✓ QRCode library loaded');
+        initQRFlow();
+        return;
+      }
+      if (attempt > 8) {
+        console.warn('QRCode library not available after 8 attempts — using fallback');
+        initQRFlow();
+        return;
+      }
+      setTimeout(() => waitForQRCode(attempt + 1), 400);
+    }
+    waitForQRCode();
+
+    // ===== YT IFRAME =====
     function onYouTubeIframeAPIReady() {
       ytApiReady = true;
       ytPlayer = new YT.Player('ytPlayer', {
