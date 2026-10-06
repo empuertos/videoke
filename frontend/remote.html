@@ -375,10 +375,10 @@
     </div>
 
     <div class="yt-card">
-      <div class="label">🎤 I-RESERVE ANG KANTA</div>
-      <input type="text" id="ytUrl" placeholder="I-paste ang YouTube link..."
+      <div class="label">🎤 RESERVE A SONG</div>
+      <input type="text" id="ytUrl" placeholder="Paste a YouTube link..."
         inputmode="url" autocomplete="off">
-      <button class="primary-btn" onclick="addYouTube()" id="reserveBtn">➕ I-reserve</button>
+      <button class="primary-btn" onclick="addYouTube()" id="reserveBtn">➕ Reserve</button>
 
       <div class="yt-preview" id="ytPreview">
         <img id="ytThumb" src="" alt="">
@@ -389,19 +389,19 @@
       </div>
 
       <button class="yt-open-btn" onclick="openYouTubeApp()">
-        ▶ Buksan ang YouTube App
+        ▶ Open YouTube App
       </button>
 
       <div class="yt-hint">
         <div class="icon">💡</div>
         <div>
-          <b>Paano mag-reserve:</b>
+          <b>How to reserve:</b>
           <ol>
-            <li>I-tap ang <b>▶ Buksan ang YouTube App</b></li>
-            <li>Hanapin ang kanta (hal. <b>"[Kanta] karaoke"</b>)</li>
-            <li>I-tap ang <b>Share → Copy link</b></li>
-            <li>Bumalik dito at i-paste ang link</li>
-            <li>I-tap ang <b>➕ I-reserve</b></li>
+            <li>Tap <b>▶ Open YouTube App</b></li>
+            <li>Search for the song (e.g. <b>"[Song] karaoke"</b>)</li>
+            <li>Tap <b>Share → Copy link</b></li>
+            <li>Come back here and paste the link</li>
+            <li>Tap <b>➕ Reserve</b></li>
           </ol>
         </div>
       </div>
@@ -412,7 +412,7 @@
     <div class="now-card">
       <div class="label" data-i18n="nowSinging">🎤 NOW SINGING</div>
       <div id="nowContent">
-        <div class="empty" data-i18n="noQueue">Walang tumutugtog</div>
+        <div class="empty" data-i18n="noQueue">Nothing playing</div>
       </div>
     </div>
 
@@ -450,7 +450,7 @@
         <span class="badge" id="queueCount">0</span>
       </div>
       <div class="queue-list" id="queueList">
-        <div class="empty-state">Walang naka-reserve</div>
+        <div class="empty-state">No reservations</div>
       </div>
     </div>
 
@@ -482,7 +482,7 @@
           <div class="icon">🎬</div>
           <div>
             <b>YouTube Videoke</b><br>
-            Lahat ng kanta galing YouTube. Walang download.
+            All songs come from YouTube. No downloads needed.
           </div>
         </div>
 
@@ -497,7 +497,7 @@
           padding:14px;background:rgba(255,255,255,0.05);
           border-radius:10px;margin-bottom:8px">
           <div style="font-size:11px;color:#8888a0;margin-bottom:8px">
-            I-scan ng guests:
+            Guests scan this:
           </div>
           <img id="adminQRImg" src="" style="width:200px;height:200px;
             border-radius:8px;background:#fff;padding:8px">
@@ -527,17 +527,17 @@
   <div id="partyGate">
     <div class="icon">🎤</div>
     <h2>Videoke Party</h2>
-    <p id="partyGateMsg">I-scan ang QR code na ipinakita ng host, o i-type ang 6-character party code.</p>
+    <p id="partyGateMsg">Scan the QR code shown on the host, or type the 6-character party code.</p>
     <input type="text" id="partyCodeInput" placeholder="ABC123"
       maxlength="6" autocomplete="off" autocapitalize="characters">
-    <button onclick="submitPartyCode()">Sumali sa Party</button>
+    <button onclick="submitPartyCode()">Join Party</button>
     <div class="err" id="partyGateErr"></div>
     <button class="admin-link" onclick="openAdminFromGate()">⚙️ Admin Access</button>
   </div>
 
   <div id="partyEndedBanner">
-    <h2>🎉 Tapos na ang Party!</h2>
-    <p>Salamat sa pagsali. Hindi na tumatanggap ng bagong kanta.</p>
+    <h2>🎉 Party Ended!</h2>
+    <p>Thanks for joining. No longer accepting new songs.</p>
   </div>
 
   <div id="toast"></div>
@@ -595,10 +595,10 @@
       const input = document.getElementById('partyCodeInput');
       const code = input.value.trim().toUpperCase();
       if (code.length !== 6) {
-        document.getElementById('partyGateErr').textContent = 'Dapat 6 characters.';
+        document.getElementById('partyGateErr').textContent = 'Must be 6 characters.';
         return;
       }
-      document.getElementById('partyGateErr').textContent = 'Kinukuha...';
+      document.getElementById('partyGateErr').textContent = 'Checking...';
       joinWithCode(code);
     }
 
@@ -606,7 +606,7 @@
       const valid = await verifyPartyCode(code);
       if (!valid) {
         document.getElementById('partyGateErr').textContent =
-          '❌ Invalid o expired na party code.';
+          '❌ Invalid or expired party code.';
         return;
       }
       partyCode = code;
@@ -616,7 +616,7 @@
       hidePartyGate();
       document.getElementById('partyEndedBanner').classList.remove('show');
       document.body.classList.remove('party-ended');
-      toast('✓ Sumali sa party!', 'success');
+      toast('✓ Joined the party!', 'success');
     }
 
     (async function initPartyAccess() {
@@ -636,7 +636,7 @@
         hidePartyGate();
       } else {
         localStorage.removeItem('videoke:partyCode');
-        showPartyGate('❌ Expired o invalid na party code. Kailangan ng bago mula sa host.');
+        showPartyGate('❌ Expired or invalid party code. Please get a new one from the host.');
       }
     })();
 
@@ -670,8 +670,8 @@
         partyVerified = false;
         localStorage.removeItem('videoke:partyCode');
         showPartyGate(reason === 'no_party'
-          ? 'Walang aktibong party ngayon. Hintayin ang host.'
-          : '❌ Invalid na party code. Kailangan ng bago.');
+          ? 'No active party right now. Please wait for the host.'
+          : '❌ Invalid party code. Please get a new one.');
       }
     });
 
@@ -681,7 +681,7 @@
         localStorage.removeItem('videoke:partyCode');
         document.getElementById('partyEndedBanner').classList.add('show');
         document.body.classList.add('party-ended');
-        showPartyGate('🎉 Tapos na ang party. Salamat sa pagsali!');
+        showPartyGate('🎉 Party ended. Thanks for joining!');
       }
     });
 
@@ -746,7 +746,7 @@
 
     function openYouTubeApp() {
       window.open('https://m.youtube.com', '_blank');
-      toast('▶ Bukas sa YouTube...');
+      toast('▶ Opening YouTube...');
     }
 
     // =====================================================
@@ -771,7 +771,7 @@
 
       document.getElementById('ytThumb').src =
         `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-      document.getElementById('ytTitle').textContent = 'Kinukuha ang title...';
+      document.getElementById('ytTitle').textContent = 'Fetching title...';
       document.getElementById('ytAuthor').textContent = videoId;
       document.getElementById('ytPreview').classList.add('show');
 
@@ -806,23 +806,23 @@
     // ADD SONG
     // =====================================================
     async function addYouTube() {
-      if (!partyVerified) return toast('🚫 Kailangan munang sumali sa party.', 'error');
+      if (!partyVerified) return toast('🚫 You must join the party first.', 'error');
 
       const input = document.getElementById('ytUrl').value.trim();
       const singer = document.getElementById('singer').value.trim() || 'Guest';
-      if (!input) return toast('I-paste ang YouTube link', 'error');
+      if (!input) return toast('Please paste a YouTube link', 'error');
 
       const videoId = parseYouTubeUrl(input);
-      if (!videoId) return toast('Hindi valid na YouTube link', 'error');
+      if (!videoId) return toast('Not a valid YouTube link', 'error');
 
       const reserveBtn = document.getElementById('reserveBtn');
       reserveBtn.disabled = true;
-      reserveBtn.textContent = '⏳ Kinukuha title...';
+      reserveBtn.textContent = '⏳ Fetching title...';
 
       let title = currentTitle;
       let previouslyFailed = false;
 
-      if (!title || title === 'Kinukuha ang title...') {
+      if (!title || title === 'Fetching title...') {
         const clientResult = await fetchTitleClientSide(videoId);
         if (clientResult && clientResult.title) title = clientResult.title;
       }
@@ -838,11 +838,11 @@
       if (!title) title = `YouTube Video (${videoId})`;
 
       reserveBtn.disabled = false;
-      reserveBtn.textContent = '➕ I-reserve';
+      reserveBtn.textContent = '➕ Reserve';
 
       if (previouslyFailed) {
         const proceed = confirm(
-          `⚠️ Naka-blacklist ang video na ito dati.\n\n"${title}"\n\nSigurado ka?`
+          `⚠️ This video was previously blacklisted.\n\n"${title}"\n\nContinue anyway?`
         );
         if (!proceed) return;
       }
@@ -854,7 +854,7 @@
       previewVideoId = null; currentTitle = ''; currentAuthor = '';
 
       if (navigator.vibrate) navigator.vibrate(20);
-      toast('✓ Na-reserve: ' + title.substring(0, 40), 'success');
+      toast('✓ Reserved: ' + title.substring(0, 40), 'success');
     }
 
     // =====================================================
@@ -883,7 +883,7 @@
     function renderFavorites() {
       const el = document.getElementById('favList');
       if (!favorites.length) {
-        el.innerHTML = '<div class="empty-state">Wala pang paborito</div>';
+        el.innerHTML = '<div class="empty-state">No favorites yet</div>';
         return;
       }
       el.innerHTML = favorites.map(f => `
@@ -903,7 +903,7 @@
     }
 
     function quickAdd(videoId, title) {
-      if (!partyVerified) return toast('🚫 Sumali muna sa party.', 'error');
+      if (!partyVerified) return toast('🚫 Join the party first.', 'error');
       const singer = document.getElementById('singer').value.trim() || 'Guest';
       socket.emit('addSong', { videoId, title, singer });
       if (navigator.vibrate) navigator.vibrate(20);
@@ -923,11 +923,11 @@
         const data = await (await fetch(API + '/api/history?limit=50')).json();
         const el = document.getElementById('historyList');
         if (!data.length) {
-          el.innerHTML = '<div class="empty-state">Wala pang history</div>';
+          el.innerHTML = '<div class="empty-state">No history yet</div>';
           return;
         }
         el.innerHTML = data.map(h => {
-          const time = new Date(h.playedAt).toLocaleString('en-PH', {
+          const time = new Date(h.playedAt).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
           });
           return `<div class="history-item">
@@ -946,7 +946,7 @@
     // CONTROLS
     // =====================================================
     function sendCmd(type) {
-      if (!partyVerified) return toast('🚫 Sumali muna sa party.', 'error');
+      if (!partyVerified) return toast('🚫 Join the party first.', 'error');
       socket.emit(type);
       if (navigator.vibrate) navigator.vibrate(15);
     }
@@ -965,7 +965,7 @@
         localStorage.removeItem('videoke:partyCode');
         document.getElementById('partyEndedBanner').classList.add('show');
         document.body.classList.add('party-ended');
-        showPartyGate('🎉 Tapos na ang party. Salamat sa pagsali!');
+        showPartyGate('🎉 Party ended. Thanks for joining!');
       }
 
       const nowEl = document.getElementById('nowContent');
@@ -975,7 +975,7 @@
           <div class="song">${escapeHtml(s.nowPlaying.title || s.nowPlaying.videoId)}</div>
           <div style="font-size:10px;color:#ff6b6b;margin-top:6px">▶ YouTube</div>`;
       } else {
-        nowEl.innerHTML = '<div class="empty">Walang tumutugtog</div>';
+        nowEl.innerHTML = '<div class="empty">Nothing playing</div>';
       }
 
       document.getElementById('queueCount').textContent = s.queue.length;
@@ -993,7 +993,7 @@
           <div class="stat-item">
             <span class="stat-icon">🎵</span>
             <span class="stat-value">${s.stats.queueLength || 0}</span>
-            <span class="stat-label">kanta</span>
+            <span class="stat-label">songs</span>
           </div>
           <div class="stat-item">
             <span class="stat-icon">⏱️</span>
@@ -1013,7 +1013,7 @@
       const myName = (document.getElementById('singer').value.trim() || '').toLowerCase();
 
       if (!s.queue.length) {
-        qEl.innerHTML = '<div class="empty-state">Walang naka-reserve</div>';
+        qEl.innerHTML = '<div class="empty-state">No reservations</div>';
         return;
       }
 
@@ -1025,11 +1025,11 @@
             <div class="pos">${i + 1}</div>
             <div class="info">
               <div class="singer">
-                ${isMe ? '<span class="me-badge">IKAW</span>' : ''}
+                ${isMe ? '<span class="me-badge">YOU</span>' : ''}
                 ${escapeHtml(q.singer)}
               </div>
               <div class="song">${escapeHtml(displayTitle)}</div>
-              <div class="wait-time">⏱️ ${q.waitText || 'Susunod na'}</div>
+              <div class="wait-time">⏱️ ${q.waitText || 'Up next'}</div>
             </div>
             <div class="actions">
               ${i > 0 ? `<button onclick="moveSong(${q.id}, 'up')">↑</button>` : ''}
@@ -1041,7 +1041,7 @@
     }
 
     function removeSong(id) {
-      if (confirm('Alisin ang kantang ito?')) socket.emit('removeSong', id);
+      if (confirm('Remove this song?')) socket.emit('removeSong', id);
     }
     function moveSong(id, dir) {
       socket.emit('moveSong', { id, direction: dir });
@@ -1049,7 +1049,7 @@
 
     socket.on('error', msg => toast(msg, 'error'));
     socket.on('videoBlacklisted', ({ videoId, title }) => {
-      toast(`⚠️ Hindi ma-play: "${(title || '').substring(0, 30)}"`, 'error');
+      toast(`⚠️ Cannot play: "${(title || '').substring(0, 30)}"`, 'error');
     });
     socket.on('historyCleared', () => {
       if (document.getElementById('tab-history').style.display !== 'none') loadHistory();
@@ -1081,7 +1081,6 @@
         showLoginForm();
         return;
       }
-      // Show login form with loading state habang nagve-verify
       document.getElementById('adminLoginForm').style.display = 'block';
       document.getElementById('adminPanel').style.display = 'none';
       document.getElementById('logoutBtn').style.display = 'none';
@@ -1101,7 +1100,6 @@
         adminToken = null;
         localStorage.removeItem('videoke:adminToken');
         showLoginForm();
-        // Huwag mag-toast kung first time pa lang nag-open
       }
     }
 
@@ -1135,14 +1133,14 @@
     // =====================================================
     async function doLogin() {
       const pw = document.getElementById('adminPw').value;
-      if (!pw) return toast('Ilagay ang password', 'error');
+      if (!pw) return toast('Enter your password', 'error');
 
       try {
         const r = await fetch(
           API + '/api/admin/login?password=' + encodeURIComponent(pw)
         );
         if (!r.ok) {
-          if (r.status === 401) throw new Error('Maling password');
+          if (r.status === 401) throw new Error('Wrong password');
           throw new Error('Server error ' + r.status);
         }
         const { token, partyActive, partyCode } = await r.json();
@@ -1164,7 +1162,7 @@
       localStorage.removeItem('videoke:adminToken');
       showLoginForm();
       hideAdminQR();
-      toast('✓ Naka-logout', 'success');
+      toast('✓ Logged out', 'success');
     }
 
     // =====================================================
@@ -1172,13 +1170,13 @@
     // =====================================================
     async function adminAction(action) {
       if (!adminToken) {
-        toast('Kailangan mag-login', 'error');
+        toast('Please log in first', 'error');
         showLoginForm();
         return;
       }
-      if (action === 'clear-history' && !confirm('I-clear lahat ng history?')) return;
-      if (action === 'clear-failed' && !confirm('I-clear ang failed videos list?')) return;
-      if (action === 'end-party' && !confirm('Tapusin ang party? Hindi na makakapag-reserve ang guests.')) return;
+      if (action === 'clear-history' && !confirm('Clear all history?')) return;
+      if (action === 'clear-failed' && !confirm('Clear the failed videos list?')) return;
+      if (action === 'end-party' && !confirm('End the party? Guests will no longer be able to reserve.')) return;
 
       try {
         const r = await fetch(
@@ -1190,10 +1188,10 @@
           adminVerified = false;
           localStorage.removeItem('videoke:adminToken');
           showLoginForm();
-          throw new Error('Session expired. Mag-login ulit.');
+          throw new Error('Session expired. Please log in again.');
         }
         if (r.status === 404) {
-          throw new Error('Endpoint wala sa backend.\n\nSiguraduhing naka-deploy ang pinakabagong server.js sa Render (Manual Deploy → Clear build cache & deploy).');
+          throw new Error('Endpoint missing on backend.\n\nMake sure the latest server.js is deployed to Render (Manual Deploy → Clear build cache & deploy).');
         }
         if (!r.ok) {
           const errData = await r.json().catch(() => ({}));
@@ -1204,7 +1202,7 @@
 
         if (action === 'start-party' && data.code) {
           showAdminQR(data.code);
-          toast('✓ Bagong party: ' + data.code, 'success');
+          toast('✓ New party: ' + data.code, 'success');
         } else if (action === 'end-party') {
           hideAdminQR();
           toast('✓ Party ended', 'success');
@@ -1242,10 +1240,11 @@
     }
 
     function toggleLang() {
-      const current = localStorage.getItem('videoke:lang') || 'fil';
-      localStorage.setItem('videoke:lang', current === 'fil' ? 'en' : 'fil');
+      const current = localStorage.getItem('videoke:lang') || 'en';
+      localStorage.setItem('videoke:lang', current === 'en' ? 'fil' : 'en');
       document.getElementById('langIcon').textContent =
-        (current === 'fil') ? '🇺🇸' : '🇵🇭';
+        (current === 'en') ? '🇵🇭' : '🇺🇸';
+      toast(current === 'en' ? 'Language: Filipino' : 'Language: English');
     }
 
     refreshFavorites();
@@ -1263,6 +1262,13 @@
     document.getElementById('partyCodeInput').addEventListener('input', (e) => {
       e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     });
+
+    // Default language to English
+    if (!localStorage.getItem('videoke:lang')) {
+      localStorage.setItem('videoke:lang', 'en');
+    }
+    document.getElementById('langIcon').textContent =
+      (localStorage.getItem('videoke:lang') === 'en') ? '🇵🇭' : '🇺🇸';
   </script>
 </body>
 </html>
