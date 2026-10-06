@@ -796,4 +796,707 @@
     function loadFilters() {
       return {
         hdOnly: localStorage.getItem('videoke:f:hd') !== '0',
-        filterChannels: localStorage.getItem('videoke:f:ch
+        filterChannels: localStorage.getItem('videoke:f:ch') !== '0',
+        minDuration: parseInt(localStorage.getItem('videoke:f:min')) || FILTER_DEFAULTS.minDuration,
+        maxDuration: parseInt(localStorage.getItem('videoke:f:max')) || FILTER_DEFAULTS.maxDuration
+      };
+    }
+
+    function saveFilters(f) {
+      localStorage.setItem('videoke:f:hd', f.hdOnly ? '1' : '0');
+      localStorage.setItem('videoke:f:ch', f.filterChannels ? '1' : '0');
+      localStorage.setItem('videoke:f:min', f.minDuration);
+      localStorage.setItem('videoke:f:max', f.maxDuration);
+    }
+
+    let filters = loadFilters();
+
+    function initFiltersUI() {
+      document.getElementById('hdOnly').checked = filters.hdOnly;
+      document.getElementById('filterChannels').checked = filters.filterChannels;
+      document.getElementById('minDuration').value = formatMMSS(filters.minDuration);
+      document.getElementById('maxDuration').value = formatMMSS(filters.maxDuration);
+      renderActiveFilters();
+    }
+
+    function formatMMSS(seconds) {
+      if (!seconds) return '0:00';
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function parseMMSS(str) {
+      if (!str) return 0;
+      str = String(str).trim();
+      if (str.includes(':')) {
+        const [m, s] = str.split(':');
+        return (parseInt(m) || 0) * 60 + (parseInt(s) || 0);
+      }
+      return parseInt(str) || 0;
+    }
+
+    function validateDuration(type) {
+      const input = document.getElementById(type === 'min' ? 'minDuration' : 'maxDuration');
+      input.value = formatMMSS(parseMMSS(input.value));
+    }
+
+    function setPreset(preset) {
+      const presets = {
+        short: { min: 60, max: 180 },
+        song: { min: 120, max: 360 },
+        long: { min: 120, max: 720 },
+        all: { min: 0, max: 0 }
+      };
+      const p = presets[preset];
+      if (!p) return;
+      filters.minDuration = p.min;
+      filters.maxDuration = p.max;
+      document.getElementById('minDuration').value = formatMMSS(p.min);
+      document.getElementById('maxDuration').value = formatMMSS(p.max);
+      saveFilters(filters);
+      renderActiveFilters();
+      const q = document.getElementById('ytSearch').value.trim();
+      if (q.length >= 2) doSearch();
+    }
+
+    function applyFilters() {
+      filters.hdOnly = document.getElementById('hdOnly').checked;
+      filters.filterChannels = document.getElementById('filterChannels').checked;
+      filters.minDuration = parseMMSS(document.getElementById('minDuration').value);
+      filters.maxDuration = parseMMSS(document.getElementById('maxDuration').value);
+      saveFilters(filters);
+      renderActiveFilters();
+      const q = document.getElementById('ytSearch').value.trim();
+      if (q.length >= 2) doSearch();
+    }
+
+    function resetFilters() {
+      filters = { ...FILTER_DEFAULTS };
+      saveFilters(filters);
+      initFiltersUI();
+      const q = document.getElementById('ytSearch').value.trim();
+      if (q.length >= 2) doSearch();
+    }
+
+    function toggleFilters() {
+      const panel = document.getElementById('filtersPanel');
+      const arrow = document.getElementById('filtersArrow');
+      panel.classList.toggle('show');
+      arrow.classList.toggle('open', panel.classList.contains('show'));
+    }
+
+    function renderActiveFilters() {
+      const el = document.getElementById('activeFilters');
+      const badges = [];
+      if (filters.hdOnly) badges.push('<span class="filter-badge hd">🎬 HD Only</span>');
+      if (filters.filterChannels) badges.push('<span class="filter-badge">✓ Trusted</span>');
+      if (filters.minDuration > 0 || filters.maxDuration > 0) {
+        const minT = filters.minDuration ? formatMMSS(filters.minDuration) : '0:00';
+        const maxT = filters.maxDuration ? formatMMSS(filters.maxDuration) : '∞';
+        badges.push(`<span class="filter-badge duration">⏱️ ${minT} - ${maxT}</span>`);
+      }
+      el.innerHTML = badges.join('');
+      const hdBadge = document.getElementById('hdModeBadge');
+      if (hdBadge) hdBadge.textContent = filters.hdOnly ? 'HD ON' : 'HD OFF';
+    }
+
+    initFiltersUI();
+
+    let toastTimer;
+    function toast(msg, type = 'success') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'show ' + type;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.className = '', 2800);
+    }
+
+    socket.on('connect', () => {
+      document.getElementById('statusDot').classList.remove('offline');
+      document.getElementById('statusText').textContent = t('connected');
+    });
+    socket.on('disconnect', () => {
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = t('disconnected');
+    });
+
+    const singerInput = document.getElementById('singer');
+    singerInput.value = localStorage.getItem('videoke:singerName') || '';
+    let saveNameTimer;
+    singerInput.addEventListener('input', (e) => {
+      clearTimeout(saveNameTimer);
+      saveNameTimer = setTimeout(() => {
+        localStorage.setItem('videoke:singerName', e.target.value.trim());
+        if (lastState) renderQueue(lastState);
+      }, 300);
+    });
+
+    function parseYouTubeUrl(input) {
+      if (!input) return null;
+      input = String(input).trim();
+      if (/^[\w-]{11}$/.test(input)) return input;
+      const m = input.match(
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/|.*[?&]v=))([\w-]{11})/
+      );
+      return m ? m[1] : null;
+    }
+
+    function hasHDKeyword(title) {
+      return /\b(hd|4k|1080p?|720p?|full\s*hd|uhd)\b/i.test(title || '');
+    }
+
+    document.getElementById('ytSearch').addEventListener('input', (e) => {
+      clearTimeout(searchDebounce);
+      const q = e.target.value.trim();
+      if (q.length < 2) {
+        document.getElementById('searchResults').classList.remove('show');
+        return;
+      }
+      searchDebounce = setTimeout(doSearch, 600);
+    });
+
+    document.getElementById('ytSearch').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(searchDebounce);
+        doSearch();
+      }
+    });
+
+    async function doSearch() {
+      const query = document.getElementById('ytSearch').value.trim();
+      if (!query || query.length < 2) return;
+
+      lastSearchQuery = query;
+      const resultsEl = document.getElementById('searchResults');
+      resultsEl.classList.add('show');
+      resultsEl.innerHTML = `
+        <div class="search-loading">
+          <div class="spinner"></div>
+          <span>Naghahanap: "${escapeHtml(query)}"...</span>
+        </div>
+      `;
+      document.getElementById('searchBtn').disabled = true;
+
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          hd: filters.hdOnly ? '1' : '0',
+          channels: filters.filterChannels ? '1' : '0',
+          min: filters.minDuration,
+          max: filters.maxDuration
+        });
+
+        const r = await fetch(API + '/api/search?' + params.toString());
+        const data = await r.json();
+
+        if (!data.results || data.results.length === 0) {
+          resultsEl.innerHTML = `
+            <div class="empty-state" style="padding:16px">
+              🎤 ${escapeHtml(data.error || 'Walang nakita.')}
+              <br><br>
+              <span style="font-size:11px;color:#666">
+                Subukan i-adjust ang filters o ibang spelling.
+              </span>
+            </div>
+          `;
+          return;
+        }
+
+        resultsEl.innerHTML = data.results.map(v => {
+          const duration = formatDuration(v.duration);
+          const trendingBadge = v.trendingCount > 0
+            ? `<span class="trend-badge">🔥 ${v.trendingCount}</span>` : '';
+
+          let hdBadge = '';
+          if (/\b4k\b/i.test(v.title)) {
+            hdBadge = '<span class="hd-badge uhd">4K</span>';
+          } else if (v.isHD || v.titleHD || hasHDKeyword(v.title)) {
+            hdBadge = '<span class="hd-badge hd">HD</span>';
+          }
+
+          let channelBadge = '';
+          if (v.channelScore >= 10) {
+            channelBadge = '<span class="channel-badge trusted">⭐</span>';
+          }
+
+          return `
+            <div class="search-result" onclick="quickAddFromSearch('${v.videoId}', '${escapeAttr(v.title)}')">
+              <img src="${v.thumbnail}" loading="lazy"
+                onerror="this.style.display='none'">
+              <div class="sr-info">
+                <div class="sr-title">🎤 ${escapeHtml(v.title)} ${hdBadge}</div>
+                <div class="sr-meta">
+                  ${v.author ? `<span>${escapeHtml(v.author)}</span>${channelBadge}` : ''}
+                  ${duration ? `<span class="sr-duration">${duration}</span>` : ''}
+                  ${trendingBadge}
+                </div>
+              </div>
+              <span class="sr-add">+</span>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        resultsEl.innerHTML = `
+          <div class="empty-state" style="padding:16px">
+            ⚠️ Search error. Subukan ulit.
+          </div>
+        `;
+      } finally {
+        document.getElementById('searchBtn').disabled = false;
+      }
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds) return '';
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function quickAddFromSearch(videoId, title) {
+      const singer = document.getElementById('singer').value.trim() || 'Guest';
+      socket.emit('addSong', {
+        videoId, title, singer,
+        searchQuery: lastSearchQuery
+      });
+      if (navigator.vibrate) navigator.vibrate(20);
+      toast('✓ ' + title.substring(0, 40));
+      document.getElementById('ytSearch').value = '';
+      document.getElementById('searchResults').classList.remove('show');
+      lastSearchQuery = '';
+    }
+
+    document.getElementById('ytUrl').addEventListener('input', (e) => {
+      clearTimeout(previewTimer);
+      const value = e.target.value.trim();
+      if (!value) {
+        document.getElementById('ytPreview').classList.remove('show');
+        previewVideoId = null;
+        return;
+      }
+      const videoId = parseYouTubeUrl(value);
+      if (!videoId) {
+        document.getElementById('ytPreview').classList.remove('show');
+        previewVideoId = null;
+        return;
+      }
+      previewVideoId = videoId;
+      document.getElementById('ytThumb').src =
+        `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+      document.getElementById('ytTitle').textContent = 'Loading...';
+      document.getElementById('ytAuthor').textContent = videoId;
+      document.getElementById('ytPreview').classList.add('show');
+
+      previewTimer = setTimeout(() => {
+        fetch(API + `/api/yt-info/${videoId}`).then(r => r.json()).then(data => {
+          if (previewVideoId !== videoId) return;
+          let hdBadge = '';
+          if (data.isHD || data.titleHD) {
+            hdBadge = ' <span class="hd-badge hd">HD</span>';
+          }
+          if (/\b4k\b/i.test(data.title)) {
+            hdBadge = ' <span class="hd-badge uhd">4K</span>';
+          }
+          document.getElementById('ytTitle').innerHTML = data.title + hdBadge;
+          document.getElementById('ytAuthor').textContent = data.author || videoId;
+        }).catch(() => {
+          document.getElementById('ytTitle').textContent = 'YouTube Video';
+        });
+      }, 500);
+    });
+
+    document.getElementById('ytUrl').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addYouTube();
+    });
+
+    async function addYouTube() {
+      const input = document.getElementById('ytUrl').value.trim();
+      const singer = document.getElementById('singer').value.trim() || 'Guest';
+      if (!input) return toast('I-paste ang YouTube link', 'error');
+
+      const videoId = parseYouTubeUrl(input);
+      if (!videoId) return toast('Hindi valid na YouTube link', 'error');
+
+      let title = document.getElementById('ytTitle').textContent;
+      let isHD = false;
+      if (!title || title === 'Loading...' || title === '—') {
+        try {
+          const r = await fetch(API + `/api/yt-info/${videoId}`);
+          const data = await r.json();
+          title = data.title;
+          isHD = data.isHD;
+        } catch {
+          title = 'YouTube: ' + videoId;
+        }
+      }
+
+      const looksKaraoke = /karaoke|videoke|minus[\s-]?one|instrumental|backing|sing[\s-]?along/i.test(title);
+      const looksHD = hasHDKeyword(title) || isHD;
+
+      const warnings = [];
+      if (!looksKaraoke) warnings.push('⚠️ Mukhang HINDI karaoke');
+      if (filters.hdOnly && !looksHD) warnings.push('⚠️ Mukhang HINDI HD');
+
+      if (warnings.length > 0) {
+        const proceed = confirm(
+          `${warnings.join('\n')}\n\n"${title}"\n\nSigurado ka?`
+        );
+        if (!proceed) return;
+      }
+
+      socket.emit('addSong', { videoId, title, singer });
+      document.getElementById('ytUrl').value = '';
+      document.getElementById('ytPreview').classList.remove('show');
+      previewVideoId = null;
+      if (navigator.vibrate) navigator.vibrate(20);
+      toast('✓ Na-reserve: ' + title.substring(0, 40), 'success');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el =>
+        el.style.display = el.id === 'tab-' + tab ? 'block' : 'none');
+      document.querySelectorAll('.tab-btn').forEach(el =>
+        el.classList.toggle('active', el.dataset.tab === tab));
+      if (tab === 'history') loadHistory();
+      if (tab === 'top') loadLeaderboard();
+      if (tab === 'favorites') renderFavorites();
+    }
+
+    async function refreshFavorites() {
+      try {
+        const data = await (await fetch(API + '/api/favorites')).json();
+        favorites = data;
+        renderFavorites();
+      } catch {}
+    }
+
+    function renderFavorites() {
+      const el = document.getElementById('favList');
+      if (!favorites.length) {
+        el.innerHTML = '<div class="empty-state">Wala pang paborito</div>';
+        return;
+      }
+      el.innerHTML = favorites.map(f => `
+        <button class="song-item" onclick="quickAdd('${f.videoId}', '${escapeAttr(f.title)}')">
+          <img src="https://i.ytimg.com/vi/${f.videoId}/mqdefault.jpg"
+            onerror="this.style.display='none'">
+          <div class="info">
+            <div class="song-title">${escapeHtml(f.title)}</div>
+            <div class="song-author">▶ YouTube</div>
+          </div>
+          <span class="fav-btn on"
+            onclick="event.stopPropagation(); toggleFav('${f.videoId}', '${escapeAttr(f.title)}')">
+            ★</span>
+          <span class="plus">+</span>
+        </button>
+      `).join('');
+    }
+
+    function quickAdd(videoId, title) {
+      const singer = document.getElementById('singer').value.trim() || 'Guest';
+      socket.emit('addSong', { videoId, title, singer });
+      if (navigator.vibrate) navigator.vibrate(20);
+      toast('✓ ' + title.substring(0, 40));
+    }
+
+    function toggleFav(videoId, title) {
+      socket.emit('toggleFavorite', { videoId, title });
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    async function loadHistory() {
+      try {
+        const data = await (await fetch(API + '/api/history?limit=50')).json();
+        const el = document.getElementById('historyList');
+        if (!data.length) {
+          el.innerHTML = '<div class="empty-state">Wala pang history</div>';
+          return;
+        }
+        el.innerHTML = data.map(h => {
+          const cls = h.score >= 8 ? 'high' : h.score < 5 ? 'low' : '';
+          const time = new Date(h.playedAt).toLocaleString('en-PH', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+          return `<div class="history-item">
+            <div class="score-badge ${cls}">${h.score ? h.score.toFixed(1) : '—'}</div>
+            <div class="info">
+              <div class="singer">${escapeHtml(h.singer)}</div>
+              <div class="song">${escapeHtml(h.title)}</div>
+              <div class="time">${time}</div>
+            </div>
+          </div>`;
+        }).join('');
+      } catch {}
+    }
+
+    async function loadLeaderboard() {
+      try {
+        const data = await (await fetch(API + '/api/leaderboard')).json();
+        const el = document.getElementById('leaderboard');
+        if (!data.length) {
+          el.innerHTML = '<div class="empty-state">Wala pang leaderboard</div>';
+          return;
+        }
+        el.innerHTML = data.map((s, i) => `
+          <div class="leader-item rank-${i + 1}">
+            <div class="rank">${i === 0 ? '🥇' : i === 1 ? '🥈' :
+              i === 2 ? '🥉' : '#' + (i + 1)}</div>
+            <div class="info">
+              <div class="name">${escapeHtml(s.singer)}</div>
+              <div class="stats">${s.count} kanta · best: ${s.bestScore.toFixed(1)}</div>
+            </div>
+            <div class="avg">${s.avgScore.toFixed(1)}</div>
+          </div>`).join('');
+      } catch {}
+    }
+
+    function sendCmd(type) {
+      socket.emit(type);
+      if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    document.getElementById('volume').addEventListener('input', e =>
+      socket.emit('volume', e.target.value));
+
+    socket.on('command', cmd => {
+      if (cmd.type === 'scoring') {
+        currentScoring = cmd.song;
+        hasVotedThisRound = false;
+        showScoring(cmd.song, cmd.duration);
+      }
+    });
+
+    function showScoring(song, duration) {
+      const panel = document.getElementById('scoringPanel');
+      document.getElementById('scSinger').textContent = song.singer || 'Guest';
+      document.querySelectorAll('#scoreButtons button').forEach(b =>
+        b.classList.remove('voted'));
+      panel.classList.add('active');
+      let remaining = duration;
+      const el = document.getElementById('scCountdown');
+      el.textContent = remaining;
+      const timer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(timer);
+          panel.classList.remove('active');
+          currentScoring = null;
+          return;
+        }
+        el.textContent = remaining;
+      }, 1000);
+      setTimeout(() => {
+        panel.classList.remove('active');
+        currentScoring = null;
+        clearInterval(timer);
+      }, (duration + 1) * 1000);
+    }
+
+    function submitScore(score) {
+      if (!currentScoring) return;
+      if (hasVotedThisRound) { toast('Naka-vote ka na', 'error'); return; }
+      socket.emit('submitScore', { score, voterId });
+      hasVotedThisRound = true;
+      const btn = document.querySelector(`#scoreButtons button:nth-child(${score})`);
+      if (btn) btn.classList.add('voted');
+      if (navigator.vibrate) navigator.vibrate(30);
+      toast(`Nag-vote ka ng ${score}/10`);
+    }
+
+    const voterId = localStorage.getItem('videoke:voterId') ||
+      (() => {
+        const id = 'v_' + Math.random().toString(36).slice(2, 15) +
+          Date.now().toString(36);
+        localStorage.setItem('videoke:voterId', id);
+        return id;
+      })();
+
+    socket.on('state', s => {
+      lastState = s;
+      const nowEl = document.getElementById('nowContent');
+      if (s.nowPlaying) {
+        nowEl.innerHTML = `
+          <div class="singer">${escapeHtml(s.nowPlaying.singer)}</div>
+          <div class="song">${escapeHtml(s.nowPlaying.title)}</div>
+          <div style="font-size:10px;color:#ff6b6b;margin-top:6px">▶ YouTube</div>`;
+      } else {
+        nowEl.innerHTML = `<div class="empty">${t('noQueue')}</div>`;
+      }
+
+      document.getElementById('queueCount').textContent = s.queue.length;
+      document.getElementById('qTabBadge').textContent = s.queue.length;
+
+      const statsEl = document.getElementById('singerStats');
+      if (s.stats && s.stats.queueLength > 0) {
+        statsEl.style.display = 'flex';
+        statsEl.innerHTML = `
+          <div class="stat-item">
+            <span class="stat-icon">👥</span>
+            <span class="stat-value">${s.stats.singerCount || 0}</span>
+            <span class="stat-label">singers</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">🎵</span>
+            <span class="stat-value">${s.stats.queueLength || 0}</span>
+            <span class="stat-label">kanta</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">⏱️</span>
+            <span class="stat-value">${s.stats.totalWaitText || '0 min'}</span>
+            <span class="stat-label">total</span>
+          </div>
+        `;
+      } else {
+        statsEl.style.display = 'none';
+      }
+
+      renderQueue(s);
+    });
+
+    function renderQueue(s) {
+      const qEl = document.getElementById('queueList');
+      const myName = (document.getElementById('singer').value.trim() || '').toLowerCase();
+
+      if (!s.queue.length) {
+        qEl.innerHTML = '<div class="empty-state">Walang naka-reserve</div>';
+        return;
+      }
+
+      qEl.innerHTML = s.queue.map((q, i) => {
+        const isMe = myName && q.singer.toLowerCase() === myName;
+        const isNext = i === 0;
+        return `
+          <div class="queue-item ${isMe ? 'is-me' : ''} ${isNext ? 'is-next' : ''}">
+            <div class="pos">${i + 1}</div>
+            <div class="info">
+              <div class="singer">
+                ${isMe ? '<span class="me-badge">IKAW</span>' : ''}
+                ${escapeHtml(q.singer)}
+              </div>
+              <div class="song">${escapeHtml(q.title)}</div>
+              <div class="wait-time">⏱️ ${q.waitText || 'Susunod na'}</div>
+            </div>
+            <div class="actions">
+              ${i > 0 ? `<button onclick="moveSong(${q.id}, 'up')">↑</button>` : ''}
+              ${i < s.queue.length - 1 ? `<button onclick="moveSong(${q.id}, 'down')">↓</button>` : ''}
+              <button class="remove" onclick="removeSong(${q.id})">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function removeSong(id) {
+      if (confirm('Alisin ang kantang ito?')) socket.emit('removeSong', id);
+    }
+    function moveSong(id, dir) {
+      socket.emit('moveSong', { id, direction: dir });
+    }
+
+    socket.on('error', msg => toast(msg, 'error'));
+    socket.on('historyCleared', () => {
+      if (document.getElementById('tab-history').style.display !== 'none') loadHistory();
+    });
+    socket.on('kicked', msg => { alert(msg); location.reload(); });
+
+    socket.on('recentSearches', (list) => {
+      const section = document.getElementById('recentSection');
+      const listEl = document.getElementById('recentList');
+      if (!list || list.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+      document.getElementById('recentCount').textContent = list.length;
+      listEl.innerHTML = list.slice(0, 15).map(r => `
+        <button class="recent-chip" onclick="searchFromRecent('${escapeAttr(r.query)}')">
+          <span class="q">${escapeHtml(r.query)}</span>
+          <span class="who">· ${escapeHtml(r.singer)}</span>
+        </button>
+      `).join('');
+    });
+
+    function searchFromRecent(query) {
+      document.getElementById('ytSearch').value = query;
+      document.getElementById('ytSearch').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      doSearch();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    function openAdmin() {
+      openModal('adminModal');
+      if (adminToken) showAdminPanel();
+    }
+    async function doLogin() {
+      const pw = document.getElementById('adminPw').value;
+      try {
+        const r = await fetch(API + '/api/admin/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        if (!r.ok) throw new Error('Maling password');
+        const { token } = await r.json();
+        adminToken = token;
+        localStorage.setItem('videoke:adminToken', token);
+        showAdminPanel();
+        toast('Logged in');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    function showAdminPanel() {
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+    }
+    async function adminAction(action) {
+      if (!adminToken) return;
+      if (action === 'clear-history' && !confirm('I-clear lahat ng history?')) return;
+      try {
+        const r = await fetch(API + '/api/admin/' + action, {
+          method: 'POST', headers: { 'x-admin-token': adminToken }
+        });
+        if (!r.ok) throw new Error('Failed');
+        toast('✓ ' + action);
+      } catch (e) { toast('Error', 'error'); }
+    }
+
+    function applyI18n() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.getElementById('singer').placeholder = t('namePlaceholder');
+      document.getElementById('langIcon').textContent =
+        getLang() === 'fil' ? '🇵🇭' : '🇺🇸';
+      document.getElementById('statusText').textContent =
+        socket.connected ? t('connected') : t('disconnected');
+    }
+    function toggleLang() {
+      setLang(getLang() === 'fil' ? 'en' : 'fil');
+      applyI18n();
+    }
+    window.addEventListener('langchange', applyI18n);
+    applyI18n();
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeAttr(s) {
+      return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    refreshFavorites();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+    }
+
+    let lastTouch = 0;
+    document.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - lastTouch < 300) e.preventDefault();
+      lastTouch = now;
+    }, { passive: false });
+  </script>
+</body>
+</html>
