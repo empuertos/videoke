@@ -85,9 +85,7 @@
       border-radius:10px;font-size:11px;line-height:1.6;
       color:#a0b0c0;margin-top:12px; }
     .yt-hint .icon { font-size:18px;flex-shrink:0; }
-    .yt-hint ol {
-      padding-left:20px;margin:6px 0 0 0;line-height:1.8;
-    }
+    .yt-hint ol { padding-left:20px;margin:6px 0 0 0;line-height:1.8; }
     .yt-hint ol li { margin-bottom:2px; }
     .yt-hint b { color:#fff; }
 
@@ -322,7 +320,7 @@
         maxlength="30" autocomplete="off">
     </div>
 
-    <!-- ===== SIMPLE RESERVE CARD ===== -->
+    <!-- RESERVE CARD -->
     <div class="yt-card">
       <div class="label">🎤 I-RESERVE ANG KANTA</div>
 
@@ -470,6 +468,9 @@
     let previewVideoId = null;
     let previewTimer = null;
     let lastState = null;
+    // ⬇️ Store title/author para hindi mawala
+    let currentTitle = '';
+    let currentAuthor = '';
 
     let toastTimer;
     function toast(msg, type = 'success') {
@@ -517,53 +518,76 @@
       toast('▶ Bukas sa YouTube...');
     }
 
-    // ===== URL PREVIEW =====
+    // ===== URL PREVIEW with title caching =====
     document.getElementById('ytUrl').addEventListener('input', (e) => {
       clearTimeout(previewTimer);
       const value = e.target.value.trim();
       if (!value) {
         document.getElementById('ytPreview').classList.remove('show');
         previewVideoId = null;
+        currentTitle = '';
+        currentAuthor = '';
         return;
       }
       const videoId = parseYouTubeUrl(value);
       if (!videoId) {
         document.getElementById('ytPreview').classList.remove('show');
         previewVideoId = null;
+        currentTitle = '';
+        currentAuthor = '';
         return;
       }
       previewVideoId = videoId;
+      currentTitle = '';
+      currentAuthor = '';
+
       document.getElementById('ytThumb').src =
         `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-      document.getElementById('ytTitle').textContent = 'Loading...';
+      document.getElementById('ytTitle').textContent = 'Kinukuha ang title...';
       document.getElementById('ytAuthor').textContent = videoId;
       document.getElementById('ytPreview').classList.add('show');
 
       previewTimer = setTimeout(() => {
-        fetch(API + `/api/yt-info/${videoId}`).then(r => r.json()).then(data => {
-          if (previewVideoId !== videoId) return;
-          let hdBadge = '';
-          if (data.previouslyFailed) {
-            hdBadge = ' <span class="hd-badge failed">⛔ FAILED</span>';
-          } else if (data.isHD || data.titleHD) {
-            hdBadge = ' <span class="hd-badge hd">HD</span>';
-          }
-          if (/\b4k\b/i.test(data.title)) {
-            hdBadge = ' <span class="hd-badge uhd">4K</span>';
-          }
-          document.getElementById('ytTitle').innerHTML = data.title + hdBadge;
-          document.getElementById('ytAuthor').textContent = data.author || videoId;
-        }).catch(() => {
-          document.getElementById('ytTitle').textContent = 'YouTube Video';
-        });
-      }, 500);
+        fetch(API + `/api/yt-info/${videoId}`)
+          .then(r => r.json())
+          .then(data => {
+            if (previewVideoId !== videoId) return;
+
+            // Store sa variable
+            currentTitle = (data.title || '').trim() || `YouTube Video (${videoId})`;
+            currentAuthor = (data.author || '').trim();
+
+            // Use textContent (safe sa special chars)
+            document.getElementById('ytTitle').textContent = currentTitle;
+
+            // Badge sa author line
+            let badge = '';
+            if (data.previouslyFailed) {
+              badge = ' <span class="hd-badge failed">⛔ FAILED</span>';
+            } else if (data.isHD || data.titleHD) {
+              badge = ' <span class="hd-badge hd">HD</span>';
+            }
+            if (/\b4k\b/i.test(currentTitle)) {
+              badge = ' <span class="hd-badge uhd">4K</span>';
+            }
+            document.getElementById('ytAuthor').innerHTML =
+              escapeHtml(currentAuthor || videoId) + badge;
+          })
+          .catch((err) => {
+            console.error('YT info failed:', err);
+            currentTitle = `YouTube Video (${videoId})`;
+            currentAuthor = '';
+            document.getElementById('ytTitle').textContent = currentTitle;
+            document.getElementById('ytAuthor').textContent = videoId;
+          });
+      }, 400);
     });
 
     document.getElementById('ytUrl').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') addYouTube();
     });
 
-    // ===== ADD YOUTUBE =====
+    // ===== ADD YOUTUBE with guaranteed title =====
     async function addYouTube() {
       const input = document.getElementById('ytUrl').value.trim();
       const singer = document.getElementById('singer').value.trim() || 'Guest';
@@ -572,17 +596,38 @@
       const videoId = parseYouTubeUrl(input);
       if (!videoId) return toast('Hindi valid na YouTube link', 'error');
 
-      let title = document.getElementById('ytTitle').textContent;
+      // ⬇️ Priority: currentTitle → fresh fetch → fallback
+      let title = currentTitle;
       let previouslyFailed = false;
-      if (!title || title === 'Loading...' || title === '—') {
+
+      if (!title || title.trim() === '' || title === 'Kinukuha ang title...') {
+        toast('Kinukuha ang title...');
         try {
-          const r = await fetch(API + `/api/yt-info/${videoId}`);
+          const r = await fetch(API + `/api/yt-info/${videoId}`, {
+            signal: AbortSignal.timeout(12000)
+          });
           const data = await r.json();
           title = data.title;
           previouslyFailed = data.previouslyFailed;
-        } catch {
-          title = 'YouTube: ' + videoId;
+        } catch (e) {
+          console.error('Title fetch failed:', e);
+          title = `YouTube Video (${videoId})`;
         }
+      } else {
+        // Check failed status kung may cached title
+        try {
+          const r = await fetch(API + `/api/yt-info/${videoId}`, {
+            signal: AbortSignal.timeout(8000)
+          });
+          const data = await r.json();
+          previouslyFailed = data.previouslyFailed;
+        } catch {}
+      }
+
+      // ⬇️ Safety net — GUARANTEED may title
+      if (!title || title.trim() === '' || title === '—' ||
+          title === 'Loading...' || title === 'Kinukuha ang title...') {
+        title = `YouTube Video (${videoId})`;
       }
 
       if (previouslyFailed) {
@@ -594,9 +639,14 @@
       }
 
       socket.emit('addSong', { videoId, title, singer });
+
+      // Reset
       document.getElementById('ytUrl').value = '';
       document.getElementById('ytPreview').classList.remove('show');
       previewVideoId = null;
+      currentTitle = '';
+      currentAuthor = '';
+
       if (navigator.vibrate) navigator.vibrate(20);
       toast('✓ Na-reserve: ' + title.substring(0, 40), 'success');
     }
