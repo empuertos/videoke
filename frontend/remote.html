@@ -265,7 +265,7 @@
       padding:13px 22px;background:rgba(0,0,0,0.9);
       border:1px solid var(--gold);color:#fff;
       border-radius:30px;font-size:13px;font-weight:600;
-      z-index:1000;opacity:0;transition:all 0.3s;
+      z-index:10000;opacity:0;transition:all 0.3s;
       pointer-events:none;backdrop-filter:blur(20px); }
     #toast.show { opacity:1;
       transform:translateX(-50%) translateY(0); }
@@ -297,6 +297,47 @@
       border-radius:12px;margin-bottom:16px;display:flex;
       gap:10px;font-size:12px;line-height:1.5;color:#a0b0c0; }
     .info-box .icon { font-size:20px;flex-shrink:0; }
+
+    /* ⭐ PARTY GATE — blocking screen */
+    #partyGate { display:none; position:fixed; inset:0; z-index:9000;
+      background:radial-gradient(ellipse at top,#2a0a1a,#0a0512);
+      padding:24px; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center; }
+    #partyGate.show { display:flex; }
+    #partyGate .icon { font-size:64px; margin-bottom:16px; }
+    #partyGate h2 { font-size:24px; font-weight:800; margin-bottom:8px;
+      background:linear-gradient(135deg,#ffd700,#ff8a00);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent; }
+    #partyGate p { font-size:13px; color:#a0a0b0; max-width:320px;
+      line-height:1.6; margin-bottom:24px; }
+    #partyGate input { width:100%; max-width:280px; padding:16px;
+      font-size:24px; letter-spacing:6px; text-align:center;
+      text-transform:uppercase; font-weight:800;
+      background:var(--card); color:#fff;
+      border:2px solid var(--border); border-radius:14px;
+      margin-bottom:14px; font-family:monospace; }
+    #partyGate input:focus { outline:none; border-color:var(--gold); }
+    #partyGate button { padding:14px 40px;
+      background:linear-gradient(135deg,#ff2e55,#ff0044);
+      color:#fff; border:none; border-radius:12px;
+      font-size:15px; font-weight:700; cursor:pointer;
+      font-family:inherit; }
+    #partyGate button:active { transform:scale(0.97); }
+    #partyGate .err { color:#ff6b6b; font-size:12px;
+      margin-top:12px; min-height:16px; font-weight:600; }
+
+    /* Party ended banner */
+    #partyEndedBanner { display:none; position:fixed; top:0; left:0; right:0;
+      z-index:8000; padding:14px 20px;
+      background:linear-gradient(135deg,#ff0044,#c41136);
+      color:#fff; text-align:center;
+      box-shadow:0 4px 20px rgba(255,0,68,0.5); }
+    #partyEndedBanner.show { display:block; }
+    #partyEndedBanner h2 { font-size:16px; font-weight:800; }
+    #partyEndedBanner p { font-size:11px; opacity:0.9; margin-top:2px; }
+    body.party-ended { padding-top:70px; }
+    body.party-ended .container { opacity:0.3; pointer-events:none; }
   </style>
 </head>
 <body>
@@ -432,6 +473,27 @@
             Lahat ng kanta galing YouTube. Walang download.
           </div>
         </div>
+
+        <button class="primary" onclick="adminAction('start-party')"
+          style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,#22c55e,#16a34a)"
+          id="startPartyBtn">🎉 Start New Party</button>
+        <button class="primary" onclick="adminAction('end-party')"
+          style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,#6b7280,#4b5563)"
+          id="endPartyBtn">🚫 End Party</button>
+
+        <div id="adminPartyQR" style="display:none;text-align:center;
+          padding:14px;background:rgba(255,255,255,0.05);
+          border-radius:10px;margin-bottom:8px">
+          <div style="font-size:11px;color:#8888a0;margin-bottom:8px">
+            I-scan ng guests:
+          </div>
+          <img id="adminQRImg" src="" style="width:200px;height:200px;
+            border-radius:8px;background:#fff;padding:8px">
+          <div id="adminCodeText" style="font-family:monospace;
+            font-size:22px;font-weight:800;color:#ffd700;
+            margin-top:10px;letter-spacing:3px"></div>
+        </div>
+
         <button class="primary" onclick="adminAction('stop')"
           style="width:100%;margin-bottom:8px">⏹ Force Stop</button>
         <button class="primary" onclick="adminAction('kick-all')"
@@ -445,6 +507,23 @@
         <button class="secondary" onclick="closeModal('adminModal')">Close</button>
       </div>
     </div>
+  </div>
+
+  <!-- ⭐ Party Gate — blocking screen -->
+  <div id="partyGate">
+    <div class="icon">🎤</div>
+    <h2>Videoke Party</h2>
+    <p id="partyGateMsg">I-scan ang QR code na ipinakita ng host, o i-type ang 6-character party code.</p>
+    <input type="text" id="partyCodeInput" placeholder="ABC123"
+      maxlength="6" autocomplete="off" autocapitalize="characters">
+    <button onclick="submitPartyCode()">Sumali sa Party</button>
+    <div class="err" id="partyGateErr"></div>
+  </div>
+
+  <!-- ⭐ Party ended banner -->
+  <div id="partyEndedBanner">
+    <h2>🎉 Tapos na ang Party!</h2>
+    <p>Salamat sa pagsali. Hindi na tumatanggap ng bagong kanta.</p>
   </div>
 
   <div id="toast"></div>
@@ -464,7 +543,7 @@
     const socket = io(BACKEND_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 2000
     });
 
@@ -476,6 +555,87 @@
     let currentTitle = '';
     let currentAuthor = '';
 
+    // ⭐ PARTY CODE STATE
+    let partyCode = null;
+    let partyVerified = false;
+
+    // =====================================================
+    // PARTY GATE FUNCTIONS
+    // =====================================================
+    function showPartyGate(msg) {
+      document.getElementById('partyGate').classList.add('show');
+      if (msg) document.getElementById('partyGateMsg').textContent = msg;
+    }
+    function hidePartyGate() {
+      document.getElementById('partyGate').classList.remove('show');
+    }
+
+    async function verifyPartyCode(code) {
+      try {
+        const r = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(code));
+        const data = await r.json();
+        return data.valid === true;
+      } catch (e) { return false; }
+    }
+
+    function submitPartyCode() {
+      const input = document.getElementById('partyCodeInput');
+      const code = input.value.trim().toUpperCase();
+      if (code.length !== 6) {
+        document.getElementById('partyGateErr').textContent = 'Dapat 6 characters.';
+        return;
+      }
+      document.getElementById('partyGateErr').textContent = 'Kinukuha...';
+      joinWithCode(code);
+    }
+
+    async function joinWithCode(code) {
+      const valid = await verifyPartyCode(code);
+      if (!valid) {
+        document.getElementById('partyGateErr').textContent =
+          '❌ Invalid o expired na party code.';
+        return;
+      }
+      partyCode = code;
+      partyVerified = true;
+      localStorage.setItem('videoke:partyCode', code);
+      socket.emit('joinParty', { code });
+      hidePartyGate();
+      document.getElementById('partyEndedBanner').classList.remove('show');
+      document.body.classList.remove('party-ended');
+      toast('✓ Sumali sa party!', 'success');
+    }
+
+    // Auto-check sa page load
+    (async function initPartyAccess() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlCode = urlParams.get('party');
+      const savedCode = localStorage.getItem('videoke:partyCode');
+      const codeToTry = ((urlCode || savedCode) || '').toUpperCase();
+
+      if (!codeToTry) {
+        showPartyGate();
+        return;
+      }
+      const valid = await verifyPartyCode(codeToTry);
+      if (valid) {
+        partyCode = codeToTry;
+        partyVerified = true;
+        localStorage.setItem('videoke:partyCode', codeToTry);
+        if (urlCode) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+        if (socket.connected) socket.emit('joinParty', { code: partyCode });
+        hidePartyGate();
+      } else {
+        localStorage.removeItem('videoke:partyCode');
+        showPartyGate('❌ Expired o invalid na party code. Kailangan ng bago mula sa host.');
+      }
+    })();
+
+    // =====================================================
+    // TOAST
+    // =====================================================
     let toastTimer;
     function toast(msg, type = 'success') {
       const el = document.getElementById('toast');
@@ -485,15 +645,44 @@
       toastTimer = setTimeout(() => el.className = '', 2800);
     }
 
+    // =====================================================
+    // SOCKET EVENTS
+    // =====================================================
     socket.on('connect', () => {
       document.getElementById('statusDot').classList.remove('offline');
       document.getElementById('statusText').textContent = 'Connected';
+      if (partyCode && partyVerified) {
+        socket.emit('joinParty', { code: partyCode });
+      }
     });
     socket.on('disconnect', () => {
       document.getElementById('statusDot').classList.add('offline');
       document.getElementById('statusText').textContent = 'Disconnected';
     });
 
+    socket.on('partyJoined', ({ ok, reason }) => {
+      if (!ok) {
+        partyVerified = false;
+        localStorage.removeItem('videoke:partyCode');
+        showPartyGate(reason === 'no_party'
+          ? 'Walang aktibong party ngayon. Hintayin ang host.'
+          : '❌ Invalid na party code. Kailangan ng bago.');
+      }
+    });
+
+    socket.on('partyChanged', ({ active }) => {
+      if (!active) {
+        partyVerified = false;
+        localStorage.removeItem('videoke:partyCode');
+        document.getElementById('partyEndedBanner').classList.add('show');
+        document.body.classList.add('party-ended');
+        showPartyGate('🎉 Tapos na ang party. Salamat sa pagsali!');
+      }
+    });
+
+    // =====================================================
+    // SINGER NAME
+    // =====================================================
     const singerInput = document.getElementById('singer');
     singerInput.value = localStorage.getItem('videoke:singerName') || '';
     let saveNameTimer;
@@ -505,6 +694,9 @@
       }, 300);
     });
 
+    // =====================================================
+    // YOUTUBE HELPERS
+    // =====================================================
     function parseYouTubeUrl(input) {
       if (!input) return null;
       input = String(input).trim();
@@ -552,6 +744,9 @@
       toast('▶ Bukas sa YouTube...');
     }
 
+    // =====================================================
+    // URL INPUT PREVIEW
+    // =====================================================
     document.getElementById('ytUrl').addEventListener('input', (e) => {
       clearTimeout(previewTimer);
       const value = e.target.value.trim();
@@ -607,7 +802,14 @@
       if (e.key === 'Enter') addYouTube();
     });
 
+    // =====================================================
+    // ADD SONG
+    // =====================================================
     async function addYouTube() {
+      if (!partyVerified) {
+        return toast('🚫 Kailangan munang sumali sa party.', 'error');
+      }
+
       const input = document.getElementById('ytUrl').value.trim();
       const singer = document.getElementById('singer').value.trim() || 'Guest';
       if (!input) return toast('I-paste ang YouTube link', 'error');
@@ -659,6 +861,9 @@
       toast('✓ Na-reserve: ' + title.substring(0, 40), 'success');
     }
 
+    // =====================================================
+    // TABS
+    // =====================================================
     function switchTab(tab) {
       document.querySelectorAll('.tab-content').forEach(el =>
         el.style.display = el.id === 'tab-' + tab ? 'block' : 'none');
@@ -668,6 +873,9 @@
       if (tab === 'favorites') renderFavorites();
     }
 
+    // =====================================================
+    // FAVORITES
+    // =====================================================
     async function refreshFavorites() {
       try {
         const data = await (await fetch(API + '/api/favorites')).json();
@@ -699,6 +907,7 @@
     }
 
     function quickAdd(videoId, title) {
+      if (!partyVerified) return toast('🚫 Sumali muna sa party.', 'error');
       const singer = document.getElementById('singer').value.trim() || 'Guest';
       socket.emit('addSong', { videoId, title, singer });
       if (navigator.vibrate) navigator.vibrate(20);
@@ -710,6 +919,9 @@
       if (navigator.vibrate) navigator.vibrate(10);
     }
 
+    // =====================================================
+    // HISTORY
+    // =====================================================
     async function loadHistory() {
       try {
         const data = await (await fetch(API + '/api/history?limit=50')).json();
@@ -734,7 +946,11 @@
       } catch {}
     }
 
+    // =====================================================
+    // CONTROLS
+    // =====================================================
     function sendCmd(type) {
+      if (!partyVerified) return toast('🚫 Sumali muna sa party.', 'error');
       socket.emit(type);
       if (navigator.vibrate) navigator.vibrate(15);
     }
@@ -742,8 +958,20 @@
     document.getElementById('volume').addEventListener('input', e =>
       socket.emit('volume', e.target.value));
 
+    // =====================================================
+    // STATE
+    // =====================================================
     socket.on('state', s => {
       lastState = s;
+
+      if (typeof s.partyActive === 'boolean' && !s.partyActive && partyVerified) {
+        partyVerified = false;
+        localStorage.removeItem('videoke:partyCode');
+        document.getElementById('partyEndedBanner').classList.add('show');
+        document.body.classList.add('party-ended');
+        showPartyGate('🎉 Tapos na ang party. Salamat sa pagsali!');
+      }
+
       const nowEl = document.getElementById('nowContent');
       if (s.nowPlaying) {
         nowEl.innerHTML = `
@@ -832,6 +1060,9 @@
     });
     socket.on('kicked', msg => { alert(msg); location.reload(); });
 
+    // =====================================================
+    // MODALS
+    // =====================================================
     function openModal(id) { document.getElementById(id).classList.add('show'); }
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
     function openAdmin() {
@@ -840,7 +1071,7 @@
     }
 
     // =====================================================
-    // LOGIN — GET-based (no CORS preflight)
+    // ADMIN LOGIN
     // =====================================================
     async function doLogin() {
       const pw = document.getElementById('adminPw').value;
@@ -854,10 +1085,11 @@
           if (r.status === 401) throw new Error('Maling password');
           throw new Error('Server error ' + r.status);
         }
-        const { token } = await r.json();
+        const { token, partyActive, partyCode } = await r.json();
         adminToken = token;
         localStorage.setItem('videoke:adminToken', token);
         showAdminPanel();
+        if (partyActive && partyCode) showAdminQR(partyCode);
         toast('✓ Logged in', 'success');
       } catch (e) {
         alert('🔴 Login Error\n\n' + e.message);
@@ -873,15 +1105,43 @@
       if (!adminToken) return;
       if (action === 'clear-history' && !confirm('I-clear lahat ng history?')) return;
       if (action === 'clear-failed' && !confirm('I-clear ang failed videos list?')) return;
+      if (action === 'end-party' && !confirm('Tapusin ang party? Hindi na makakapag-reserve ang guests.')) return;
+
       try {
         const r = await fetch(
           API + '/api/admin/' + action + '?token=' + encodeURIComponent(adminToken)
         );
         if (!r.ok) throw new Error('Failed');
-        toast('✓ ' + action);
+        const data = await r.json();
+
+        if (action === 'start-party' && data.code) {
+          showAdminQR(data.code);
+          toast('✓ Bagong party: ' + data.code, 'success');
+        } else if (action === 'end-party') {
+          hideAdminQR();
+          toast('✓ Party ended', 'success');
+        } else {
+          toast('✓ ' + action, 'success');
+        }
       } catch (e) { toast('Error', 'error'); }
     }
 
+    function showAdminQR(code) {
+      const frontendBase = window.location.origin;
+      const url = frontendBase + '/remote.html?party=' + code;
+      document.getElementById('adminQRImg').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' +
+        encodeURIComponent(url);
+      document.getElementById('adminCodeText').textContent = code;
+      document.getElementById('adminPartyQR').style.display = 'block';
+    }
+    function hideAdminQR() {
+      document.getElementById('adminPartyQR').style.display = 'none';
+    }
+
+    // =====================================================
+    // UTILITIES
+    // =====================================================
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -899,12 +1159,21 @@
 
     refreshFavorites();
 
+    // Prevent double-tap zoom
     let lastTouch = 0;
     document.addEventListener('touchend', e => {
       const now = Date.now();
       if (now - lastTouch < 300) e.preventDefault();
       lastTouch = now;
     }, { passive: false });
+
+    // Party code input — auto-submit sa Enter
+    document.getElementById('partyCodeInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitPartyCode();
+    });
+    document.getElementById('partyCodeInput').addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
   </script>
 </body>
 </html>
