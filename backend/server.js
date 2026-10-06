@@ -9,8 +9,20 @@ const app = express();
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+
+// =====================================================
+// SECURE ADMIN PASSWORD (Walang default)
+// =====================================================
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  console.error('');
+  console.error('  ❌ FATAL ERROR: ADMIN_PASSWORD is not set!');
+  console.error('  👉 Please set ADMIN_PASSWORD in Render Environment Variables.');
+  console.error('  🛑 Server shutting down to prevent unauthorized access.');
+  console.error('');
+  process.exit(1);
+}
 
 // =====================================================
 // SOCKET.IO SETUP (may CORS na)
@@ -44,8 +56,7 @@ const FAILED_FILE = path.join(DATA_DIR, 'failed-videos.json');
 app.use(express.json({ limit: '10mb' }));
 
 // =====================================================
-// ⬇️ CORS MIDDLEWARE para sa EXPRESS HTTP ROUTES
-// (IMPORTANTE: ito ang nag-fix ng "Failed to fetch")
+// CORS MIDDLEWARE para sa EXPRESS HTTP ROUTES
 // =====================================================
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
@@ -334,9 +345,13 @@ function authAdmin(req, res, next) {
   next();
 }
 
-// Admin login
-app.post('/api/admin/login', (req, res) => {
-  const { password } = req.body || {};
+// =====================================================
+// ADMIN ROUTES (Naka-GET na lahat para sa frontend)
+// =====================================================
+
+// Admin login (GET)
+app.get('/api/admin/login', (req, res) => {
+  const { password } = req.query || {};
   if (password !== ADMIN_PASSWORD)
     return res.status(401).json({ error: 'Maling password' });
   const token = crypto.randomBytes(24).toString('hex');
@@ -344,8 +359,8 @@ app.post('/api/admin/login', (req, res) => {
   res.json({ token });
 });
 
-// Clear history
-app.post('/api/admin/clear-history', authAdmin, (req, res) => {
+// Clear history (GET)
+app.get('/api/admin/clear-history', authAdmin, (req, res) => {
   history = []; saveJSON(HISTORY_FILE, history);
   stats.totalPlayed = 0;
   io.emit('historyCleared');
@@ -353,22 +368,22 @@ app.post('/api/admin/clear-history', authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Clear failed videos
-app.post('/api/admin/clear-failed', authAdmin, (req, res) => {
+// Clear failed videos (GET)
+app.get('/api/admin/clear-failed', authAdmin, (req, res) => {
   failedVideos = {};
   saveJSON(FAILED_FILE, failedVideos);
   console.log('Cleared failed videos list');
   res.json({ ok: true });
 });
 
-// Kick all guests
-app.post('/api/admin/kick-all', authAdmin, (req, res) => {
+// Kick all guests (GET)
+app.get('/api/admin/kick-all', authAdmin, (req, res) => {
   io.emit('kicked', 'Admin action');
   res.json({ ok: true });
 });
 
-// Force stop
-app.post('/api/admin/stop', authAdmin, (req, res) => {
+// Force stop (GET)
+app.get('/api/admin/stop', authAdmin, (req, res) => {
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = null;
   nowPlaying = null;
@@ -377,8 +392,8 @@ app.post('/api/admin/stop', authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// Clear trending
-app.post('/api/admin/clear-trending', authAdmin, (req, res) => {
+// Clear trending (GET)
+app.get('/api/admin/clear-trending', authAdmin, (req, res) => {
   trending = {};
   saveTrending();
   io.emit('trending', getTrendingStats());
@@ -602,11 +617,11 @@ io.on('connection', (socket) => {
 // =====================================================
 server.listen(PORT, () => {
   console.log('');
-  console.log('  🎤  VIDEoke BACKEND — CORS Fixed');
+  console.log('  🎤  VIDEoke BACKEND — Secured');
   console.log('  ═══════════════════════════════════════════════');
   console.log('  🚀  Port:         ' + PORT);
   console.log('  🌐  Frontend URL: ' + FRONTEND_URL);
-  console.log('  🔐  Admin pass:   ' + ADMIN_PASSWORD);
+  console.log('  🔐  Admin pass:   [HIDDEN - Set in Render Env Vars]');
   console.log('  🎵  History:      ' + history.length);
   console.log('  ⛔  Failed:       ' + Object.keys(failedVideos).length);
   console.log('');
