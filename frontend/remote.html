@@ -44,13 +44,14 @@
     .input-group label { display:block;font-size:11px;font-weight:600;
       color:var(--dim);margin-bottom:6px;letter-spacing:1px;
       text-transform:uppercase; }
-    input[type=text], input[type=search] { width:100%;padding:13px 16px;
+    input[type=text] { width:100%;padding:13px 16px;
       font-size:16px;background:var(--card);color:#fff;
       border:1.5px solid var(--border);border-radius:12px;
       font-family:inherit; }
     input:focus { outline:none;border-color:var(--red);
       background:var(--card2); }
 
+    /* ===== SIMPLE RESERVE CARD ===== */
     .yt-card { background:linear-gradient(135deg,#2a0a1a,#1a0010);
       border:1px solid rgba(255,46,85,0.2);border-radius:16px;
       padding:18px;margin-bottom:16px;position:relative;overflow:hidden; }
@@ -66,25 +67,6 @@
       color:#fff;border:none;border-radius:12px;
       font-size:15px;font-weight:700;cursor:pointer;font-family:inherit; }
 
-    .quick-actions { display:grid;
-      grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px; }
-    .qa-btn { padding:12px;border:none;border-radius:10px;
-      font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
-      display:flex;align-items:center;justify-content:center;gap:6px; }
-    .qa-btn.yt-btn { background:linear-gradient(135deg,#ff0000,#cc0000);
-      color:#fff; }
-    .qa-btn.yt-btn:active { transform:scale(0.97); }
-    .qa-btn.filter-btn { background:rgba(96,165,250,0.15);
-      color:#60a5fa;border:1px solid rgba(96,165,250,0.3); }
-    .qa-btn.filter-btn:active { transform:scale(0.97); }
-
-    .yt-hint { display:flex;gap:10px;padding:12px;
-      background:rgba(96,165,250,0.08);
-      border:1px solid rgba(96,165,250,0.2);
-      border-radius:10px;font-size:11px;line-height:1.5;
-      color:#a0b0c0;margin-top:12px; }
-    .yt-hint .icon { font-size:18px;flex-shrink:0; }
-
     .yt-preview { background:rgba(0,0,0,0.4);
       border:1px solid rgba(255,255,255,0.08);
       border-radius:12px;padding:10px;margin-top:10px;
@@ -98,166 +80,31 @@
       -webkit-line-clamp:2;-webkit-box-orient:vertical; }
     .yt-preview .author { font-size:11px;color:var(--dim);margin-top:2px; }
 
-    .filters-panel { display:none;margin-bottom:12px;
-      padding:12px;background:rgba(0,0,0,0.3);
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:12px; }
-    .filters-panel.show { display:block; }
-
-    .filter-row { display:flex;align-items:flex-start;gap:10px;
-      padding:10px 12px;background:rgba(255,255,255,0.03);
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:10px;cursor:pointer;margin-bottom:8px; }
-    .filter-row input[type=checkbox] { display:none; }
-    .filter-check { width:22px;height:22px;border-radius:6px;
-      background:rgba(255,255,255,0.1);
-      border:2px solid rgba(255,255,255,0.15);
-      flex-shrink:0;position:relative;transition:all 0.15s;
-      margin-top:2px; }
-    .filter-row input:checked ~ .filter-check {
-      background:#4ade80;border-color:#4ade80; }
-    .filter-row input:checked ~ .filter-check::after {
-      content:'✓';position:absolute;color:#000;
-      font-weight:900;font-size:14px;top:50%;left:50%;
-      transform:translate(-50%,-50%); }
-    .filter-info { flex:1; }
-    .filter-info b { display:block;font-size:13px;color:#fff;
-      margin-bottom:2px; }
-    .filter-info small { font-size:10px;color:var(--dim);
-      display:block;line-height:1.3; }
-
-    .duration-filter { display:block !important;cursor:default; }
-    .duration-inputs { display:flex;align-items:center;gap:8px;
-      margin-top:10px; }
-    .dur-input { flex:1; }
-    .dur-input label { display:block;font-size:9px;color:var(--dim);
-      text-transform:uppercase;letter-spacing:1px;
-      margin-bottom:4px;font-weight:700; }
-    .dur-input input { width:100%;padding:10px;
-      background:rgba(0,0,0,0.4);
-      border:1.5px solid rgba(255,255,255,0.1);
-      border-radius:8px;color:#fff;font-size:15px;
-      text-align:center;font-family:monospace;font-weight:700; }
-    .dur-sep { color:var(--dim);padding:0 4px;
-      padding-top:20px;font-weight:700; }
-
-    .duration-presets { display:grid;
-      grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px; }
-    .duration-presets button { padding:8px 4px;
-      background:rgba(255,255,255,0.05);
-      border:1px solid rgba(255,255,255,0.1);
-      border-radius:8px;color:#fff;font-size:10px;
-      font-weight:700;cursor:pointer;font-family:inherit; }
-
-    .filter-reset { width:100%;padding:10px;background:transparent;
-      border:1px solid rgba(255,255,255,0.1);
-      border-radius:10px;color:var(--dim);font-size:12px;
-      font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px; }
-
-    .active-filters { display:flex;flex-wrap:wrap;gap:5px;
-      margin-bottom:10px; }
-    .active-filters:empty { display:none; }
-    .filter-badge { padding:4px 10px;
-      background:rgba(96,165,250,0.15);
-      border:1px solid rgba(96,165,250,0.3);
-      color:#60a5fa;border-radius:12px;font-size:10px;
-      font-weight:700;letter-spacing:0.5px; }
-    .filter-badge.hd { background:rgba(74,222,128,0.15);
-      border-color:rgba(74,222,128,0.3);color:#4ade80; }
-    .filter-badge.duration { background:rgba(255,215,0,0.15);
-      border-color:rgba(255,215,0,0.3);color:#ffd700; }
-
-    .karaoke-only-badge { display:inline-block;padding:6px 12px;
-      background:rgba(74,222,128,0.1);
-      border:1px solid rgba(74,222,128,0.3);
-      color:var(--green);border-radius:20px;font-size:10px;
-      font-weight:700;letter-spacing:1px;margin-bottom:12px;
-      text-transform:uppercase; }
-
-    .search-results { display:none;flex-direction:column;gap:6px;
-      max-height:400px;overflow-y:auto;margin-bottom:10px;
-      padding-right:4px; }
-    .search-results.show { display:flex; }
-
-    .search-result { display:flex;gap:10px;padding:10px;
-      background:rgba(0,0,0,0.3);
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:10px;cursor:pointer;
-      transition:all 0.15s;align-items:center; }
-    .search-result:active { background:rgba(255,46,85,0.1);
-      border-color:var(--red); }
-    .search-result.failed {
-      opacity: 0.6;
-      border-color: rgba(255,107,107,0.3);
+    .yt-hint { display:flex;gap:10px;padding:12px;
+      background:rgba(96,165,250,0.08);
+      border:1px solid rgba(96,165,250,0.2);
+      border-radius:10px;font-size:11px;line-height:1.6;
+      color:#a0b0c0;margin-top:12px; }
+    .yt-hint .icon { font-size:18px;flex-shrink:0; }
+    .yt-hint ol {
+      padding-left:20px;margin:6px 0 0 0;line-height:1.8;
     }
-    .search-result img { width:80px;height:60px;border-radius:6px;
-      object-fit:cover;flex-shrink:0;background:#000; }
-    .search-result .sr-info { flex:1;min-width:0; }
-    .search-result .sr-title { font-size:13px;font-weight:600;
-      line-height:1.3;overflow:hidden;display:-webkit-box;
-      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
-    .search-result .sr-meta { font-size:11px;color:var(--dim);
-      margin-top:3px;display:flex;gap:8px;align-items:center;
-      flex-wrap:wrap; }
-    .search-result .sr-duration { background:rgba(0,0,0,0.6);
-      padding:1px 6px;border-radius:4px;font-size:10px;
-      font-family:monospace; }
-    .search-result .sr-add { font-size:22px;color:var(--red);
-      font-weight:300;padding:0 6px;flex-shrink:0; }
+    .yt-hint ol li { margin-bottom:2px; }
+    .yt-hint b { color:#fff; }
+
+    .yt-open-btn { width:100%;padding:14px;margin-top:12px;
+      background:linear-gradient(135deg,#ff0000,#cc0000);
+      color:#fff;border:none;border-radius:12px;
+      font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+      display:flex;align-items:center;justify-content:center;gap:8px; }
+    .yt-open-btn:active { transform:scale(0.98); }
 
     .hd-badge { display:inline-block;font-size:9px;font-weight:800;
       padding:2px 6px;border-radius:4px;margin-left:4px;
       letter-spacing:0.5px;vertical-align:middle; }
-    .hd-badge.hd { background:linear-gradient(135deg,#4ade80,#22c55e);
-      color:#000; }
-    .hd-badge.uhd { background:linear-gradient(135deg,#ffd700,#ff8a00);
-      color:#000; }
-    .hd-badge.failed { background:linear-gradient(135deg,#ff6b6b,#c41136);
-      color:#fff; }
-
-    .trend-badge { font-size:10px;background:rgba(255,215,0,0.15);
-      color:var(--gold);padding:1px 6px;border-radius:4px;
-      font-weight:700;margin-left:4px; }
-
-    .channel-badge { display:inline-block;font-size:9px;
-      font-weight:700;padding:2px 6px;border-radius:4px;
-      background:rgba(96,165,250,0.15);color:#60a5fa;
-      margin-left:4px;letter-spacing:0.3px; }
-    .channel-badge.trusted {
-      background:linear-gradient(135deg,#4ade80,#22c55e);
-      color:#000; }
-
-    .yt-divider { text-align:center;margin:14px 0;
-      position:relative;color:var(--dim);font-size:11px;
-      text-transform:uppercase;letter-spacing:2px; }
-    .yt-divider::before, .yt-divider::after { content:'';
-      position:absolute;top:50%;width:40%;height:1px;
-      background:rgba(255,255,255,0.08); }
-    .yt-divider::before { left:0; }
-    .yt-divider::after { right:0; }
-
-    .search-loading { display:flex;align-items:center;
-      justify-content:center;gap:8px;padding:20px;
-      color:var(--dim);font-size:12px; }
-    .spinner { width:16px;height:16px;
-      border:2px solid rgba(255,255,255,0.1);
-      border-top-color:var(--red);border-radius:50%;
-      animation:spin 0.8s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    .no-results-notice { background:rgba(255,215,0,0.08);
-      border:1px solid rgba(255,215,0,0.3);
-      border-radius:12px;padding:14px;margin-top:10px;
-      font-size:12px;color:#ffd700;line-height:1.6; }
-    .no-results-notice b { color:#fff; }
-    .no-results-notice .btn-row { display:flex;gap:8px;margin-top:10px; }
-    .no-results-notice button { flex:1;padding:10px;border:none;
-      border-radius:8px;font-size:12px;font-weight:700;
-      cursor:pointer;font-family:inherit; }
-    .no-results-notice .yt-open { background:#ff0000;color:#fff; }
-    .no-results-notice .relax {
-      background:rgba(74,222,128,0.2);color:#4ade80;
-      border:1px solid rgba(74,222,128,0.4); }
+    .hd-badge.hd { background:linear-gradient(135deg,#4ade80,#22c55e);color:#000; }
+    .hd-badge.uhd { background:linear-gradient(135deg,#ffd700,#ff8a00);color:#000; }
+    .hd-badge.failed { background:linear-gradient(135deg,#ff6b6b,#c41136);color:#fff; }
 
     .now-card { background:linear-gradient(135deg,#2a0a4a,#1a0033);
       border:1px solid rgba(255,215,0,0.2);
@@ -415,20 +262,6 @@
       white-space:nowrap; }
     .history-item .time { font-size:10px;color:#555;margin-top:3px; }
 
-    .recent-section { margin-bottom:16px; }
-    .recent-list { display:flex;flex-wrap:wrap;gap:6px; }
-    .recent-chip { padding:8px 14px;background:var(--card);
-      border:1px solid var(--border);border-radius:20px;
-      color:#fff;font-size:12px;cursor:pointer;
-      font-family:inherit;display:inline-flex;
-      align-items:center;gap:6px;transition:all 0.15s;
-      max-width:100%; }
-    .recent-chip:active { background:var(--card2);
-      border-color:var(--red);transform:scale(0.96); }
-    .recent-chip .who { font-size:10px;color:var(--dim); }
-    .recent-chip .q { overflow:hidden;text-overflow:ellipsis;
-      white-space:nowrap;max-width:180px; }
-
     #toast { position:fixed;bottom:30px;left:50%;
       transform:translateX(-50%) translateY(100px);
       padding:13px 22px;background:rgba(0,0,0,0.9);
@@ -490,101 +323,11 @@
         maxlength="30" autocomplete="off">
     </div>
 
+    <!-- ===== SIMPLE RESERVE CARD ===== -->
     <div class="yt-card">
-      <div class="label">🎤 KARAOKE SEARCH</div>
+      <div class="label">🎤 I-RESERVE ANG KANTA</div>
 
-      <div class="quick-actions">
-        <button onclick="searchOnYouTube()" class="qa-btn yt-btn">
-          ▶ Buksan sa YouTube
-        </button>
-        <button onclick="toggleFilters()" class="qa-btn filter-btn">
-          ⚙️ Filters
-        </button>
-      </div>
-
-      <div class="filters-panel" id="filtersPanel">
-        <label class="filter-row">
-          <input type="checkbox" id="strictKaraoke" onchange="applyFilters()">
-          <span class="filter-check"></span>
-          <div class="filter-info">
-            <b>Karaoke Only (Strict)</b>
-            <small>Kung walang nakita, subukan i-OFF</small>
-          </div>
-        </label>
-
-        <label class="filter-row">
-          <input type="checkbox" id="hdOnly" onchange="applyFilters()">
-          <span class="filter-check"></span>
-          <div class="filter-info">
-            <b>HD Only</b>
-            <small>1080p / 4K karaoke versions lang</small>
-          </div>
-        </label>
-
-        <label class="filter-row">
-          <input type="checkbox" id="filterChannels" onchange="applyFilters()">
-          <span class="filter-check"></span>
-          <div class="filter-info">
-            <b>Trusted Channels</b>
-            <small>Tanggalin ang low-quality sources</small>
-          </div>
-        </label>
-
-        <div class="filter-row duration-filter">
-          <div class="filter-info" style="flex:1">
-            <b>Duration Range</b>
-            <small>Tanggalin ang clips at albums</small>
-            <div class="duration-inputs">
-              <div class="dur-input">
-                <label>Min</label>
-                <input type="text" id="minDuration" value="2:00"
-                  maxlength="5" onblur="validateDuration('min')"
-                  onchange="applyFilters()">
-              </div>
-              <div class="dur-sep">—</div>
-              <div class="dur-input">
-                <label>Max</label>
-                <input type="text" id="maxDuration" value="12:00"
-                  maxlength="5" onblur="validateDuration('max')"
-                  onchange="applyFilters()">
-              </div>
-            </div>
-            <div class="duration-presets">
-              <button onclick="setPreset('short')">Short</button>
-              <button onclick="setPreset('song')">Song</button>
-              <button onclick="setPreset('long')">Long</button>
-              <button onclick="setPreset('all')">All</button>
-            </div>
-          </div>
-        </div>
-
-        <button class="filter-reset" onclick="resetFilters()">🔄 Reset Default</button>
-        <button class="filter-reset" onclick="relaxAllFilters()"
-          style="margin-top:6px;border-color:rgba(74,222,128,0.4);color:#4ade80">
-          🔓 I-relax Lahat ng Filters
-        </button>
-      </div>
-
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input type="search" id="ytSearch" placeholder="Hanapin ang kanta..."
-          autocomplete="off" style="flex:1">
-        <button onclick="doSearch()" id="searchBtn"
-          style="padding:0 16px;background:linear-gradient(135deg,#ff2e55,#ff0044);
-          border:none;border-radius:12px;color:#fff;font-size:18px;cursor:pointer">
-          🔍
-        </button>
-      </div>
-
-      <div class="karaoke-only-badge">
-        🎤 KARAOKE ONLY · <span id="hdModeBadge">HD ON</span>
-      </div>
-
-      <div class="active-filters" id="activeFilters"></div>
-      <div id="searchResults" class="search-results"></div>
-
-      <div class="yt-divider"><span>o i-paste ang link</span></div>
-
-      <input type="text" id="ytUrl" placeholder="https://youtu.be/..."
+      <input type="text" id="ytUrl" placeholder="I-paste ang YouTube link..."
         inputmode="url" autocomplete="off">
       <button class="primary-btn" onclick="addYouTube()">➕ I-reserve</button>
 
@@ -596,22 +339,23 @@
         </div>
       </div>
 
+      <button class="yt-open-btn" onclick="openYouTubeApp()">
+        ▶ Buksan ang YouTube App
+      </button>
+
       <div class="yt-hint">
         <div class="icon">💡</div>
         <div>
-          Kung wala ang hinahanap mo, i-tap ang
-          <b>▶ Buksan sa YouTube</b> para direkta sa YouTube app.
-          Tapos i-copy ang link at i-paste sa baba.
+          <b>Paano mag-reserve:</b>
+          <ol>
+            <li>I-tap ang <b>▶ Buksan ang YouTube App</b></li>
+            <li>Hanapin ang kanta (hal. <b>"[Kanta] karaoke"</b>)</li>
+            <li>I-tap ang <b>Share → Copy link</b></li>
+            <li>Bumalik dito at i-paste ang link</li>
+            <li>I-tap ang <b>➕ I-reserve</b></li>
+          </ol>
         </div>
       </div>
-    </div>
-
-    <div class="recent-section" id="recentSection" style="display:none">
-      <div class="section-header">
-        <h2>🕒 Recent Searches</h2>
-        <span class="badge" id="recentCount">0</span>
-      </div>
-      <div class="recent-list" id="recentList"></div>
     </div>
 
     <div class="singer-stats" id="singerStats"></div>
@@ -699,10 +443,6 @@
           style="width:100%;margin-bottom:8px">👢 Kick All</button>
         <button class="primary" onclick="adminAction('clear-history')"
           style="width:100%;margin-bottom:8px">🗑️ Clear History</button>
-        <button class="primary" onclick="adminAction('clear-recent')"
-          style="width:100%;margin-bottom:8px">🕒 Clear Recent</button>
-        <button class="primary" onclick="adminAction('clear-trending')"
-          style="width:100%;margin-bottom:8px">🔥 Clear Trending</button>
         <button class="primary" onclick="adminAction('clear-failed')"
           style="width:100%;margin-bottom:8px">⛔ Clear Failed Videos</button>
       </div>
@@ -730,145 +470,7 @@
     let adminToken = localStorage.getItem('videoke:adminToken') || null;
     let previewVideoId = null;
     let previewTimer = null;
-    let lastSearchQuery = '';
-    let searchDebounce = null;
     let lastState = null;
-
-    const FILTER_DEFAULTS = {
-      hdOnly: true,
-      filterChannels: true,
-      strictKaraoke: true,
-      minDuration: 120,
-      maxDuration: 720
-    };
-
-    function loadFilters() {
-      return {
-        hdOnly: localStorage.getItem('videoke:f:hd') !== '0',
-        filterChannels: localStorage.getItem('videoke:f:ch') !== '0',
-        strictKaraoke: localStorage.getItem('videoke:f:strict') !== '0',
-        minDuration: parseInt(localStorage.getItem('videoke:f:min')) || FILTER_DEFAULTS.minDuration,
-        maxDuration: parseInt(localStorage.getItem('videoke:f:max')) || FILTER_DEFAULTS.maxDuration
-      };
-    }
-
-    function saveFilters(f) {
-      localStorage.setItem('videoke:f:hd', f.hdOnly ? '1' : '0');
-      localStorage.setItem('videoke:f:ch', f.filterChannels ? '1' : '0');
-      localStorage.setItem('videoke:f:strict', f.strictKaraoke ? '1' : '0');
-      localStorage.setItem('videoke:f:min', f.minDuration);
-      localStorage.setItem('videoke:f:max', f.maxDuration);
-    }
-
-    let filters = loadFilters();
-
-    function initFiltersUI() {
-      document.getElementById('hdOnly').checked = filters.hdOnly;
-      document.getElementById('filterChannels').checked = filters.filterChannels;
-      document.getElementById('strictKaraoke').checked = filters.strictKaraoke;
-      document.getElementById('minDuration').value = formatMMSS(filters.minDuration);
-      document.getElementById('maxDuration').value = formatMMSS(filters.maxDuration);
-      renderActiveFilters();
-    }
-
-    function formatMMSS(seconds) {
-      if (!seconds) return '0:00';
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      return `${m}:${String(s).padStart(2, '0')}`;
-    }
-
-    function parseMMSS(str) {
-      if (!str) return 0;
-      str = String(str).trim();
-      if (str.includes(':')) {
-        const [m, s] = str.split(':');
-        return (parseInt(m) || 0) * 60 + (parseInt(s) || 0);
-      }
-      return parseInt(str) || 0;
-    }
-
-    function validateDuration(type) {
-      const input = document.getElementById(type === 'min' ? 'minDuration' : 'maxDuration');
-      input.value = formatMMSS(parseMMSS(input.value));
-    }
-
-    function setPreset(preset) {
-      const presets = {
-        short: { min: 60, max: 180 },
-        song: { min: 120, max: 360 },
-        long: { min: 120, max: 720 },
-        all: { min: 0, max: 0 }
-      };
-      const p = presets[preset];
-      if (!p) return;
-      filters.minDuration = p.min;
-      filters.maxDuration = p.max;
-      document.getElementById('minDuration').value = formatMMSS(p.min);
-      document.getElementById('maxDuration').value = formatMMSS(p.max);
-      saveFilters(filters);
-      renderActiveFilters();
-      const q = document.getElementById('ytSearch').value.trim();
-      if (q.length >= 2) doSearch();
-    }
-
-    function applyFilters() {
-      filters.hdOnly = document.getElementById('hdOnly').checked;
-      filters.filterChannels = document.getElementById('filterChannels').checked;
-      filters.strictKaraoke = document.getElementById('strictKaraoke').checked;
-      filters.minDuration = parseMMSS(document.getElementById('minDuration').value);
-      filters.maxDuration = parseMMSS(document.getElementById('maxDuration').value);
-      saveFilters(filters);
-      renderActiveFilters();
-      const q = document.getElementById('ytSearch').value.trim();
-      if (q.length >= 2) doSearch();
-    }
-
-    function resetFilters() {
-      filters = { ...FILTER_DEFAULTS };
-      saveFilters(filters);
-      initFiltersUI();
-      const q = document.getElementById('ytSearch').value.trim();
-      if (q.length >= 2) doSearch();
-    }
-
-    function relaxAllFilters() {
-      filters = {
-        hdOnly: false,
-        filterChannels: false,
-        strictKaraoke: false,
-        minDuration: 0,
-        maxDuration: 0
-      };
-      saveFilters(filters);
-      initFiltersUI();
-      const q = document.getElementById('ytSearch').value.trim();
-      if (q.length >= 2) doSearch();
-      toast('🔓 Na-relax lahat ng filters');
-    }
-
-    function toggleFilters() {
-      const panel = document.getElementById('filtersPanel');
-      panel.classList.toggle('show');
-    }
-
-    function renderActiveFilters() {
-      const el = document.getElementById('activeFilters');
-      const badges = [];
-      if (filters.strictKaraoke) badges.push('<span class="filter-badge">🎤 Karaoke</span>');
-      if (filters.hdOnly) badges.push('<span class="filter-badge hd">🎬 HD Only</span>');
-      if (filters.filterChannels) badges.push('<span class="filter-badge">✓ Trusted</span>');
-      if (filters.minDuration > 0 || filters.maxDuration > 0) {
-        const minT = filters.minDuration ? formatMMSS(filters.minDuration) : '0:00';
-        const maxT = filters.maxDuration ? formatMMSS(filters.maxDuration) : '∞';
-        badges.push(`<span class="filter-badge duration">⏱️ ${minT} - ${maxT}</span>`);
-      }
-      el.innerHTML = badges.join('');
-      const hdBadge = document.getElementById('hdModeBadge');
-      if (hdBadge) hdBadge.textContent = filters.hdOnly ? 'HD ON' : 'HD OFF';
-    }
-
-    initFiltersUI();
 
     let toastTimer;
     function toast(msg, type = 'success') {
@@ -913,158 +515,15 @@
       return /\b(hd|4k|1080p?|720p?|full\s*hd|uhd)\b/i.test(title || '');
     }
 
-    document.getElementById('ytSearch').addEventListener('input', (e) => {
-      clearTimeout(searchDebounce);
-      const q = e.target.value.trim();
-      if (q.length < 2) {
-        document.getElementById('searchResults').classList.remove('show');
-        return;
-      }
-      searchDebounce = setTimeout(doSearch, 600);
-    });
-
-    document.getElementById('ytSearch').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        clearTimeout(searchDebounce);
-        doSearch();
-      }
-    });
-
-    async function doSearch() {
-      const query = document.getElementById('ytSearch').value.trim();
-      if (!query || query.length < 2) return;
-
-      lastSearchQuery = query;
-      const resultsEl = document.getElementById('searchResults');
-      resultsEl.classList.add('show');
-      resultsEl.innerHTML = `
-        <div class="search-loading">
-          <div class="spinner"></div>
-          <span>Naghahanap: "${escapeHtml(query)}"...</span>
-        </div>
-      `;
-      document.getElementById('searchBtn').disabled = true;
-
-      try {
-        const params = new URLSearchParams({
-          q: query,
-          hd: filters.hdOnly ? '1' : '0',
-          channels: filters.filterChannels ? '1' : '0',
-          strict: filters.strictKaraoke ? '1' : '0',
-          min: filters.minDuration,
-          max: filters.maxDuration
-        });
-
-        const r = await fetch(API + '/api/search?' + params.toString());
-        const data = await r.json();
-
-        if (!data.results || data.results.length === 0) {
-          resultsEl.innerHTML = `
-            <div class="no-results-notice">
-              <div>😕 <b>Walang nakita para sa "${escapeHtml(query)}"</b></div>
-              <div style="margin-top:6px;color:#a0b0c0;font-size:11px">
-                Subukan ang mga sumusunod:
-              </div>
-              <div class="btn-row">
-                <button class="relax" onclick="relaxAllFilters()">🔓 I-relax Filters</button>
-                <button class="yt-open" onclick="searchOnYouTube()">▶ Sa YouTube</button>
-              </div>
-            </div>
-          `;
-          return;
-        }
-
-        const hasNoHD = data.results.some(v => v.noHDMatch);
-        const noHDNotice = hasNoHD
-          ? `<div style="padding:8px 12px;background:rgba(255,215,0,0.1);
-              border:1px solid rgba(255,215,0,0.3);border-radius:8px;
-              font-size:11px;color:#ffd700;margin-bottom:8px">
-              ⚠️ Walang HD result. Ipinapakita ang lahat ng available.
-            </div>`
-          : '';
-
-        resultsEl.innerHTML = noHDNotice + data.results.map(v => {
-          const duration = formatDuration(v.duration);
-          const trendingBadge = v.trendingCount > 0
-            ? `<span class="trend-badge">🔥 ${v.trendingCount}</span>` : '';
-
-          let hdBadge = '';
-          if (v.previouslyFailed) {
-            hdBadge = '<span class="hd-badge failed">⛔ FAILED</span>';
-          } else if (/\b4k\b/i.test(v.title)) {
-            hdBadge = '<span class="hd-badge uhd">4K</span>';
-          } else if (v.isHD || v.titleHD || hasHDKeyword(v.title)) {
-            hdBadge = '<span class="hd-badge hd">HD</span>';
-          }
-
-          let channelBadge = '';
-          if (v.channelScore >= 10) {
-            channelBadge = '<span class="channel-badge trusted">⭐</span>';
-          }
-
-          return `
-            <div class="search-result ${v.previouslyFailed ? 'failed' : ''}"
-              onclick="quickAddFromSearch('${v.videoId}', '${escapeAttr(v.title)}')">
-              <img src="${v.thumbnail}" loading="lazy"
-                onerror="this.style.display='none'">
-              <div class="sr-info">
-                <div class="sr-title">🎤 ${escapeHtml(v.title)} ${hdBadge}</div>
-                <div class="sr-meta">
-                  ${v.author ? `<span>${escapeHtml(v.author)}</span>${channelBadge}` : ''}
-                  ${duration ? `<span class="sr-duration">${duration}</span>` : ''}
-                  ${trendingBadge}
-                </div>
-              </div>
-              <span class="sr-add">+</span>
-            </div>
-          `;
-        }).join('');
-      } catch (e) {
-        resultsEl.innerHTML = `
-          <div class="no-results-notice">
-            <div>⚠️ <b>Search error</b></div>
-            <div style="color:#a0b0c0;font-size:11px;margin-top:6px">
-              Subukan ulit o i-paste ang link sa ibaba.
-            </div>
-            <div class="btn-row">
-              <button class="yt-open" onclick="searchOnYouTube()">▶ Sa YouTube</button>
-            </div>
-          </div>
-        `;
-      } finally {
-        document.getElementById('searchBtn').disabled = false;
-      }
-    }
-
-    function searchOnYouTube() {
-      const query = document.getElementById('ytSearch').value.trim();
-      const searchTerm = query ? `${query} karaoke` : 'karaoke';
-      const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchTerm)}`;
+    // ===== OPEN YOUTUBE APP =====
+    function openYouTubeApp() {
+      // Buksan ang YouTube app (o mobile web)
+      const url = 'https://m.youtube.com';
       window.open(url, '_blank');
-      toast('▶ Bukas sa YouTube app...');
+      toast('▶ Buksas sa YouTube...');
     }
 
-    function formatDuration(seconds) {
-      if (!seconds) return '';
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      return `${m}:${String(s).padStart(2, '0')}`;
-    }
-
-    function quickAddFromSearch(videoId, title) {
-      const singer = document.getElementById('singer').value.trim() || 'Guest';
-      socket.emit('addSong', {
-        videoId, title, singer,
-        searchQuery: lastSearchQuery
-      });
-      if (navigator.vibrate) navigator.vibrate(20);
-      toast('✓ ' + title.substring(0, 40));
-      document.getElementById('ytSearch').value = '';
-      document.getElementById('searchResults').classList.remove('show');
-      lastSearchQuery = '';
-    }
-
+    // ===== URL PREVIEW =====
     document.getElementById('ytUrl').addEventListener('input', (e) => {
       clearTimeout(previewTimer);
       const value = e.target.value.trim();
@@ -1110,6 +569,7 @@
       if (e.key === 'Enter') addYouTube();
     });
 
+    // ===== ADD YOUTUBE =====
     async function addYouTube() {
       const input = document.getElementById('ytUrl').value.trim();
       const singer = document.getElementById('singer').value.trim() || 'Guest';
@@ -1119,14 +579,12 @@
       if (!videoId) return toast('Hindi valid na YouTube link', 'error');
 
       let title = document.getElementById('ytTitle').textContent;
-      let isHD = false;
       let previouslyFailed = false;
       if (!title || title === 'Loading...' || title === '—') {
         try {
           const r = await fetch(API + `/api/yt-info/${videoId}`);
           const data = await r.json();
           title = data.title;
-          isHD = data.isHD;
           previouslyFailed = data.previouslyFailed;
         } catch {
           title = 'YouTube: ' + videoId;
@@ -1137,20 +595,6 @@
         const proceed = confirm(
           `⚠️ Naka-blacklist ang video na ito dati (hindi ma-play).\n\n` +
           `"${title}"\n\nSigurado ka bang i-reserve pa rin?`
-        );
-        if (!proceed) return;
-      }
-
-      const looksKaraoke = /karaoke|videoke|minus[\s-]?one|instrumental|backing|sing[\s-]?along/i.test(title);
-      const looksHD = hasHDKeyword(title) || isHD;
-
-      const warnings = [];
-      if (!looksKaraoke) warnings.push('⚠️ Mukhang HINDI karaoke');
-      if (filters.hdOnly && !looksHD) warnings.push('⚠️ Mukhang HINDI HD');
-
-      if (warnings.length > 0 && !previouslyFailed) {
-        const proceed = confirm(
-          `${warnings.join('\n')}\n\n"${title}"\n\nSigurado ka?`
         );
         if (!proceed) return;
       }
@@ -1299,9 +743,8 @@
 
       qEl.innerHTML = s.queue.map((q, i) => {
         const isMe = myName && q.singer.toLowerCase() === myName;
-        const isNext = i === 0;
         return `
-          <div class="queue-item ${isMe ? 'is-me' : ''} ${isNext ? 'is-next' : ''}">
+          <div class="queue-item ${isMe ? 'is-me' : ''}">
             <div class="pos">${i + 1}</div>
             <div class="info">
               <div class="singer">
@@ -1327,44 +770,14 @@
       socket.emit('moveSong', { id, direction: dir });
     }
 
-    socket.on('error', msg => {
-      toast(msg, 'error');
-      if (msg && msg.includes('Hindi ma-embed')) {
-        document.getElementById('ytSearch').focus();
-      }
-    });
-
+    socket.on('error', msg => toast(msg, 'error'));
     socket.on('videoBlacklisted', ({ videoId, title }) => {
       toast(`⚠️ Hindi ma-play: "${(title || '').substring(0, 30)}" — tinanggal sa queue`, 'error');
     });
-
     socket.on('historyCleared', () => {
       if (document.getElementById('tab-history').style.display !== 'none') loadHistory();
     });
     socket.on('kicked', msg => { alert(msg); location.reload(); });
-
-    socket.on('recentSearches', (list) => {
-      const section = document.getElementById('recentSection');
-      const listEl = document.getElementById('recentList');
-      if (!list || list.length === 0) {
-        section.style.display = 'none';
-        return;
-      }
-      section.style.display = 'block';
-      document.getElementById('recentCount').textContent = list.length;
-      listEl.innerHTML = list.slice(0, 15).map(r => `
-        <button class="recent-chip" onclick="searchFromRecent('${escapeAttr(r.query)}')">
-          <span class="q">${escapeHtml(r.query)}</span>
-          <span class="who">· ${escapeHtml(r.singer)}</span>
-        </button>
-      `).join('');
-    });
-
-    function searchFromRecent(query) {
-      document.getElementById('ytSearch').value = query;
-      document.getElementById('ytSearch').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      doSearch();
-    }
 
     function openModal(id) { document.getElementById(id).classList.add('show'); }
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
