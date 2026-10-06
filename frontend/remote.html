@@ -51,7 +51,6 @@
     input:focus { outline:none;border-color:var(--red);
       background:var(--card2); }
 
-    /* ===== SIMPLE RESERVE CARD ===== */
     .yt-card { background:linear-gradient(135deg,#2a0a1a,#1a0010);
       border:1px solid rgba(255,46,85,0.2);border-radius:16px;
       padding:18px;margin-bottom:16px;position:relative;overflow:hidden; }
@@ -511,16 +510,11 @@
       return m ? m[1] : null;
     }
 
-    function hasHDKeyword(title) {
-      return /\b(hd|4k|1080p?|720p?|full\s*hd|uhd)\b/i.test(title || '');
-    }
-
     // ===== OPEN YOUTUBE APP =====
     function openYouTubeApp() {
-      // Buksan ang YouTube app (o mobile web)
       const url = 'https://m.youtube.com';
       window.open(url, '_blank');
-      toast('▶ Buksas sa YouTube...');
+      toast('▶ Bukas sa YouTube...');
     }
 
     // ===== URL PREVIEW =====
