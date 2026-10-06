@@ -32,7 +32,6 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
 const FAVORITES_FILE = path.join(DATA_DIR, 'favorites.json');
-const RECENT_FILE = path.join(DATA_DIR, 'recent-searches.json');
 const TRENDING_FILE = path.join(DATA_DIR, 'trending.json');
 const FAILED_FILE = path.join(DATA_DIR, 'failed-videos.json');
 
@@ -79,8 +78,6 @@ function hasHDKeyword(title) {
   return HD_KEYWORDS.some(re => re.test(title));
 }
 
-const searchCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
 const hdCache = new Map();
 const HD_CACHE_TTL = 30 * 60 * 1000;
 const ytInfoCache = new Map();
@@ -91,7 +88,6 @@ let nowPlaying = null;
 let countdownTimer = null;
 let history = loadJSON(HISTORY_FILE);
 let favorites = loadJSON(FAVORITES_FILE, []);
-let recentSearches = loadJSON(RECENT_FILE, []);
 let trending = loadJSON(TRENDING_FILE, {});
 let failedVideos = loadJSON(FAILED_FILE, {});
 let stats = { totalPlayed: history.length, startedAt: Date.now() };
@@ -137,20 +133,6 @@ function getTrendingStats() {
       .sort((a, b) => b.count - a.count).slice(0, 10).map(mapEntry),
     allTime: [...all].sort((a, b) => b.count - a.count).slice(0, 10).map(mapEntry)
   };
-}
-
-function pushRecentSearch(query, singer) {
-  const clean = String(query || '').trim().toLowerCase().substring(0, 80);
-  if (!clean) return;
-  recentSearches = recentSearches.filter(r => r.query !== clean);
-  recentSearches.unshift({
-    query: clean,
-    singer: String(singer || 'Guest').substring(0, 30),
-    at: Date.now()
-  });
-  recentSearches = recentSearches.slice(0, 30);
-  saveJSON(RECENT_FILE, recentSearches);
-  io.emit('recentSearches', recentSearches);
 }
 
 function countUniqueSingers() {
@@ -199,7 +181,6 @@ app.get('/api/info', (req, res) => {
   });
 });
 
-// ===== YT-INFO endpoint =====
 app.get('/api/yt-info/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
   if (!/^[\w-]{11}$/.test(videoId))
@@ -226,9 +207,7 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
       title = (data.title || '').trim();
       author = (data.author_name || '').trim();
     }
-  } catch (e) {
-    console.log('oEmbed failed:', e.message);
-  }
+  } catch (e) {}
 
   if (!title) title = `YouTube Video (${videoId})`;
 
@@ -244,11 +223,6 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
   };
 
   ytInfoCache.set(videoId, { data: responseData, at: Date.now() });
-  if (ytInfoCache.size > 200) {
-    const entries = [...ytInfoCache.entries()].sort((a, b) => a[1].at - b[1].at);
-    entries.slice(0, 50).forEach(([k]) => ytInfoCache.delete(k));
-  }
-
   res.json(responseData);
 });
 
@@ -259,7 +233,6 @@ app.get('/api/history', (req, res) => {
 
 app.get('/api/favorites', (req, res) => res.json(favorites));
 app.get('/api/trending', (req, res) => res.json(getTrendingStats()));
-app.get('/api/recent-searches', (req, res) => res.json(recentSearches));
 app.get('/api/failed-videos', (req, res) => res.json(Object.values(failedVideos)));
 
 function authAdmin(req, res, next) {
@@ -289,7 +262,6 @@ app.post('/api/admin/clear-history', authAdmin, (req, res) => {
 app.post('/api/admin/clear-failed', authAdmin, (req, res) => {
   failedVideos = {};
   saveJSON(FAILED_FILE, failedVideos);
-  console.log('Cleared failed videos list');
   res.json({ ok: true });
 });
 
@@ -304,13 +276,6 @@ app.post('/api/admin/stop', authAdmin, (req, res) => {
   nowPlaying = null;
   io.emit('command', { type: 'stop' });
   broadcastState();
-  res.json({ ok: true });
-});
-
-app.post('/api/admin/clear-recent', authAdmin, (req, res) => {
-  recentSearches = [];
-  saveJSON(RECENT_FILE, recentSearches);
-  io.emit('recentSearches', []);
   res.json({ ok: true });
 });
 
@@ -366,7 +331,7 @@ function playNext() {
 }
 
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id, 'Total:', io.engine.clientsCount);
+  console.log('Client connected:', socket.id);
 
   socket.emit('state', {
     queue: [],
@@ -378,22 +343,25 @@ io.on('connection', (socket) => {
     },
     favorites: favorites.map(f => f.videoId)
   });
-  socket.emit('recentSearches', recentSearches);
   socket.emit('trending', getTrendingStats());
   broadcastState();
 
   if (!nowPlaying) {
     socket.emit('command', { type: 'idle' });
+  } else if (countdownTimer) {
+    socket.emit('command', { type: 'countdown', song: nowPlaying, seconds: 3 });
+  } else {
+    socket.emit('command', { type: 'play', song: nowPlaying });
   }
 
-  socket.on('addSong', ({ videoId, singer, title, searchQuery }) => {
+  socket.on('addSong', ({ videoId, singer, title }) => {
     const vid = parseYouTubeUrl(videoId) || videoId;
     if (!vid || !/^[\w-]{11}$/.test(vid))
       return socket.emit('error', 'Hindi valid na YouTube link');
 
     if (failedVideos[vid]) {
       return socket.emit('error',
-        '⚠️ Hindi ma-embed ang video na ito (blocked ng owner). Subukan ibang version.');
+        '⚠️ Hindi ma-embed ang video na ito. Subukan ibang version.');
     }
 
     const s = String(singer || 'Guest').substring(0, 30).trim() || 'Guest';
@@ -401,7 +369,6 @@ io.on('connection', (socket) => {
     if (queue.some(q => q.videoId === vid && q.singer === s))
       return socket.emit('error', 'Naka-reserve na ang kantang ito');
 
-    // GUARANTEED TITLE
     let cleanTitle = String(title || '').trim();
     if (!cleanTitle || cleanTitle === 'YouTube Video' || cleanTitle === '—' ||
         cleanTitle === 'Loading...' || cleanTitle === 'Kinukuha ang title...') {
@@ -409,7 +376,6 @@ io.on('connection', (socket) => {
     }
 
     trackReservation(vid, cleanTitle);
-    if (searchQuery) pushRecentSearch(searchQuery, s);
 
     queue.push({
       id: Date.now() + Math.floor(Math.random() * 1000),
@@ -419,7 +385,6 @@ io.on('connection', (socket) => {
       reservedAt: Date.now()
     });
 
-    // ⬇️ HUWAG mag-auto-play — hihintayin ang host na pumindot ng SIMULAN
     broadcastState();
   });
 
@@ -457,7 +422,6 @@ io.on('connection', (socket) => {
       failedAt: Date.now()
     };
     saveJSON(FAILED_FILE, failedVideos);
-    console.log(`✗ Blacklisted: ${videoId} — ${title}`);
 
     queue = queue.filter(q => q.videoId !== videoId);
     if (nowPlaying && nowPlaying.videoId === videoId) {
@@ -468,11 +432,9 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
-  // ⬇️ MANUAL START — host-triggered
   socket.on('startPlaying', () => {
     if (nowPlaying || countdownTimer) return;
     if (queue.length === 0) return;
-    console.log('▶ Manual start triggered by host');
     playNext();
   });
 
@@ -510,18 +472,19 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id, 'Total:', io.engine.clientsCount);
+    console.log('Client disconnected:', socket.id);
   });
 });
 
 server.listen(PORT, () => {
   console.log('');
-  console.log('  🎤  VIDEoke BACKEND — Socket.IO Server');
+  console.log('  🎤  VIDEoke BACKEND — Clean Version');
   console.log('  ═══════════════════════════════════════════════');
   console.log('  🚀  Port:         ' + PORT);
   console.log('  🌐  Frontend URL: ' + FRONTEND_URL);
   console.log('  🔐  Admin pass:   ' + ADMIN_PASSWORD);
   console.log('  🎵  History:      ' + history.length);
   console.log('  ⛔  Failed:       ' + Object.keys(failedVideos).length);
+  console.log('  ℹ️   Mode:         Manual link paste only');
   console.log('');
 });
