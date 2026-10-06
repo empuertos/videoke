@@ -42,13 +42,14 @@
       border-radius:12px;font-size:16px;color:#a0b0c0;letter-spacing:1px; }
     .tv-hint b { color:#60a5fa;font-weight:800; }
 
+    /* ===== IDLE SCREEN ===== */
     #idleScreen {
       position:fixed;inset:0;z-index:500;display:none;
       flex-direction:row;align-items:center;justify-content:center;
       gap:20px;padding:30px;
       background:radial-gradient(ellipse at top left,#2a0a4a,#0a0512 60%);
     }
-    #idleScreen .left { flex:1 1 0;min-width:0;max-width:30%;
+    #idleScreen .left { flex:1 1 0;min-width:0;max-width:34%;
       display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
     #idleScreen .right { flex:0 0 auto;
       display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
@@ -87,56 +88,142 @@
     #idleQueue::-webkit-scrollbar { width:4px; }
     #idleQueue::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
 
-    #queuePanel { position:fixed;top:100px;right:30px;
-      width:320px;max-height:60vh;z-index:45;
-      background:rgba(10,5,18,0.85);backdrop-filter:blur(20px);
-      border:1px solid rgba(255,215,0,0.3);border-radius:16px;
-      padding:14px;display:none;box-shadow:0 20px 60px rgba(0,0,0,0.5);
-      pointer-events:none; }
-    #queuePanel.show { display:block; }
+    /* ===== SLIM TOP BAR (queue + now singing) ===== */
+    #topBar {
+      position:fixed;
+      top:0;left:0;right:0;
+      z-index:45;
+      min-height:46px;
+      padding:6px 14px;
+      background:linear-gradient(180deg, rgba(10,5,18,0.92), rgba(10,5,18,0.55));
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(255,215,0,0.15);
+      display:none;
+      align-items:center;
+      gap:12px;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    #topBar.show { display:flex; }
+    #topBar.hidden-mode {
+      opacity: 0.15;
+      transform: translateY(-30px);
+    }
+    #topBar.hidden-mode:hover,
+    #topBar.hidden-mode.expand-mode {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-    .qp-header { display:flex;align-items:center;gap:8px;
-      margin-bottom:10px;padding-bottom:10px;
-      border-bottom:1px solid rgba(255,215,0,0.2); }
-    .qp-icon { font-size:16px; }
-    .qp-title { flex:1;font-size:11px;font-weight:700;
-      letter-spacing:3px;color:var(--gold);text-transform:uppercase; }
-    .qp-count { background:var(--red);color:#fff;font-size:11px;
-      font-weight:700;padding:2px 9px;border-radius:12px; }
+    /* === Now Singing section (left) === */
+    .ns-section {
+      display:flex;align-items:center;gap:8px;
+      padding-right:14px;
+      border-right:1px solid rgba(255,215,0,0.2);
+      flex-shrink:0;
+      max-width:340px;
+    }
+    .ns-mic { font-size:16px; }
+    .ns-info { min-width:0;overflow:hidden; }
+    .ns-label {
+      font-size:8px;letter-spacing:2px;
+      color:var(--gold);font-weight:700;
+      text-transform:uppercase;
+    }
+    .ns-singer {
+      font-size:14px;font-weight:800;
+      color:#fff;line-height:1.1;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .ns-song {
+      font-size:11px;color:#c0c0d0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      margin-top:1px;
+    }
 
-    .qp-list { display:flex;flex-direction:column;gap:6px;
-      max-height:calc(60vh - 60px);overflow-y:auto; }
-    .qp-item { display:flex;align-items:center;gap:8px;
-      padding:8px 10px;background:rgba(255,255,255,0.04);
-      border-left:3px solid rgba(255,255,255,0.15);
-      border-radius:8px;font-size:12px; }
+    /* === Queue section (right) === */
+    .q-section {
+      flex:1;
+      display:flex;align-items:center;gap:8px;
+      min-width:0;
+    }
+    .q-label {
+      display:flex;align-items:center;gap:5px;
+      padding:4px 10px;
+      background:rgba(255,215,0,0.1);
+      border:1px solid rgba(255,215,0,0.3);
+      border-radius:12px;
+      flex-shrink:0;
+    }
+    .q-label .q-icon { font-size:12px; }
+    .q-label .q-title {
+      font-size:9px;font-weight:700;letter-spacing:2px;
+      color:var(--gold);text-transform:uppercase;
+    }
+    .q-label .q-count {
+      background:var(--red);color:#fff;
+      font-size:9px;font-weight:800;
+      padding:1px 6px;border-radius:8px;
+      min-width:18px;text-align:center;
+    }
+
+    .qp-list {
+      display:flex;flex-direction:row;gap:6px;
+      overflow-x:auto;flex:1;
+      padding-bottom:1px;
+    }
+    .qp-list::-webkit-scrollbar { height:3px; }
+    .qp-list::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
+
+    .qp-item {
+      display:flex;align-items:center;gap:5px;
+      padding:4px 10px;
+      background:rgba(255,255,255,0.05);
+      border-left:2px solid rgba(255,255,255,0.15);
+      border-radius:6px;
+      font-size:10px;
+      white-space:nowrap;
+      flex-shrink:0;
+      max-width:180px;
+    }
     .qp-item.first {
-      background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,138,0,0.05));
-      border-left-color:var(--gold); }
-    .qp-item .qp-num { min-width:22px;font-size:11px;
-      font-weight:800;color:var(--dim);text-align:center; }
-    .qp-item .qp-info { flex:1;min-width:0; }
-    .qp-item .qp-singer { font-size:12px;font-weight:700;color:#fff;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .qp-item .qp-song { font-size:10px;color:var(--dim);margin-top:1px;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .qp-item .qp-wait { font-size:10px;color:var(--gold);
-      font-weight:700;white-space:nowrap;margin-left:6px; }
-    .qp-empty { text-align:center;padding:16px;color:var(--dim);
-      font-size:11px;font-style:italic; }
+      background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,138,0,0.08));
+      border-left-color:var(--gold);
+    }
+    .qp-item .qp-num {
+      font-size:9px;font-weight:800;color:var(--dim);
+      min-width:12px;text-align:center;
+    }
+    .qp-item.first .qp-num { color:var(--gold); }
+    .qp-item .qp-info { min-width:0;overflow:hidden; }
+    .qp-item .qp-singer {
+      font-size:10px;font-weight:700;color:#fff;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .qp-item .qp-song {
+      font-size:9px;color:var(--dim);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      max-width:130px;
+    }
+    .qp-item .qp-wait {
+      font-size:9px;color:var(--gold);font-weight:700;
+      margin-left:4px;flex-shrink:0;
+    }
+    .qp-empty { color:var(--dim);font-size:10px;font-style:italic;padding:4px; }
 
-    #nowSinging { position:fixed;bottom:0;left:0;right:0;z-index:50;
-      padding:40px 60px 30px;
-      background:linear-gradient(transparent,rgba(0,0,0,0.95) 70%);
-      display:none;pointer-events:none; }
-    #nowSinging .label { display:inline-block;font-size:12px;
-      letter-spacing:4px;color:var(--gold);font-weight:700;
-      padding:6px 14px;background:rgba(255,215,0,0.15);
-      border:1px solid rgba(255,215,0,0.4);border-radius:20px;margin-bottom:12px; }
-    #nowSinging .singer { font-size:56px;font-weight:900;
-      text-shadow:0 4px 30px rgba(0,0,0,0.9);line-height:1.1; }
-    #nowSinging .song { font-size:24px;color:#c0c0d0;margin-top:6px; }
+    /* === Toggle button for auto-hide === */
+    .toggle-bar-btn {
+      width:28px;height:28px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(0,0,0,0.4);
+      color:#fff;cursor:pointer;
+      font-size:12px;
+      flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .toggle-bar-btn:hover { background:rgba(255,215,0,0.2); }
 
+    /* ===== COUNTDOWN (full screen overlay) ===== */
     #countdown { position:fixed;inset:0;z-index:200;
       display:none;flex-direction:column;align-items:center;justify-content:center;
       background:rgba(5,0,15,0.96);backdrop-filter:blur(30px); }
@@ -164,59 +251,13 @@
     .cd-queue-item .cd-song { font-size:10px;color:var(--dim);
       margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
-    #scoringOverlay { position:fixed;inset:0;z-index:300;
-      display:none;flex-direction:column;align-items:center;justify-content:center;
-      text-align:center;padding:60px;
-      background:radial-gradient(ellipse at center,rgba(42,10,74,0.98),rgba(5,0,15,0.99));
-      backdrop-filter:blur(30px); }
-    #scoringOverlay .title { font-size:16px;letter-spacing:6px;
-      color:var(--gold);font-weight:700;margin-bottom:20px; }
-    #scoringOverlay .singer { font-size:72px;font-weight:900;
-      background:linear-gradient(135deg,#fff,#ffd700);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent; }
-    #scoringOverlay .song { font-size:28px;color:#a0a0c0;margin-top:12px; }
-    #scoringOverlay .hint { font-size:20px;color:var(--gold);
-      margin-top:50px;letter-spacing:2px;animation:pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-    #scoringOverlay .votes { margin-top:40px;display:flex;align-items:baseline;gap:14px; }
-    #scoringOverlay .vcount { font-size:96px;font-weight:900;
-      color:#4ade80;transition:transform 0.2s; }
-    #scoringOverlay .vcount.bump { transform:scale(1.3); }
-    #scoringOverlay .vlabel { font-size:18px;color:var(--dim);
-      letter-spacing:2px;text-transform:uppercase; }
-    #scoringOverlay .bar { margin-top:40px;width:500px;max-width:80vw;height:6px;
-      background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden; }
-    #scoringOverlay .bar-fill { height:100%;
-      background:linear-gradient(90deg,#ffd700,#ff2e55);width:100%; }
-
-    #scoreReveal { position:fixed;inset:0;z-index:400;
-      display:none;flex-direction:column;align-items:center;justify-content:center;
-      text-align:center;padding:60px;
-      background:radial-gradient(ellipse at center,rgba(42,10,74,0.98),rgba(5,0,15,0.99)); }
-    #scoreReveal .label { font-size:16px;letter-spacing:8px;
-      color:var(--gold);font-weight:700; }
-    #scoreReveal .singer { font-size:56px;font-weight:900;margin-top:18px; }
-    #scoreReveal .song { font-size:22px;color:#a0a0c0;margin-top:6px; }
-    #scoreReveal .scoreRow { margin-top:30px;display:flex;align-items:baseline;gap:12px; }
-    #scoreReveal .big { font-size:200px;font-weight:900;
-      line-height:1;letter-spacing:-8px;
-      background:linear-gradient(135deg,#ffd700,#ff8a00,#ff2e55);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent; }
-    #scoreReveal .max { font-size:48px;color:#666;font-weight:700; }
-    #scoreReveal .stars { font-size:42px;margin-top:30px;
-      letter-spacing:8px;color:#ffd700; }
-    #scoreReveal .histo { margin-top:30px;display:flex;
-      gap:6px;align-items:flex-end;height:80px; }
-    #scoreReveal .histo .bar-item { width:32px;
-      background:linear-gradient(180deg,#ffd700,#ff8a00);
-      border-radius:4px 4px 0 0;position:relative; }
-    #scoreReveal .histo .lbl { position:absolute;bottom:-22px;
-      left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim); }
-
-    #hostControls { position:fixed;top:30px;right:30px;z-index:60;
-      display:none;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:400px; }
+    /* ===== CONTROLS ===== */
+    #hostControls { position:fixed;top:70px;right:30px;z-index:60;
+      display:none;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:400px;
+      transition: opacity 0.3s;
+    }
+    #hostControls.auto-hidden { opacity: 0.15; }
+    #hostControls.auto-hidden:hover { opacity: 1; }
     #hostControls button { min-width:56px;height:56px;padding:0 14px;
       border-radius:28px;border:1px solid rgba(255,255,255,0.15);
       background:rgba(0,0,0,0.5);color:#fff;
@@ -226,26 +267,32 @@
     #hostControls button.force-play {
       background:linear-gradient(135deg,#22c55e,#16a34a);
       border-color:#4ade80; }
-    #hostControls button.force-play:hover {
-      background:linear-gradient(135deg,#16a34a,#15803d); }
 
-    #statsBadge { position:fixed;top:30px;left:30px;z-index:60;
-      display:none;padding:10px 18px;background:rgba(0,0,0,0.6);
+    #statsBadge { position:fixed;top:70px;left:30px;z-index:60;
+      display:none;padding:8px 16px;background:rgba(0,0,0,0.55);
       border:1px solid rgba(255,215,0,0.3);border-radius:30px;
-      font-size:14px;color:var(--gold);backdrop-filter:blur(20px); }
+      font-size:13px;color:var(--gold);backdrop-filter:blur(20px);
+      transition: opacity 0.3s;
+    }
+    #statsBadge.auto-hidden { opacity: 0.15; }
+    #statsBadge.auto-hidden:hover { opacity: 1; }
     #statsBadge b { color:#fff; }
-    #langBtn { position:fixed;top:30px;right:100px;z-index:60;
-      display:none;padding:10px 16px;background:rgba(0,0,0,0.6);
-      border:1px solid rgba(255,255,255,0.15);border-radius:30px;
-      color:#fff;cursor:pointer;font-size:14px;backdrop-filter:blur(20px); }
 
-    #offlineBanner { position:fixed;top:90px;left:50%;transform:translateX(-50%);
-      z-index:70;padding:10px 24px;background:rgba(255,46,85,0.9);
-      color:#fff;border-radius:24px;font-size:14px;
+    #langBtn { position:fixed;top:70px;right:100px;z-index:60;
+      display:none;padding:8px 14px;background:rgba(0,0,0,0.5);
+      border:1px solid rgba(255,255,255,0.15);border-radius:30px;
+      color:#fff;cursor:pointer;font-size:13px;backdrop-filter:blur(20px);
+      transition: opacity 0.3s;
+    }
+    #langBtn.auto-hidden { opacity: 0.15; }
+    #langBtn.auto-hidden:hover { opacity: 1; }
+
+    #offlineBanner { position:fixed;top:70px;left:50%;transform:translateX(-50%);
+      z-index:70;padding:8px 20px;background:rgba(255,46,85,0.9);
+      color:#fff;border-radius:20px;font-size:13px;
       font-weight:600;display:none; }
     #offlineBanner.show { display:block; }
 
-    /* ===== DEBUG LOG PANEL ===== */
     #debugLog {
       position:fixed;bottom:10px;left:10px;z-index:9999;
       background:rgba(0,0,0,0.85);
@@ -296,32 +343,50 @@
       </div>
     </div>
     <div id="idleQueue">
-      <div class="qp-header">
-        <span class="qp-icon">📋</span>
-        <span class="qp-title">SUSUNOD NA KANTA</span>
-        <span class="qp-count" id="idleQpCount">0</span>
+      <div class="qp-header" style="display:flex;align-items:center;gap:8px;
+        margin-bottom:10px;padding-bottom:10px;
+        border-bottom:1px solid rgba(255,215,0,0.2);">
+        <span style="font-size:14px">📋</span>
+        <span style="flex:1;font-size:11px;font-weight:700;
+          letter-spacing:2px;color:var(--gold);text-transform:uppercase;
+          white-space:nowrap;">SUSUNOD NA KANTA</span>
+        <span class="qp-count" id="idleQpCount" style="background:var(--red);
+          color:#fff;font-size:10px;font-weight:700;padding:2px 8px;
+          border-radius:10px;min-width:22px;text-align:center;">0</span>
       </div>
-      <div class="qp-list" id="idleQpList">
+      <div class="qp-list" id="idleQpList" style="display:flex;flex-direction:column;
+        gap:6px;overflow:visible;">
         <div class="qp-empty">Walang naka-reserve</div>
       </div>
     </div>
   </div>
 
-  <div id="queuePanel">
-    <div class="qp-header">
-      <span class="qp-icon">📋</span>
-      <span class="qp-title">SUSUNOD</span>
-      <span class="qp-count" id="qpCount">0</span>
+  <!-- ===== SLIM TOP BAR ===== -->
+  <div id="topBar">
+    <!-- Now Singing (left) -->
+    <div class="ns-section">
+      <span class="ns-mic">🎤</span>
+      <div class="ns-info">
+        <div class="ns-label">NOW SINGING</div>
+        <div class="ns-singer" id="nsSinger">—</div>
+        <div class="ns-song" id="nsSong">—</div>
+      </div>
     </div>
-    <div class="qp-list" id="qpList">
-      <div class="qp-empty">Walang naka-reserve</div>
-    </div>
-  </div>
 
-  <div id="nowSinging">
-    <div class="label" id="nsLabel">🎤 NOW SINGING</div>
-    <div class="singer" id="nsSinger">—</div>
-    <div class="song" id="nsSong">—</div>
+    <!-- Queue (right) -->
+    <div class="q-section">
+      <div class="q-label">
+        <span class="q-icon">📋</span>
+        <span class="q-title">SUSUNOD</span>
+        <span class="q-count" id="qpCount">0</span>
+      </div>
+      <div class="qp-list" id="qpList">
+        <div class="qp-empty">Walang naka-reserve</div>
+      </div>
+    </div>
+
+    <!-- Toggle auto-hide -->
+    <button class="toggle-bar-btn" onclick="toggleBarPin()" id="pinBtn" title="Pin">📌</button>
   </div>
 
   <div id="countdown">
@@ -330,30 +395,6 @@
     <div class="song" id="cdSong">—</div>
     <div class="number" id="cdNumber">5</div>
     <div class="cd-queue" id="cdQueue"></div>
-  </div>
-
-  <div id="scoringOverlay">
-    <div class="title" id="scTitle">RATE THE PERFORMANCE</div>
-    <div class="singer" id="scSinger">—</div>
-    <div class="song" id="scSong">—</div>
-    <div class="hint" id="scHint">Tap a score on your phone</div>
-    <div class="votes">
-      <span class="vcount" id="scVotes">0</span>
-      <span class="vlabel" id="scVLabel">votes</span>
-    </div>
-    <div class="bar"><div class="bar-fill" id="scBar"></div></div>
-  </div>
-
-  <div id="scoreReveal">
-    <div class="label" id="rvLabel">SCORE</div>
-    <div class="singer" id="rvSinger">—</div>
-    <div class="song" id="rvSong">—</div>
-    <div class="scoreRow">
-      <span class="big" id="rvScore">0.0</span>
-      <span class="max">/ 10</span>
-    </div>
-    <div class="stars" id="rvStars"></div>
-    <div class="histo" id="rvHisto"></div>
   </div>
 
   <div id="hostControls">
@@ -390,8 +431,9 @@
     let lastCommand = null;
     let lastNowPlaying = null;
     let forceRetryTimer = null;
+    let autoHideTimer = null;
+    let barPinned = localStorage.getItem('videoke:barPinned') === '1';
 
-    // ===== DEBUG LOG =====
     function debugLog(msg, type = '') {
       const el = document.getElementById('debugLog');
       const t = new Date().toLocaleTimeString('en-PH', { hour12: false });
@@ -400,7 +442,6 @@
       line.textContent = `[${t}] ${msg}`;
       el.appendChild(line);
       el.scrollTop = el.scrollHeight;
-      // Limit to 50 lines
       while (el.children.length > 50) el.removeChild(el.firstChild);
       console.log(`[VIDEOKE] ${msg}`);
     }
@@ -408,7 +449,6 @@
       document.getElementById('debugLog').classList.toggle('show');
     }
     debugLog('Boot started');
-    debugLog(`Backend: ${BACKEND_URL}`);
 
     function resizeCanvas() { fx.width = window.innerWidth; fx.height = window.innerHeight; }
     resizeCanvas();
@@ -482,12 +522,7 @@
       document.getElementById('idleSub').textContent = t('readyToSing');
       document.getElementById('idleHint').textContent = t('scanHint');
       document.getElementById('qrLabel').textContent = '📱 ' + t('scanToJoin');
-      document.getElementById('nsLabel').textContent = '🎤 ' + t('nowSinging');
       document.getElementById('cdLabel').textContent = t('upNext');
-      document.getElementById('scTitle').textContent = t('rateNow');
-      document.getElementById('scHint').textContent = t('tapToVote');
-      document.getElementById('scVLabel').textContent = t('votesReceived');
-      document.getElementById('rvLabel').textContent = t('score');
       document.getElementById('langBtn').textContent = '🌐 ' + (getLang() === 'fil' ? 'FIL' : 'EN');
     }
     function toggleLang() { setLang(getLang() === 'fil' ? 'en' : 'fil'); applyLang(); }
@@ -510,7 +545,38 @@
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     }
 
-    // ===== START — with autoplay unlock =====
+    // ===== AUTO-HIDE BAR LOGIC =====
+    function resetAutoHide() {
+      const bar = document.getElementById('topBar');
+      if (barPinned) {
+        bar.classList.remove('hidden-mode');
+        return;
+      }
+      clearTimeout(autoHideTimer);
+      bar.classList.remove('hidden-mode');
+      bar.classList.add('expand-mode');
+      autoHideTimer = setTimeout(() => {
+        bar.classList.add('hidden-mode');
+        bar.classList.remove('expand-mode');
+      }, 5000);
+    }
+
+    function toggleBarPin() {
+      barPinned = !barPinned;
+      localStorage.setItem('videoke:barPinned', barPinned ? '1' : '0');
+      const btn = document.getElementById('pinBtn');
+      btn.textContent = barPinned ? '📌' : '📌';
+      btn.title = barPinned ? 'Pinned (click to auto-hide)' : 'Auto-hide (click to pin)';
+      const bar = document.getElementById('topBar');
+      if (barPinned) {
+        bar.classList.remove('hidden-mode');
+        clearTimeout(autoHideTimer);
+      } else {
+        resetAutoHide();
+      }
+    }
+
+    // ===== START =====
     const startScreen = document.getElementById('startScreen');
     function startVideoke() {
       if (started) return;
@@ -519,13 +585,10 @@
       startScreen.style.display = 'none';
       goFullscreen();
 
-      // ⬇️ CRITICAL: I-play muna ang YT player muted para ma-unlock autoplay
       if (ytReady && ytPlayer) {
         try {
-          debugLog('Unlocking autoplay (muted play)');
           ytPlayer.mute();
           ytPlayer.playVideo();
-          // Pagkatapos ng 800ms, i-pause at i-unmute
           setTimeout(() => {
             try {
               ytPlayer.pauseVideo();
@@ -533,16 +596,10 @@
               debugLog('Autoplay unlocked ✓');
             } catch (e) {}
           }, 800);
-        } catch (e) {
-          debugLog('Unlock error: ' + e.message, 'err');
-        }
-      } else {
-        debugLog('YT not ready at start — will unlock later', 'warn');
+        } catch (e) {}
       }
 
-      // I-replay ang last command kung meron
       if (lastCommand && lastCommand.type !== 'idle' && lastCommand.type !== 'stop') {
-        debugLog('Replaying: ' + lastCommand.type);
         setTimeout(() => handleCommand(lastCommand), 900);
       } else {
         show(document.getElementById('idleScreen'));
@@ -568,6 +625,7 @@
         case 's': case 'S': socket.emit('stop'); break;
         case 'l': case 'L': toggleLang(); break;
         case 'd': case 'D': toggleDebug(); break;
+        case 'b': case 'B': toggleBarPin(); break;
       }
     });
 
@@ -575,17 +633,13 @@
       debugLog('Socket connected ✓');
       document.getElementById('offlineBanner').classList.remove('show');
     });
-    socket.on('disconnect', () => {
-      debugLog('Socket disconnected', 'err');
-    });
+    socket.on('disconnect', () => debugLog('Socket disconnected', 'err'));
     socket.on('connect_error', (err) => {
       debugLog('Connection error: ' + err.message, 'err');
-      document.getElementById('offlineBanner').textContent =
-        '⚠️ Hindi maka-connect sa server.';
+      document.getElementById('offlineBanner').textContent = '⚠️ Hindi maka-connect sa server.';
       document.getElementById('offlineBanner').classList.add('show');
     });
 
-    // ===== QR =====
     function generateQR(url) {
       const el = document.getElementById('qrcode');
       if (!el) return;
@@ -609,10 +663,7 @@
           const img = el.querySelector('img');
           if (img) img.remove();
         }, 50);
-        debugLog('QR generated ✓');
-      } catch (e) {
-        debugLog('QR error: ' + e.message, 'err');
-      }
+      } catch (e) { debugLog('QR error: ' + e.message, 'err'); }
     }
 
     function initQRFlow() {
@@ -622,7 +673,7 @@
           document.getElementById('urlText').textContent = info.remoteUrl;
           generateQR(info.remoteUrl);
         })
-        .catch((err) => {
+        .catch(() => {
           const f = location.origin + '/remote.html';
           document.getElementById('urlText').textContent = f;
           generateQR(f);
@@ -636,7 +687,6 @@
     }
     waitForQRCode();
 
-    // ===== YT IFRAME =====
     function onYouTubeIframeAPIReady() {
       debugLog('YouTube API ready');
       ytApiReady = true;
@@ -656,29 +706,20 @@
           },
           onStateChange: (e) => {
             const states = ['ended','playing','paused','buffering','cued'];
-            const stateName = states[e.data] || e.data;
-            debugLog('YT state: ' + stateName);
+            debugLog('YT state: ' + (states[e.data] || e.data));
             if (e.data === 0 && currentVideoId) {
-              debugLog('Song ended → next');
               socket.emit('songEnded');
               currentVideoId = null;
             }
           },
           onError: (e) => {
-            // Error codes:
-            // 2 = invalid param, 5 = HTML5 error, 100 = not found,
-            // 101 = embed not allowed, 150 = embed not allowed (same as 101)
             const errMsgs = {
-              2: 'Invalid video ID',
-              5: 'HTML5 player error',
-              100: 'Video not found',
-              101: 'Embedding not allowed',
+              2: 'Invalid video ID', 5: 'HTML5 player error',
+              100: 'Video not found', 101: 'Embedding not allowed',
               150: 'Embedding not allowed'
             };
-            const msg = errMsgs[e.data] || ('Error ' + e.data);
-            debugLog('YT error: ' + msg, 'err');
+            debugLog('YT error: ' + (errMsgs[e.data] || e.data), 'err');
             if (currentVideoId) {
-              debugLog('Auto-skip to next');
               socket.emit('songEnded');
               currentVideoId = null;
             }
@@ -687,50 +728,34 @@
       });
     }
 
-    // ===== PLAY VIDEO — mas robust na autoplay handling =====
     function playVideo(videoId) {
       debugLog('playVideo: ' + videoId);
       currentVideoId = videoId;
-      if (!ytReady) {
-        debugLog('YT not ready, pending', 'warn');
-        pendingPlay = videoId;
-        return;
-      }
+      if (!ytReady) { pendingPlay = videoId; return; }
 
       try {
         ytPlayer.loadVideoById(videoId);
 
-        // Monitor autoplay — kung hindi tumugtog after 2s, force muted play
         clearTimeout(forceRetryTimer);
         forceRetryTimer = setTimeout(() => {
           if (!ytPlayer || !ytPlayer.getPlayerState) return;
           const state = ytPlayer.getPlayerState();
-          // -1 = unstarted, 0 = ended, 5 = cued, 2 = paused
           if (state !== 1 && state !== 3) {
-            debugLog('Autoplay blocked (state ' + state + ') — forcing muted', 'warn');
+            debugLog('Autoplay blocked — forcing muted', 'warn');
             try {
               ytPlayer.mute();
               ytPlayer.playVideo();
-              // Unmute pag tumutugtog na
               const check = setInterval(() => {
                 if (!ytPlayer || !ytPlayer.getPlayerState) {
-                  clearInterval(check);
-                  return;
+                  clearInterval(check); return;
                 }
                 if (ytPlayer.getPlayerState() === 1) {
                   clearInterval(check);
-                  debugLog('Playing — unmuting');
-                  setTimeout(() => {
-                    try { ytPlayer.unMute(); } catch(e) {}
-                  }, 300);
+                  setTimeout(() => { try { ytPlayer.unMute(); } catch(e) {} }, 300);
                 }
               }, 300);
               setTimeout(() => clearInterval(check), 6000);
-            } catch (e) {
-              debugLog('Force play failed: ' + e.message, 'err');
-            }
-          } else {
-            debugLog('Playing ok (state ' + state + ')');
+            } catch (e) {}
           }
         }, 2000);
       } catch (e) {
@@ -738,57 +763,52 @@
       }
     }
 
-    // ===== FORCE PLAY — para sa stuck state =====
     function forcePlay() {
       debugLog('FORCE PLAY tapped');
-      // Kung may lastCommand na play, i-replay
       if (lastCommand && lastCommand.song && lastCommand.song.videoId) {
-        debugLog('Force replaying: ' + lastCommand.song.videoId);
         hide(document.getElementById('idleScreen'));
         hide(document.getElementById('countdown'));
-        showB(document.getElementById('nowSinging'));
-        document.getElementById('nsSinger').textContent = lastCommand.song.singer || 'Guest';
-        document.getElementById('nsSong').textContent = lastCommand.song.title || '';
         playVideo(lastCommand.song.videoId);
       } else if (lastNowPlaying) {
-        debugLog('Force playing nowPlaying: ' + lastNowPlaying.videoId);
         hide(document.getElementById('idleScreen'));
-        showB(document.getElementById('nowSinging'));
-        document.getElementById('nsSinger').textContent = lastNowPlaying.singer || 'Guest';
-        document.getElementById('nsSong').textContent = lastNowPlaying.title || '';
         playVideo(lastNowPlaying.videoId);
       } else {
-        debugLog('Force play — walang kanta', 'warn');
         socket.emit('skip');
       }
     }
 
     function renderQueue(s) {
       const { queue, nowPlaying } = s;
-      const panel = document.getElementById('queuePanel');
+      const bar = document.getElementById('topBar');
       const list = document.getElementById('qpList');
       const count = document.getElementById('qpCount');
 
-      if (nowPlaying && queue.length > 0) panel.classList.add('show');
-      else panel.classList.remove('show');
+      // Show bar kapag may nowPlaying
+      if (nowPlaying) bar.classList.add('show');
+      else bar.classList.remove('show');
 
       count.textContent = queue.length;
 
       if (queue.length === 0) {
         list.innerHTML = '<div class="qp-empty">Walang naka-reserve</div>';
       } else {
-        list.innerHTML = queue.slice(0, 8).map((q, i) => `
+        list.innerHTML = queue.slice(0, 10).map((q, i) => `
           <div class="qp-item ${i === 0 ? 'first' : ''}">
             <div class="qp-num">${i + 1}</div>
             <div class="qp-info">
               <div class="qp-singer">${escapeHtml(q.singer)}</div>
               <div class="qp-song">${escapeHtml(q.title)}</div>
             </div>
-            <div class="qp-wait">${q.waitText || ''}</div>
+            ${q.waitText ? `<div class="qp-wait">${q.waitText}</div>` : ''}
           </div>
-        `).join('');
+        `).join('') + (queue.length > 10
+          ? `<div class="qp-item" style="border-left-color:transparent">
+               <div class="qp-info"><div class="qp-singer">+${queue.length - 10} pa</div></div>
+             </div>`
+          : '');
       }
 
+      // Idle queue
       const idleList = document.getElementById('idleQpList');
       const idleCount = document.getElementById('idleQpCount');
       idleCount.textContent = queue.length;
@@ -797,13 +817,27 @@
         idleList.innerHTML = '<div class="qp-empty">Walang naka-reserve</div>';
       } else {
         idleList.innerHTML = queue.slice(0, 10).map((q, i) => `
-          <div class="qp-item ${i === 0 ? 'first' : ''}">
-            <div class="qp-num">${i + 1}</div>
-            <div class="qp-info">
-              <div class="qp-singer">${escapeHtml(q.singer)}</div>
-              <div class="qp-song">${escapeHtml(q.title)}</div>
+          <div class="qp-item ${i === 0 ? 'first' : ''}"
+            style="display:flex;padding:8px 10px;border-radius:8px;
+            background:${i === 0 ? 'linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,138,0,0.08))' : 'rgba(255,255,255,0.05)'};
+            border-left:3px solid ${i === 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)'};
+            margin-bottom:4px;">
+            <div class="qp-num" style="font-size:11px;font-weight:800;
+              color:${i === 0 ? 'var(--gold)' : 'var(--dim)'};
+              min-width:22px;text-align:center;">${i + 1}</div>
+            <div class="qp-info" style="flex:1;min-width:0;margin-left:6px;">
+              <div class="qp-singer" style="font-size:12px;font-weight:700;
+                color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                ${escapeHtml(q.singer)}
+              </div>
+              <div class="qp-song" style="font-size:10px;color:var(--dim);
+                margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                ${escapeHtml(q.title)}
+              </div>
             </div>
-            <div class="qp-wait">${q.waitText || ''}</div>
+            ${q.waitText ? `<div class="qp-wait" style="font-size:10px;
+              color:var(--gold);font-weight:700;margin-left:6px;align-self:center;">
+              ${q.waitText}</div>` : ''}
           </div>
         `).join('');
       }
@@ -827,33 +861,22 @@
     function showB(el) { el.style.display = 'block'; }
 
     function handleCommand(cmd) {
-      debugLog('CMD: ' + cmd.type + (cmd.song ? ' — ' + cmd.song.title : ''));
+      debugLog('CMD: ' + cmd.type);
 
       switch (cmd.type) {
         case 'play':
           hide(document.getElementById('countdown'));
           hide(document.getElementById('idleScreen'));
-          hide(document.getElementById('scoreReveal'));
-          hide(document.getElementById('scoringOverlay'));
-          showB(document.getElementById('nowSinging'));
-          document.getElementById('hostControls').style.display = 'flex';
-          document.getElementById('statsBadge').style.display = 'block';
-          document.getElementById('langBtn').style.display = 'block';
           document.getElementById('nsSinger').textContent = cmd.song.singer || 'Guest';
           document.getElementById('nsSong').textContent = cmd.song.title || '';
           playVideo(cmd.song.videoId);
           spawnFireworks(60);
+          resetAutoHide();
           break;
 
         case 'countdown':
-          hide(document.getElementById('nowSinging'));
           hide(document.getElementById('idleScreen'));
-          hide(document.getElementById('scoringOverlay'));
-          hide(document.getElementById('scoreReveal'));
           show(document.getElementById('countdown'));
-          document.getElementById('hostControls').style.display = 'flex';
-          document.getElementById('statsBadge').style.display = 'block';
-          document.getElementById('langBtn').style.display = 'block';
           document.getElementById('cdSinger').textContent = cmd.song.singer || 'Guest';
           document.getElementById('cdSong').textContent = cmd.song.title || '';
           document.getElementById('cdNumber').textContent = cmd.seconds;
@@ -868,12 +891,8 @@
         case 'stop':
           if (ytReady) ytPlayer.stopVideo();
           currentVideoId = null;
-          ['nowSinging','countdown','scoringOverlay','scoreReveal'].forEach(id =>
-            hide(document.getElementById(id)));
-          document.getElementById('hostControls').style.display = 'flex';
-          document.getElementById('statsBadge').style.display = 'block';
-          document.getElementById('langBtn').style.display = 'block';
-          document.getElementById('queuePanel').classList.remove('show');
+          hide(document.getElementById('countdown'));
+          document.getElementById('topBar').classList.remove('show');
           if (started) show(document.getElementById('idleScreen'));
           break;
 
@@ -892,60 +911,12 @@
         case 'volume':
           if (ytReady) ytPlayer.setVolume(cmd.value);
           break;
-
-        case 'scoring':
-          ['nowSinging','countdown','idleScreen','scoreReveal'].forEach(id =>
-            hide(document.getElementById(id)));
-          show(document.getElementById('scoringOverlay'));
-          document.getElementById('scSinger').textContent = cmd.song.singer || 'Guest';
-          document.getElementById('scSong').textContent = cmd.song.title || '';
-          document.getElementById('scVotes').textContent = '0';
-          const fill = document.getElementById('scBar');
-          fill.style.transition = 'none';
-          fill.style.width = '100%';
-          setTimeout(() => {
-            fill.style.transition = `width ${cmd.duration}s linear`;
-            fill.style.width = '0%';
-          }, 50);
-          document.getElementById('queuePanel').classList.remove('show');
-          break;
-
-        case 'scoreReveal':
-          hide(document.getElementById('scoringOverlay'));
-          hide(document.getElementById('idleScreen'));
-          show(document.getElementById('scoreReveal'));
-          document.getElementById('rvSinger').textContent = cmd.singer;
-          document.getElementById('rvSong').textContent = cmd.title;
-          document.getElementById('rvScore').textContent = cmd.score.toFixed(1);
-          const stars = Math.round(cmd.score / 2);
-          document.getElementById('rvStars').textContent =
-            '★'.repeat(stars) + '☆'.repeat(5 - stars);
-          const histo = document.getElementById('rvHisto');
-          if (cmd.histogram) {
-            const max = Math.max(...cmd.histogram.slice(1), 1);
-            histo.innerHTML = cmd.histogram.slice(1).map((count, i) => {
-              const h = count === 0 ? 4 : (count / max) * 60 + 10;
-              return `<div class="bar-item" style="height:${h}px"><span class="lbl">${i + 1}</span></div>`;
-            }).join('');
-          }
-          if (cmd.score >= 9) {
-            spawnConfetti(180);
-            spawnFireworks(80);
-          } else if (cmd.score >= 7) {
-            spawnConfetti(100);
-          }
-          break;
       }
     }
 
     socket.on('command', (cmd) => {
-      if (cmd.type !== 'countdownTick') {
-        lastCommand = cmd;
-      }
-      if (!started) {
-        debugLog('CMD saved (not started): ' + cmd.type, 'warn');
-        return;
-      }
+      if (cmd.type !== 'countdownTick') lastCommand = cmd;
+      if (!started) return;
       handleCommand(cmd);
     });
 
@@ -955,14 +926,6 @@
         document.getElementById('statQueue').textContent = s.stats.queueLength || 0;
         document.getElementById('statWait').textContent = s.stats.totalWaitText || '0 min';
       }
-      if (s.scoring) {
-        const el = document.getElementById('scVotes');
-        if (el && el.textContent !== String(s.scoring.votesCount)) {
-          el.textContent = s.scoring.votesCount;
-          el.classList.add('bump');
-          setTimeout(() => el.classList.remove('bump'), 250);
-        }
-      }
       lastNowPlaying = s.nowPlaying;
       renderQueue(s);
     });
@@ -971,6 +934,12 @@
       return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    // Initialize pin button
+    document.getElementById('pinBtn').textContent = '📌';
+    document.getElementById('pinBtn').title = barPinned
+      ? 'Pinned (click to auto-hide)'
+      : 'Auto-hide (click to pin)';
   </script>
 </body>
 </html>
