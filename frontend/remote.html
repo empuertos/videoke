@@ -1,469 +1,910 @@
-const express = require('express');
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const { Server } = require('socket.io');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#0a0512">
+  <title>Videoke YouTube — Remote</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="/i18n.js"></script>
+  <script src="/config.js"></script>
+  <style>
+    :root { --gold:#ffd700; --red:#ff2e55; --bg:#0a0512; --card:#16101f;
+      --card2:#1e1630; --border:rgba(255,255,255,0.08); --dim:#8888a0;
+      --green:#4ade80; }
+    * { box-sizing:border-box; margin:0; padding:0;
+      -webkit-tap-highlight-color:transparent; }
+    body { background:var(--bg); color:#fff;
+      font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+      min-height:100vh; padding-bottom:40px; overscroll-behavior:none; }
 
-const app = express();
-const server = http.createServer(app);
+    .header { position:sticky;top:0;z-index:100;padding:14px 18px;
+      background:rgba(10,5,18,0.92);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center; }
+    .header h1 { font-size:20px;font-weight:800;
+      background:linear-gradient(135deg,#ffd700,#ff8a00);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent; }
+    .header .status { font-size:11px;color:var(--dim);
+      display:flex;align-items:center;gap:6px;margin-top:2px; }
+    .dot { width:8px;height:8px;border-radius:50%;
+      background:var(--green);box-shadow:0 0 10px var(--green); }
+    .dot.offline { background:var(--red);box-shadow:0 0 10px var(--red); }
+    .header-actions { display:flex; gap:8px; }
+    .icon-btn { background:var(--card);border:1px solid var(--border);
+      color:#fff;width:38px;height:38px;border-radius:10px;
+      font-size:16px;cursor:pointer; }
 
-const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+    .container { padding:18px; max-width:560px; margin:0 auto; }
 
-const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'], credentials: false },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  transports: ['websocket', 'polling'],
-  maxHttpBufferSize: 1e6
-});
+    .input-group { margin-bottom:14px; }
+    .input-group label { display:block;font-size:11px;font-weight:600;
+      color:var(--dim);margin-bottom:6px;letter-spacing:1px;
+      text-transform:uppercase; }
+    input[type=text] { width:100%;padding:13px 16px;
+      font-size:16px;background:var(--card);color:#fff;
+      border:1.5px solid var(--border);border-radius:12px;
+      font-family:inherit; }
+    input:focus { outline:none;border-color:var(--red);
+      background:var(--card2); }
 
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) {
-  try { fs.mkdirSync(DATA_DIR, { recursive: true }); }
-  catch (e) { console.warn('Data dir not writable:', e.message); }
-}
-const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
-const FAVORITES_FILE = path.join(DATA_DIR, 'favorites.json');
-const TRENDING_FILE = path.join(DATA_DIR, 'trending.json');
-const FAILED_FILE = path.join(DATA_DIR, 'failed-videos.json');
+    .yt-card { background:linear-gradient(135deg,#2a0a1a,#1a0010);
+      border:1px solid rgba(255,46,85,0.2);border-radius:16px;
+      padding:18px;margin-bottom:16px;position:relative;overflow:hidden; }
+    .yt-card::before { content:'';position:absolute;top:0;left:0;right:0;
+      height:3px;background:linear-gradient(90deg,#ff2e55,#ff0044); }
+    .yt-card .label { font-size:11px;font-weight:700;letter-spacing:3px;
+      color:#ff6b6b;margin-bottom:12px; }
+    .yt-card input { background:rgba(0,0,0,0.4);
+      border:1.5px solid rgba(255,46,85,0.2);margin-bottom:10px; }
+    .yt-card input:focus { border-color:#ff2e55; }
+    .yt-card .primary-btn { width:100%;padding:14px;
+      background:linear-gradient(135deg,#ff2e55,#ff0044);
+      color:#fff;border:none;border-radius:12px;
+      font-size:15px;font-weight:700;cursor:pointer;font-family:inherit; }
+    .yt-card .primary-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
-app.use(express.json({ limit: '10mb' }));
+    .yt-preview { background:rgba(0,0,0,0.4);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;padding:10px;margin-top:10px;
+      display:none;gap:10px;align-items:center; }
+    .yt-preview.show { display:flex; }
+    .yt-preview img { width:80px;height:60px;border-radius:8px;
+      object-fit:cover;flex-shrink:0;background:#000; }
+    .yt-preview .info { flex:1;min-width:0; }
+    .yt-preview .title { font-size:13px;font-weight:600;line-height:1.3;
+      overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
+    .yt-preview .author { font-size:11px;color:var(--dim);margin-top:2px; }
 
-// CORS — allow all
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-token');
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  next();
-});
+    .yt-hint { display:flex;gap:10px;padding:12px;
+      background:rgba(96,165,250,0.08);
+      border:1px solid rgba(96,165,250,0.2);
+      border-radius:10px;font-size:11px;line-height:1.6;
+      color:#a0b0c0;margin-top:12px; }
+    .yt-hint .icon { font-size:18px;flex-shrink:0; }
+    .yt-hint ol { padding-left:20px;margin:6px 0 0 0;line-height:1.8; }
+    .yt-hint ol li { margin-bottom:2px; }
+    .yt-hint b { color:#fff; }
 
-function loadJSON(f, def = []) {
-  try { return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : def; }
-  catch { return def; }
-}
-function saveJSON(f, data) {
-  try { fs.writeFileSync(f, JSON.stringify(data, null, 2)); }
-  catch (e) { console.error('Save error:', e.message); }
-}
+    .yt-open-btn { width:100%;padding:14px;margin-top:12px;
+      background:linear-gradient(135deg,#ff0000,#cc0000);
+      color:#fff;border:none;border-radius:12px;
+      font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+      display:flex;align-items:center;justify-content:center;gap:8px; }
+    .yt-open-btn:active { transform:scale(0.98); }
 
-function parseYouTubeUrl(input) {
-  if (!input) return null;
-  input = String(input).trim();
-  if (/^[\w-]{11}$/.test(input)) return input;
-  const m = input.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/|.*[?&]v=))([\w-]{11})/
-  );
-  return m ? m[1] : null;
-}
+    .hd-badge { display:inline-block;font-size:9px;font-weight:800;
+      padding:2px 6px;border-radius:4px;margin-left:4px;
+      letter-spacing:0.5px;vertical-align:middle; }
+    .hd-badge.hd { background:linear-gradient(135deg,#4ade80,#22c55e);color:#000; }
+    .hd-badge.uhd { background:linear-gradient(135deg,#ffd700,#ff8a00);color:#000; }
+    .hd-badge.failed { background:linear-gradient(135deg,#ff6b6b,#c41136);color:#fff; }
 
-const HD_KEYWORDS = [/\bhd\b/i, /\b4k\b/i, /\b1080p?\b/i, /\b720p?\b/i, /\bfull\s*hd\b/i, /\buhd\b/i];
-function hasHDKeyword(title) {
-  if (!title) return false;
-  return HD_KEYWORDS.some(re => re.test(title));
-}
+    .now-card { background:linear-gradient(135deg,#2a0a4a,#1a0033);
+      border:1px solid rgba(255,215,0,0.2);
+      border-radius:16px;padding:16px;margin-bottom:16px;
+      position:relative;overflow:hidden; }
+    .now-card::before { content:'';position:absolute;
+      top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--gold),var(--red)); }
+    .now-card .label { font-size:10px;font-weight:700;
+      letter-spacing:3px;color:var(--gold);margin-bottom:6px; }
+    .now-card .singer { font-size:20px;font-weight:800;
+      margin-bottom:3px; }
+    .now-card .song { font-size:13px;color:#c0c0d0; }
+    .now-card .empty { color:var(--dim);font-style:italic;font-size:13px; }
 
-const hdCache = new Map();
-const HD_CACHE_TTL = 30 * 60 * 1000;
-const ytInfoCache = new Map();
-const YT_INFO_TTL = 5 * 60 * 1000;
+    .controls { display:grid;grid-template-columns:repeat(4,1fr);
+      gap:8px;margin-bottom:14px; }
+    .ctrl-btn { padding:12px 6px;background:var(--card);
+      border:1px solid var(--border);border-radius:12px;
+      color:#fff;font-size:20px;cursor:pointer;
+      font-family:inherit;display:flex;flex-direction:column;
+      align-items:center;gap:3px; }
+    .ctrl-btn:active { transform:scale(0.95);
+      background:var(--card2);border-color:var(--red); }
+    .ctrl-btn .lbl { font-size:9px;letter-spacing:1px;
+      color:var(--dim);text-transform:uppercase;font-weight:600; }
 
-let queue = [];
-let nowPlaying = null;
-let countdownTimer = null;
-let history = loadJSON(HISTORY_FILE);
-let favorites = loadJSON(FAVORITES_FILE, []);
-let trending = loadJSON(TRENDING_FILE, {});
-let failedVideos = loadJSON(FAILED_FILE, {});
-let stats = { totalPlayed: history.length, startedAt: Date.now() };
-const adminTokens = new Map();
+    .volume-row { display:flex;align-items:center;gap:10px;
+      padding:12px 14px;background:var(--card);
+      border:1px solid var(--border);border-radius:12px;
+      margin-bottom:16px; }
+    .volume-row input[type=range] { flex:1;
+      -webkit-appearance:none;height:4px;
+      background:rgba(255,255,255,0.1);border-radius:2px;
+      outline:none; }
+    .volume-row input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none;width:20px;height:20px;
+      background:var(--gold);border-radius:50%;cursor:pointer;
+      box-shadow:0 0 15px rgba(255,215,0,0.6); }
 
-const AVG_SONG_DURATION = 4 * 60 * 1000;
+    .singer-stats { display:none;gap:12px;padding:12px 16px;
+      background:linear-gradient(135deg,rgba(255,215,0,0.08),
+        rgba(255,46,85,0.05));
+      border:1px solid rgba(255,215,0,0.2);
+      border-radius:12px;margin-bottom:14px;
+      justify-content:space-around; }
+    .stat-item { display:flex;flex-direction:column;
+      align-items:center;gap:2px; }
+    .stat-icon { font-size:16px; }
+    .stat-value { font-size:18px;font-weight:900;
+      color:var(--gold);line-height:1; }
+    .stat-label { font-size:9px;color:var(--dim);
+      text-transform:uppercase;letter-spacing:1px; }
 
-function saveTrending() { saveJSON(TRENDING_FILE, trending); }
+    .tab-nav { display:flex;gap:3px;margin-bottom:14px;
+      background:var(--card);padding:4px;border-radius:12px;
+      position:sticky;top:72px;z-index:90;overflow-x:auto; }
+    .tab-btn { flex:1;min-width:60px;padding:9px 6px;
+      background:transparent;border:none;color:var(--dim);
+      font-size:11px;font-weight:700;border-radius:8px;
+      cursor:pointer;font-family:inherit;display:flex;
+      align-items:center;justify-content:center;gap:4px; }
+    .tab-btn.active { background:linear-gradient(135deg,#ff2e55,#ff0044);
+      color:#fff;box-shadow:0 4px 15px rgba(255,46,85,0.4); }
+    .tab-badge { background:rgba(255,255,255,0.2);
+      border-radius:10px;padding:1px 5px;font-size:9px; }
 
-function trackReservation(videoId, title) {
-  if (!videoId) return;
-  if (!trending[videoId]) {
-    trending[videoId] = {
-      videoId, title: String(title || '').substring(0, 120),
-      count: 0, firstPlayed: Date.now(), lastPlayed: Date.now()
-    };
-  }
-  trending[videoId].count++;
-  trending[videoId].lastPlayed = Date.now();
-  if (title) trending[videoId].title = String(title).substring(0, 120);
-  saveTrending();
-  io.emit('trending', getTrendingStats());
-}
+    .section-header { display:flex;justify-content:space-between;
+      align-items:center;margin-bottom:10px;
+      padding-bottom:8px;border-bottom:1px solid var(--border); }
+    .section-header h2 { font-size:12px;font-weight:700;
+      letter-spacing:1px;text-transform:uppercase; }
+    .section-header .badge { background:var(--red);color:#fff;
+      font-size:10px;font-weight:700;padding:2px 9px;
+      border-radius:20px; }
+    .refresh-btn { background:transparent;border:1px solid var(--border);
+      color:#fff;padding:5px 10px;border-radius:8px;
+      cursor:pointer;font-size:12px; }
 
-function getTrendingStats() {
-  const now = Date.now();
-  const dayAgo = now - 24 * 60 * 60 * 1000;
-  const all = Object.values(trending);
-  const mapEntry = t => ({
-    videoId: t.videoId, title: t.title, count: t.count,
-    lastPlayed: t.lastPlayed,
-    thumbnail: `https://i.ytimg.com/vi/${t.videoId}/mqdefault.jpg`
-  });
-  return {
-    session: [...all].filter(t => t.lastPlayed > stats.startedAt)
-      .sort((a, b) => b.count - a.count).slice(0, 10).map(mapEntry),
-    today: [...all].filter(t => t.lastPlayed > dayAgo)
-      .sort((a, b) => b.count - a.count).slice(0, 10).map(mapEntry),
-    allTime: [...all].sort((a, b) => b.count - a.count).slice(0, 10).map(mapEntry)
-  };
-}
+    .queue-list { display:flex;flex-direction:column;gap:7px; }
+    .queue-item { display:flex;align-items:center;gap:10px;
+      padding:11px 12px;background:var(--card);
+      border:1px solid var(--border);
+      border-left:3px solid var(--gold);
+      border-radius:10px;position:relative; }
+    .queue-item.is-me {
+      background:linear-gradient(135deg,
+        rgba(74,222,128,0.15),rgba(74,222,128,0.05));
+      border-left-color:var(--green);
+      box-shadow:0 0 20px rgba(74,222,128,0.15); }
+    .queue-item.is-me .pos { background:var(--green);color:#000; }
+    .queue-item .pos { background:var(--gold);color:#000;
+      font-size:12px;font-weight:800;width:26px;height:26px;
+      border-radius:50%;display:flex;align-items:center;
+      justify-content:center;flex-shrink:0; }
+    .queue-item .info { flex:1;min-width:0; }
+    .queue-item .singer { font-size:14px;font-weight:700;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      display:flex;align-items:center; }
+    .queue-item .song { font-size:11px;color:var(--dim);
+      margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap; }
+    .queue-item .wait-time { font-size:10px;color:var(--gold);
+      margin-top:3px;font-weight:600;letter-spacing:0.5px; }
+    .queue-item.is-me .wait-time { color:var(--green); }
+    .me-badge { display:inline-block;font-size:9px;
+      font-weight:800;background:var(--green);color:#000;
+      padding:2px 7px;border-radius:4px;margin-right:6px;
+      letter-spacing:1px; }
+    .queue-item .actions { display:flex;gap:3px; }
+    .queue-item .actions button { background:transparent;
+      border:none;color:var(--dim);font-size:16px;
+      padding:5px 7px;cursor:pointer;border-radius:6px; }
+    .queue-item .actions button.remove:active {
+      background:rgba(255,46,85,0.2);color:var(--red); }
 
-function countUniqueSingers() {
-  const singers = new Set();
-  if (nowPlaying) singers.add(nowPlaying.singer.toLowerCase());
-  queue.forEach(q => singers.add(q.singer.toLowerCase()));
-  return singers.size;
-}
+    .empty-state { text-align:center;padding:24px 12px;
+      color:var(--dim);font-size:12px;font-style:italic; }
 
-function estimateWaitTime(position) { return position * AVG_SONG_DURATION; }
+    .song-list { display:flex;flex-direction:column;gap:7px; }
+    .song-item { display:flex;align-items:center;gap:10px;
+      padding:10px;background:var(--card);
+      border:1px solid var(--border);border-left:3px solid transparent;
+      border-radius:10px;cursor:pointer;width:100%;
+      color:#fff;font-family:inherit;text-align:left; }
+    .song-item:active { background:var(--card2);
+      border-left-color:var(--red); }
+    .song-item img { width:60px;height:45px;border-radius:6px;
+      object-fit:cover;flex-shrink:0;background:#000; }
+    .song-item .info { flex:1;min-width:0; }
+    .song-item .song-title { font-size:13px;font-weight:600;
+      line-height:1.3;overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
+    .song-item .song-author { font-size:11px;color:var(--dim);
+      margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap; }
+    .song-item .fav-btn { background:transparent;border:none;
+      color:var(--dim);font-size:18px;padding:4px 8px;cursor:pointer; }
+    .song-item .fav-btn.on { color:var(--gold); }
+    .song-item .plus { font-size:20px;color:var(--red);
+      font-weight:300;width:28px;text-align:center; }
 
-function formatWait(ms) {
-  if (ms <= 0) return 'Susunod na';
-  const mins = Math.round(ms / 60000);
-  if (mins < 1) return '< 1 min';
-  if (mins === 1) return '~1 min';
-  if (mins < 60) return '~' + mins + ' min';
-  const hrs = Math.floor(mins / 60);
-  const rem = mins % 60;
-  return '~' + hrs + 'h ' + rem + 'm';
-}
+    .history-item { display:flex;align-items:center;gap:10px;
+      padding:10px 12px;background:var(--card);
+      border:1px solid var(--border);border-radius:10px; }
+    .history-item .icon-badge { min-width:44px;height:44px;
+      border-radius:10px;display:flex;align-items:center;
+      justify-content:center;font-size:20px;
+      background:linear-gradient(135deg,#ffd700,#ff8a00);color:#000; }
+    .history-item .info { flex:1;min-width:0; }
+    .history-item .singer { font-size:14px;font-weight:700;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .history-item .song { font-size:11px;color:var(--dim);
+      margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap; }
+    .history-item .time { font-size:10px;color:#555;margin-top:3px; }
 
-async function checkMaxRes(videoId) {
-  const cached = hdCache.get(videoId);
-  if (cached && Date.now() - cached.at < HD_CACHE_TTL) return cached.hd;
-  try {
-    const r = await fetch(
-      `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-      { method: 'HEAD', signal: AbortSignal.timeout(2500) }
-    );
-    const hd = r.ok;
-    hdCache.set(videoId, { hd, at: Date.now() });
-    return hd;
-  } catch { return null; }
-}
+    #toast { position:fixed;bottom:30px;left:50%;
+      transform:translateX(-50%) translateY(100px);
+      padding:13px 22px;background:rgba(0,0,0,0.9);
+      border:1px solid var(--gold);color:#fff;
+      border-radius:30px;font-size:13px;font-weight:600;
+      z-index:1000;opacity:0;transition:all 0.3s;
+      pointer-events:none;backdrop-filter:blur(20px); }
+    #toast.show { opacity:1;
+      transform:translateX(-50%) translateY(0); }
+    #toast.error { border-color:var(--red); }
+    #toast.success { border-color:var(--green); }
 
-// =====================================================
-// API ROUTES
-// =====================================================
-app.get('/', (req, res) => {
-  res.json({
-    status: 'ok', service: 'videoke-backend',
-    timestamp: Date.now(), frontend: FRONTEND_URL,
-    clients: io.engine.clientsCount
-  });
-});
+    .modal-bg { position:fixed;inset:0;background:rgba(0,0,0,0.85);
+      z-index:1000;display:none;align-items:center;
+      justify-content:center;padding:20px; }
+    .modal-bg.show { display:flex; }
+    .modal { background:var(--card);border:1px solid var(--border);
+      border-radius:16px;padding:22px;max-width:440px;width:100%;
+      max-height:85vh;overflow-y:auto; }
+    .modal h3 { margin-bottom:14px;font-size:16px; }
+    .modal input { width:100%;padding:12px;
+      background:var(--card2);color:#fff;
+      border:1px solid var(--border);border-radius:10px;
+      font-size:15px;margin-bottom:12px;font-family:inherit; }
+    .modal .row { display:flex;gap:8px;margin-top:12px; }
+    .modal button { flex:1;padding:12px;border:none;
+      border-radius:10px;font-weight:700;cursor:pointer;
+      font-family:inherit;font-size:14px; }
+    .modal .primary { background:var(--red);color:#fff; }
+    .modal .secondary { background:var(--card2);color:#fff;
+      border:1px solid var(--border); }
 
-app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+    .info-box { padding:14px;background:rgba(96,165,250,0.08);
+      border:1px solid rgba(96,165,250,0.2);
+      border-radius:12px;margin-bottom:16px;display:flex;
+      gap:10px;font-size:12px;line-height:1.5;color:#a0b0c0; }
+    .info-box .icon { font-size:20px;flex-shrink:0; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>🎤 VIDEoke <span style="font-size:10px;color:#ff6b6b">YT</span></h1>
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Connected</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="toggleLang()" id="langIcon">🌐</button>
+      <button class="icon-btn" onclick="openAdmin()" title="Admin">⚙️</button>
+    </div>
+  </div>
 
-app.get('/api/info', (req, res) => {
-  const frontendBase = process.env.FRONTEND_URL?.split(',')[0]?.trim()
-    || req.headers.origin || `http://localhost:${PORT}`;
-  res.json({
-    frontendBase,
-    hostUrl: `${frontendBase}/host.html`,
-    remoteUrl: `${frontendBase}/remote.html`,
-    backendUrl: req.protocol + '://' + req.get('host')
-  });
-});
+  <div class="container">
+    <div class="input-group">
+      <label data-i18n="yourName">Your Name</label>
+      <input type="text" id="singer" placeholder="Juan Dela Cruz"
+        maxlength="30" autocomplete="off">
+    </div>
 
-app.get('/api/yt-info/:videoId', async (req, res) => {
-  const videoId = req.params.videoId;
-  if (!/^[\w-]{11}$/.test(videoId))
-    return res.status(400).json({ error: 'Invalid ID' });
+    <div class="yt-card">
+      <div class="label">🎤 I-RESERVE ANG KANTA</div>
+      <input type="text" id="ytUrl" placeholder="I-paste ang YouTube link..."
+        inputmode="url" autocomplete="off">
+      <button class="primary-btn" onclick="addYouTube()" id="reserveBtn">➕ I-reserve</button>
 
-  const cached = ytInfoCache.get(videoId);
-  if (cached && Date.now() - cached.at < YT_INFO_TTL)
-    return res.json(cached.data);
+      <div class="yt-preview" id="ytPreview">
+        <img id="ytThumb" src="" alt="">
+        <div class="info">
+          <div class="title" id="ytTitle">—</div>
+          <div class="author" id="ytAuthor"></div>
+        </div>
+      </div>
 
-  let title = '';
-  let author = '';
+      <button class="yt-open-btn" onclick="openYouTubeApp()">
+        ▶ Buksan ang YouTube App
+      </button>
 
-  try {
-    const r = await fetch(
-      `https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`,
-      { signal: AbortSignal.timeout(6000),
-        headers: { 'User-Agent': 'Mozilla/5.0' } }
-    );
-    if (r.ok) {
-      const data = await r.json();
-      title = (data.title || '').trim();
-      author = (data.author_name || '').trim();
+      <div class="yt-hint">
+        <div class="icon">💡</div>
+        <div>
+          <b>Paano mag-reserve:</b>
+          <ol>
+            <li>I-tap ang <b>▶ Buksan ang YouTube App</b></li>
+            <li>Hanapin ang kanta (hal. <b>"[Kanta] karaoke"</b>)</li>
+            <li>I-tap ang <b>Share → Copy link</b></li>
+            <li>Bumalik dito at i-paste ang link</li>
+            <li>I-tap ang <b>➕ I-reserve</b></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="singer-stats" id="singerStats"></div>
+
+    <div class="now-card">
+      <div class="label" data-i18n="nowSinging">🎤 NOW SINGING</div>
+      <div id="nowContent">
+        <div class="empty" data-i18n="noQueue">Walang tumutugtog</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="sendCmd('pause')">⏸
+        <span class="lbl">Pause</span></button>
+      <button class="ctrl-btn" onclick="sendCmd('resume')">▶
+        <span class="lbl">Play</span></button>
+      <button class="ctrl-btn" onclick="sendCmd('skip')">⏭
+        <span class="lbl">Skip</span></button>
+      <button class="ctrl-btn" onclick="sendCmd('stop')">⏹
+        <span class="lbl">Stop</span></button>
+    </div>
+
+    <div class="volume-row">
+      <span>🔊</span>
+      <input type="range" id="volume" min="0" max="100" value="80">
+    </div>
+
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="queue" onclick="switchTab('queue')">
+        📋 <span>Queue</span> <span class="tab-badge" id="qTabBadge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="favorites" onclick="switchTab('favorites')">
+        ⭐ <span>Favs</span>
+      </button>
+      <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
+        📜 <span>History</span>
+      </button>
+    </div>
+
+    <div class="tab-content" id="tab-queue">
+      <div class="section-header">
+        <h2>📋 Reserved</h2>
+        <span class="badge" id="queueCount">0</span>
+      </div>
+      <div class="queue-list" id="queueList">
+        <div class="empty-state">Walang naka-reserve</div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-favorites" style="display:none">
+      <div class="section-header">
+        <h2>⭐ Favorites</h2>
+      </div>
+      <div class="song-list" id="favList"></div>
+    </div>
+
+    <div class="tab-content" id="tab-history" style="display:none">
+      <div class="section-header">
+        <h2>📜 History</h2>
+        <button class="refresh-btn" onclick="loadHistory()">🔄</button>
+      </div>
+      <div class="song-list" id="historyList"></div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="adminModal">
+    <div class="modal">
+      <h3>🔐 Admin Panel</h3>
+      <div id="adminLoginForm">
+        <input type="password" id="adminPw" placeholder="Password">
+        <button class="primary" onclick="doLogin()" style="width:100%">Login</button>
+      </div>
+      <div id="adminPanel" style="display:none">
+        <div class="info-box">
+          <div class="icon">🎬</div>
+          <div>
+            <b>YouTube Videoke</b><br>
+            Lahat ng kanta galing YouTube. Walang download.
+          </div>
+        </div>
+        <button class="primary" onclick="adminAction('stop')"
+          style="width:100%;margin-bottom:8px">⏹ Force Stop</button>
+        <button class="primary" onclick="adminAction('kick-all')"
+          style="width:100%;margin-bottom:8px">👢 Kick All</button>
+        <button class="primary" onclick="adminAction('clear-history')"
+          style="width:100%;margin-bottom:8px">🗑️ Clear History</button>
+        <button class="primary" onclick="adminAction('clear-failed')"
+          style="width:100%;margin-bottom:8px">⛔ Clear Failed Videos</button>
+      </div>
+      <div class="row">
+        <button class="secondary" onclick="closeModal('adminModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    // Force unregister SW
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => reg.unregister());
+      }).catch(() => {});
     }
-  } catch (e) {}
 
-  if (!title) title = `YouTube Video (${videoId})`;
+    const BACKEND_URL = window.VIDEOKE_CONFIG?.BACKEND_URL || 'http://localhost:3000';
+    const API = BACKEND_URL;
 
-  const isHD = await checkMaxRes(videoId);
-  const isFailed = !!failedVideos[videoId];
-
-  const responseData = {
-    videoId, title, author,
-    isHD: isHD === true,
-    titleHD: hasHDKeyword(title),
-    previouslyFailed: isFailed,
-    thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`
-  };
-
-  ytInfoCache.set(videoId, { data: responseData, at: Date.now() });
-  res.json(responseData);
-});
-
-app.get('/api/history', (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 50, 500);
-  res.json(history.slice(-limit).reverse());
-});
-
-app.get('/api/favorites', (req, res) => res.json(favorites));
-app.get('/api/trending', (req, res) => res.json(getTrendingStats()));
-app.get('/api/failed-videos', (req, res) => res.json(Object.values(failedVideos)));
-
-// =====================================================
-// ADMIN AUTH — GET-based (no preflight)
-// =====================================================
-function authAdmin(req, res, next) {
-  const token = req.headers['x-admin-token'] || req.query.token;
-  const exp = adminTokens.get(token);
-  if (!exp || exp < Date.now())
-    return res.status(401).json({ error: 'Unauthorized' });
-  next();
-}
-
-app.get('/api/admin/login', (req, res) => {
-  const password = String(req.query.password || '');
-  if (password !== ADMIN_PASSWORD)
-    return res.status(401).json({ error: 'Maling password' });
-  const token = crypto.randomBytes(24).toString('hex');
-  adminTokens.set(token, Date.now() + 4 * 60 * 60 * 1000);
-  res.json({ token });
-});
-
-app.get('/api/admin/clear-history', authAdmin, (req, res) => {
-  history = []; saveJSON(HISTORY_FILE, history);
-  stats.totalPlayed = 0;
-  io.emit('historyCleared');
-  broadcastState();
-  res.json({ ok: true });
-});
-
-app.get('/api/admin/clear-failed', authAdmin, (req, res) => {
-  failedVideos = {};
-  saveJSON(FAILED_FILE, failedVideos);
-  res.json({ ok: true });
-});
-
-app.get('/api/admin/kick-all', authAdmin, (req, res) => {
-  io.emit('kicked', 'Admin action');
-  res.json({ ok: true });
-});
-
-app.get('/api/admin/stop', authAdmin, (req, res) => {
-  if (countdownTimer) clearInterval(countdownTimer);
-  countdownTimer = null;
-  nowPlaying = null;
-  io.emit('command', { type: 'stop' });
-  broadcastState();
-  res.json({ ok: true });
-});
-
-app.get('/api/admin/clear-trending', authAdmin, (req, res) => {
-  trending = {};
-  saveTrending();
-  io.emit('trending', getTrendingStats());
-  res.json({ ok: true });
-});
-
-// =====================================================
-// BROADCAST + PLAY
-// =====================================================
-function broadcastState() {
-  const queueWithWait = queue.map((q, i) => ({
-    ...q,
-    waitMs: estimateWaitTime(i),
-    waitText: formatWait(estimateWaitTime(i)),
-    position: i + 1
-  }));
-
-  io.emit('state', {
-    queue: queueWithWait,
-    nowPlaying,
-    stats: {
-      totalPlayed: stats.totalPlayed,
-      queueLength: queue.length,
-      singerCount: countUniqueSingers(),
-      totalWaitMs: estimateWaitTime(queue.length),
-      totalWaitText: formatWait(estimateWaitTime(queue.length))
-    },
-    favorites: favorites.map(f => f.videoId)
-  });
-}
-
-function playNext() {
-  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
-  nowPlaying = queue.shift() || null;
-  if (!nowPlaying) {
-    broadcastState();
-    io.emit('command', { type: 'idle' });
-    return;
-  }
-  broadcastState();
-  io.emit('command', { type: 'countdown', song: nowPlaying, seconds: 3 });
-  let r = 3;
-  countdownTimer = setInterval(() => {
-    r--;
-    io.emit('command', { type: 'countdownTick', seconds: r });
-    if (r <= 0) {
-      clearInterval(countdownTimer);
-      countdownTimer = null;
-      io.emit('command', { type: 'play', song: nowPlaying });
-    }
-  }, 1000);
-}
-
-// =====================================================
-// SOCKET.IO
-// =====================================================
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
-
-  socket.emit('state', {
-    queue: [], nowPlaying,
-    stats: {
-      totalPlayed: stats.totalPlayed,
-      queueLength: queue.length,
-      singerCount: countUniqueSingers()
-    },
-    favorites: favorites.map(f => f.videoId)
-  });
-  socket.emit('trending', getTrendingStats());
-  broadcastState();
-
-  if (!nowPlaying) {
-    socket.emit('command', { type: 'idle' });
-  } else if (countdownTimer) {
-    socket.emit('command', { type: 'countdown', song: nowPlaying, seconds: 3 });
-  } else {
-    socket.emit('command', { type: 'play', song: nowPlaying });
-  }
-
-  socket.on('addSong', ({ videoId, singer, title }) => {
-    const vid = parseYouTubeUrl(videoId) || videoId;
-    if (!vid || !/^[\w-]{11}$/.test(vid))
-      return socket.emit('error', 'Hindi valid na YouTube link');
-    if (failedVideos[vid])
-      return socket.emit('error', '⚠️ Hindi ma-embed ang video na ito.');
-
-    const s = String(singer || 'Guest').substring(0, 30).trim() || 'Guest';
-    if (queue.some(q => q.videoId === vid && q.singer === s))
-      return socket.emit('error', 'Naka-reserve na ang kantang ito');
-
-    let cleanTitle = String(title || '').trim();
-    if (!cleanTitle || cleanTitle === 'YouTube Video' || cleanTitle === '—' ||
-        cleanTitle === 'Loading...' || cleanTitle === 'Kinukuha ang title...') {
-      cleanTitle = `YouTube Video (${vid})`;
-    }
-
-    trackReservation(vid, cleanTitle);
-    queue.push({
-      id: Date.now() + Math.floor(Math.random() * 1000),
-      videoId: vid, title: cleanTitle.substring(0, 120),
-      singer: s, reservedAt: Date.now()
+    const socket = io(BACKEND_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000
     });
-    broadcastState();
-  });
 
-  socket.on('removeSong', (id) => {
-    queue = queue.filter(s => s.id !== id);
-    broadcastState();
-  });
+    let favorites = [];
+    let adminToken = localStorage.getItem('videoke:adminToken') || null;
+    let previewVideoId = null;
+    let previewTimer = null;
+    let lastState = null;
+    let currentTitle = '';
+    let currentAuthor = '';
 
-  socket.on('moveSong', ({ id, direction }) => {
-    const i = queue.findIndex(s => s.id === id);
-    if (i < 0) return;
-    const j = direction === 'up' ? i - 1 : i + 1;
-    if (j < 0 || j >= queue.length) return;
-    [queue[i], queue[j]] = [queue[j], queue[i]];
-    broadcastState();
-  });
-
-  socket.on('toggleFavorite', ({ videoId, title }) => {
-    const idx = favorites.findIndex(f => f.videoId === videoId);
-    if (idx >= 0) favorites.splice(idx, 1);
-    else favorites.push({
-      videoId,
-      title: String(title || 'YouTube Video').substring(0, 120),
-      addedAt: Date.now()
-    });
-    saveJSON(FAVORITES_FILE, favorites);
-    broadcastState();
-  });
-
-  socket.on('videoFailed', ({ videoId, title }) => {
-    if (!videoId) return;
-    failedVideos[videoId] = {
-      videoId, title: String(title || '').substring(0, 120),
-      failedAt: Date.now()
-    };
-    saveJSON(FAILED_FILE, failedVideos);
-    queue = queue.filter(q => q.videoId !== videoId);
-    if (nowPlaying && nowPlaying.videoId === videoId) nowPlaying = null;
-    io.emit('videoBlacklisted', { videoId, title });
-    broadcastState();
-  });
-
-  socket.on('startPlaying', () => {
-    if (nowPlaying || countdownTimer) return;
-    if (queue.length === 0) return;
-    playNext();
-  });
-
-  socket.on('skip', playNext);
-  socket.on('stop', () => {
-    if (countdownTimer) clearInterval(countdownTimer);
-    countdownTimer = null;
-    nowPlaying = null;
-    io.emit('command', { type: 'stop' });
-    broadcastState();
-  });
-  socket.on('pause', () => io.emit('command', { type: 'pause' }));
-  socket.on('resume', () => io.emit('command', { type: 'resume' }));
-  socket.on('seek', s => io.emit('command', { type: 'seek', seconds: Number(s) || 0 }));
-  socket.on('volume', v => io.emit('command', {
-    type: 'volume', value: Math.max(0, Math.min(100, Number(v) || 0))
-  }));
-
-  socket.on('songEnded', () => {
-    if (nowPlaying) {
-      history.push({
-        singer: nowPlaying.singer, title: nowPlaying.title,
-        videoId: nowPlaying.videoId, playedAt: Date.now()
-      });
-      saveJSON(HISTORY_FILE, history);
-      stats.totalPlayed = history.length;
-      nowPlaying = null;
-      broadcastState();
+    let toastTimer;
+    function toast(msg, type = 'success') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'show ' + type;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.className = '', 2800);
     }
-    playNext();
-  });
 
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
+    socket.on('connect', () => {
+      document.getElementById('statusDot').classList.remove('offline');
+      document.getElementById('statusText').textContent = 'Connected';
+    });
+    socket.on('disconnect', () => {
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = 'Disconnected';
+    });
 
-server.listen(PORT, () => {
-  console.log('');
-  console.log('  🎤  VIDEoke BACKEND — GET-based Admin');
-  console.log('  🚀  Port:   ' + PORT);
-  console.log('  🌐  Frontend: ' + FRONTEND_URL);
-  console.log('');
-});
+    const singerInput = document.getElementById('singer');
+    singerInput.value = localStorage.getItem('videoke:singerName') || '';
+    let saveNameTimer;
+    singerInput.addEventListener('input', (e) => {
+      clearTimeout(saveNameTimer);
+      saveNameTimer = setTimeout(() => {
+        localStorage.setItem('videoke:singerName', e.target.value.trim());
+        if (lastState) renderQueue(lastState);
+      }, 300);
+    });
+
+    function parseYouTubeUrl(input) {
+      if (!input) return null;
+      input = String(input).trim();
+      if (/^[\w-]{11}$/.test(input)) return input;
+      const m = input.match(
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/|.*[?&]v=))([\w-]{11})/
+      );
+      return m ? m[1] : null;
+    }
+
+    async function fetchTitleClientSide(videoId) {
+      try {
+        const r = await fetch(
+          `https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`,
+          { signal: AbortSignal.timeout(8000) }
+        );
+        if (r.ok) {
+          const data = await r.json();
+          return {
+            title: (data.title || '').trim(),
+            author: (data.author_name || '').trim()
+          };
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    async function fetchTitleViaBackend(videoId) {
+      try {
+        const r = await fetch(API + `/api/yt-info/${videoId}`, {
+          signal: AbortSignal.timeout(12000)
+        });
+        const data = await r.json();
+        return {
+          title: data.title, author: data.author,
+          isHD: data.isHD, titleHD: data.titleHD,
+          previouslyFailed: data.previouslyFailed
+        };
+      } catch (e) {}
+      return null;
+    }
+
+    function openYouTubeApp() {
+      window.open('https://m.youtube.com', '_blank');
+      toast('▶ Bukas sa YouTube...');
+    }
+
+    document.getElementById('ytUrl').addEventListener('input', (e) => {
+      clearTimeout(previewTimer);
+      const value = e.target.value.trim();
+      if (!value) {
+        document.getElementById('ytPreview').classList.remove('show');
+        previewVideoId = null;
+        currentTitle = '';
+        currentAuthor = '';
+        return;
+      }
+      const videoId = parseYouTubeUrl(value);
+      if (!videoId) {
+        document.getElementById('ytPreview').classList.remove('show');
+        previewVideoId = null;
+        currentTitle = '';
+        currentAuthor = '';
+        return;
+      }
+      previewVideoId = videoId;
+      currentTitle = '';
+      currentAuthor = '';
+
+      document.getElementById('ytThumb').src =
+        `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+      document.getElementById('ytTitle').textContent = 'Kinukuha ang title...';
+      document.getElementById('ytAuthor').textContent = videoId;
+      document.getElementById('ytPreview').classList.add('show');
+
+      previewTimer = setTimeout(async () => {
+        let result = await fetchTitleClientSide(videoId);
+        if (!result || !result.title) result = await fetchTitleViaBackend(videoId);
+        if (previewVideoId !== videoId) return;
+
+        if (result && result.title) {
+          currentTitle = result.title;
+          currentAuthor = result.author || '';
+          document.getElementById('ytTitle').textContent = currentTitle;
+          let badge = '';
+          if (result.previouslyFailed) badge = ' <span class="hd-badge failed">⛔ FAILED</span>';
+          else if (result.isHD || result.titleHD) badge = ' <span class="hd-badge hd">HD</span>';
+          if (/\b4k\b/i.test(currentTitle)) badge = ' <span class="hd-badge uhd">4K</span>';
+          document.getElementById('ytAuthor').innerHTML =
+            escapeHtml(currentAuthor || videoId) + badge;
+        } else {
+          currentTitle = `YouTube Video (${videoId})`;
+          document.getElementById('ytTitle').textContent = currentTitle;
+          document.getElementById('ytAuthor').textContent = videoId;
+        }
+      }, 300);
+    });
+
+    document.getElementById('ytUrl').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addYouTube();
+    });
+
+    async function addYouTube() {
+      const input = document.getElementById('ytUrl').value.trim();
+      const singer = document.getElementById('singer').value.trim() || 'Guest';
+      if (!input) return toast('I-paste ang YouTube link', 'error');
+
+      const videoId = parseYouTubeUrl(input);
+      if (!videoId) return toast('Hindi valid na YouTube link', 'error');
+
+      const reserveBtn = document.getElementById('reserveBtn');
+      reserveBtn.disabled = true;
+      reserveBtn.textContent = '⏳ Kinukuha title...';
+
+      let title = currentTitle;
+      let previouslyFailed = false;
+
+      if (!title || title === 'Kinukuha ang title...') {
+        const clientResult = await fetchTitleClientSide(videoId);
+        if (clientResult && clientResult.title) title = clientResult.title;
+      }
+
+      if (!title) {
+        const backendResult = await fetchTitleViaBackend(videoId);
+        if (backendResult && backendResult.title) {
+          title = backendResult.title;
+          previouslyFailed = backendResult.previouslyFailed;
+        }
+      }
+
+      if (!title) title = `YouTube Video (${videoId})`;
+
+      reserveBtn.disabled = false;
+      reserveBtn.textContent = '➕ I-reserve';
+
+      if (previouslyFailed) {
+        const proceed = confirm(
+          `⚠️ Naka-blacklist ang video na ito dati.\n\n"${title}"\n\nSigurado ka?`
+        );
+        if (!proceed) return;
+      }
+
+      socket.emit('addSong', { videoId, title, singer });
+
+      document.getElementById('ytUrl').value = '';
+      document.getElementById('ytPreview').classList.remove('show');
+      previewVideoId = null;
+      currentTitle = '';
+      currentAuthor = '';
+
+      if (navigator.vibrate) navigator.vibrate(20);
+      toast('✓ Na-reserve: ' + title.substring(0, 40), 'success');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el =>
+        el.style.display = el.id === 'tab-' + tab ? 'block' : 'none');
+      document.querySelectorAll('.tab-btn').forEach(el =>
+        el.classList.toggle('active', el.dataset.tab === tab));
+      if (tab === 'history') loadHistory();
+      if (tab === 'favorites') renderFavorites();
+    }
+
+    async function refreshFavorites() {
+      try {
+        const data = await (await fetch(API + '/api/favorites')).json();
+        favorites = data;
+        renderFavorites();
+      } catch {}
+    }
+
+    function renderFavorites() {
+      const el = document.getElementById('favList');
+      if (!favorites.length) {
+        el.innerHTML = '<div class="empty-state">Wala pang paborito</div>';
+        return;
+      }
+      el.innerHTML = favorites.map(f => `
+        <button class="song-item" onclick="quickAdd('${f.videoId}', '${escapeAttr(f.title)}')">
+          <img src="https://i.ytimg.com/vi/${f.videoId}/mqdefault.jpg"
+            onerror="this.style.display='none'">
+          <div class="info">
+            <div class="song-title">${escapeHtml(f.title)}</div>
+            <div class="song-author">▶ YouTube</div>
+          </div>
+          <span class="fav-btn on"
+            onclick="event.stopPropagation(); toggleFav('${f.videoId}', '${escapeAttr(f.title)}')">
+            ★</span>
+          <span class="plus">+</span>
+        </button>
+      `).join('');
+    }
+
+    function quickAdd(videoId, title) {
+      const singer = document.getElementById('singer').value.trim() || 'Guest';
+      socket.emit('addSong', { videoId, title, singer });
+      if (navigator.vibrate) navigator.vibrate(20);
+      toast('✓ ' + title.substring(0, 40));
+    }
+
+    function toggleFav(videoId, title) {
+      socket.emit('toggleFavorite', { videoId, title });
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    async function loadHistory() {
+      try {
+        const data = await (await fetch(API + '/api/history?limit=50')).json();
+        const el = document.getElementById('historyList');
+        if (!data.length) {
+          el.innerHTML = '<div class="empty-state">Wala pang history</div>';
+          return;
+        }
+        el.innerHTML = data.map(h => {
+          const time = new Date(h.playedAt).toLocaleString('en-PH', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+          return `<div class="history-item">
+            <div class="icon-badge">🎤</div>
+            <div class="info">
+              <div class="singer">${escapeHtml(h.singer)}</div>
+              <div class="song">${escapeHtml(h.title)}</div>
+              <div class="time">${time}</div>
+            </div>
+          </div>`;
+        }).join('');
+      } catch {}
+    }
+
+    function sendCmd(type) {
+      socket.emit(type);
+      if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    document.getElementById('volume').addEventListener('input', e =>
+      socket.emit('volume', e.target.value));
+
+    socket.on('state', s => {
+      lastState = s;
+      const nowEl = document.getElementById('nowContent');
+      if (s.nowPlaying) {
+        nowEl.innerHTML = `
+          <div class="singer">${escapeHtml(s.nowPlaying.singer)}</div>
+          <div class="song">${escapeHtml(s.nowPlaying.title || s.nowPlaying.videoId)}</div>
+          <div style="font-size:10px;color:#ff6b6b;margin-top:6px">▶ YouTube</div>`;
+      } else {
+        nowEl.innerHTML = '<div class="empty">Walang tumutugtog</div>';
+      }
+
+      document.getElementById('queueCount').textContent = s.queue.length;
+      document.getElementById('qTabBadge').textContent = s.queue.length;
+
+      const statsEl = document.getElementById('singerStats');
+      if (s.stats && s.stats.queueLength > 0) {
+        statsEl.style.display = 'flex';
+        statsEl.innerHTML = `
+          <div class="stat-item">
+            <span class="stat-icon">👥</span>
+            <span class="stat-value">${s.stats.singerCount || 0}</span>
+            <span class="stat-label">singers</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">🎵</span>
+            <span class="stat-value">${s.stats.queueLength || 0}</span>
+            <span class="stat-label">kanta</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">⏱️</span>
+            <span class="stat-value">${s.stats.totalWaitText || '0 min'}</span>
+            <span class="stat-label">total</span>
+          </div>
+        `;
+      } else {
+        statsEl.style.display = 'none';
+      }
+
+      renderQueue(s);
+    });
+
+    function renderQueue(s) {
+      const qEl = document.getElementById('queueList');
+      const myName = (document.getElementById('singer').value.trim() || '').toLowerCase();
+
+      if (!s.queue.length) {
+        qEl.innerHTML = '<div class="empty-state">Walang naka-reserve</div>';
+        return;
+      }
+
+      qEl.innerHTML = s.queue.map((q, i) => {
+        const isMe = myName && q.singer.toLowerCase() === myName;
+        const displayTitle = q.title || q.videoId || 'Unknown';
+        return `
+          <div class="queue-item ${isMe ? 'is-me' : ''}">
+            <div class="pos">${i + 1}</div>
+            <div class="info">
+              <div class="singer">
+                ${isMe ? '<span class="me-badge">IKAW</span>' : ''}
+                ${escapeHtml(q.singer)}
+              </div>
+              <div class="song">${escapeHtml(displayTitle)}</div>
+              <div class="wait-time">⏱️ ${q.waitText || 'Susunod na'}</div>
+            </div>
+            <div class="actions">
+              ${i > 0 ? `<button onclick="moveSong(${q.id}, 'up')">↑</button>` : ''}
+              ${i < s.queue.length - 1 ? `<button onclick="moveSong(${q.id}, 'down')">↓</button>` : ''}
+              <button class="remove" onclick="removeSong(${q.id})">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function removeSong(id) {
+      if (confirm('Alisin ang kantang ito?')) socket.emit('removeSong', id);
+    }
+    function moveSong(id, dir) {
+      socket.emit('moveSong', { id, direction: dir });
+    }
+
+    socket.on('error', msg => toast(msg, 'error'));
+    socket.on('videoBlacklisted', ({ videoId, title }) => {
+      toast(`⚠️ Hindi ma-play: "${(title || '').substring(0, 30)}"`, 'error');
+    });
+    socket.on('historyCleared', () => {
+      if (document.getElementById('tab-history').style.display !== 'none') loadHistory();
+    });
+    socket.on('kicked', msg => { alert(msg); location.reload(); });
+
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    function openAdmin() {
+      openModal('adminModal');
+      if (adminToken) showAdminPanel();
+    }
+
+    // =====================================================
+    // LOGIN — GET-based (no CORS preflight)
+    // =====================================================
+    async function doLogin() {
+      const pw = document.getElementById('adminPw').value;
+      if (!pw) return toast('Ilagay ang password', 'error');
+
+      try {
+        const r = await fetch(
+          API + '/api/admin/login?password=' + encodeURIComponent(pw)
+        );
+        if (!r.ok) {
+          if (r.status === 401) throw new Error('Maling password');
+          throw new Error('Server error ' + r.status);
+        }
+        const { token } = await r.json();
+        adminToken = token;
+        localStorage.setItem('videoke:adminToken', token);
+        showAdminPanel();
+        toast('✓ Logged in', 'success');
+      } catch (e) {
+        alert('🔴 Login Error\n\n' + e.message);
+      }
+    }
+
+    function showAdminPanel() {
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+    }
+
+    async function adminAction(action) {
+      if (!adminToken) return;
+      if (action === 'clear-history' && !confirm('I-clear lahat ng history?')) return;
+      if (action === 'clear-failed' && !confirm('I-clear ang failed videos list?')) return;
+      try {
+        const r = await fetch(
+          API + '/api/admin/' + action + '?token=' + encodeURIComponent(adminToken)
+        );
+        if (!r.ok) throw new Error('Failed');
+        toast('✓ ' + action);
+      } catch (e) { toast('Error', 'error'); }
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeAttr(s) {
+      return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function toggleLang() {
+      const current = localStorage.getItem('videoke:lang') || 'fil';
+      localStorage.setItem('videoke:lang', current === 'fil' ? 'en' : 'fil');
+      document.getElementById('langIcon').textContent =
+        (current === 'fil') ? '🇺🇸' : '🇵🇭';
+    }
+
+    refreshFavorites();
+
+    let lastTouch = 0;
+    document.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - lastTouch < 300) e.preventDefault();
+      lastTouch = now;
+    }, { passive: false });
+  </script>
+</body>
+</html>
