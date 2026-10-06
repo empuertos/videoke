@@ -1,6 +1,3 @@
-Ito na ang bagong, updated, at kumpletong README.md para sa project mo. I-copy mo lang lahat at i-paste sa README.md file sa root ng repo.
-
-```markdown
 # 🎤 VIDEoke YT
 
 **A YouTube-powered videoke (karaoke) system** built for parties, gatherings, and events. Guests scan a QR code from their phone, paste a YouTube link, and the song plays automatically on the host screen — **no downloads, no local files, everything streams directly from YouTube.**
