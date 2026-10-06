@@ -4,6 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <title>Videoke YouTube — Host</title>
+  <link rel="preconnect" href="https://www.youtube.com">
+  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
+  <link rel="preconnect" href="https://i.ytimg.com">
+  <link rel="preconnect" href="https://s.ytimg.com">
+  <link rel="dns-prefetch" href="https://www.youtube.com">
+  <link rel="dns-prefetch" href="https://i.ytimg.com">
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="/i18n.js"></script>
   <script src="/config.js"></script>
@@ -15,6 +21,16 @@
     #ytContainer { position:fixed;inset:0;width:100vw;height:100vh;z-index:1; }
     #ytPlayer { width:100%;height:100%; }
     canvas#fx { position:fixed;inset:0;pointer-events:none;z-index:30; }
+
+    #loadSpinner { position:fixed;inset:0;z-index:15;
+      display:none;align-items:center;justify-content:center;
+      background:rgba(0,0,0,0.7);pointer-events:none; }
+    #loadSpinner.show { display:flex; }
+    #loadSpinner .spinner { width:60px;height:60px;
+      border:5px solid rgba(255,255,255,0.15);
+      border-top-color:#ffd700;border-radius:50%;
+      animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
     #startScreen { position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;
       align-items:center;justify-content:center;cursor:pointer;text-align:center;
@@ -34,20 +50,17 @@
     #startScreen .cta { margin-top:50px;padding:20px 60px;
       background:linear-gradient(135deg,#ff2e55,#ff0044);border-radius:60px;
       font-size:22px;font-weight:700;letter-spacing:2px;
-      animation:pulseCta 2s infinite;
-      box-shadow:0 20px 60px rgba(255,46,85,0.5); }
+      animation:pulseCta 2s infinite;box-shadow:0 20px 60px rgba(255,46,85,0.5); }
     @keyframes pulseCta { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
     .tv-hint { margin-top:30px;padding:14px 24px;
       background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);
       border-radius:12px;font-size:16px;color:#a0b0c0;letter-spacing:1px; }
     .tv-hint b { color:#60a5fa;font-weight:800; }
 
-    #idleScreen {
-      position:fixed;inset:0;z-index:500;display:none;
+    #idleScreen { position:fixed;inset:0;z-index:500;display:none;
       flex-direction:row;align-items:center;justify-content:center;
       gap:20px;padding:30px;
-      background:radial-gradient(ellipse at top left,#2a0a4a,#0a0512 60%);
-    }
+      background:radial-gradient(ellipse at top left,#2a0a4a,#0a0512 60%); }
     #idleScreen .left { flex:1 1 0;min-width:0;max-width:34%;
       display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
     #idleScreen .right { flex:0 0 auto;
@@ -87,250 +100,121 @@
     #idleQueue::-webkit-scrollbar { width:4px; }
     #idleQueue::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
 
-    #topBar {
-      position:fixed;
-      top:0;left:0;right:0;
-      z-index:45;
-      min-height:56px;
-      padding:8px 16px;
+    #topBar { position:fixed;top:0;left:0;right:0;z-index:45;
+      min-height:56px;padding:8px 16px;
       background:linear-gradient(180deg, rgba(10,5,18,0.95), rgba(10,5,18,0.75));
-      backdrop-filter:blur(20px);
-      border-bottom:1px solid rgba(255,215,0,0.2);
-      display:none;
-      align-items:center;
-      gap:12px;
-    }
+      backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,0.2);
+      display:none;align-items:center;gap:12px; }
     #topBar.show { display:flex; }
 
-    .ns-section {
-      display:flex;align-items:center;gap:10px;
-      padding-right:14px;
-      border-right:1px solid rgba(255,215,0,0.2);
-      flex-shrink:0;
-      max-width:320px;
-    }
+    .ns-section { display:flex;align-items:center;gap:10px;
+      padding-right:14px;border-right:1px solid rgba(255,215,0,0.2);
+      flex-shrink:0;max-width:320px; }
     .ns-mic { font-size:20px; }
     .ns-info { min-width:0;overflow:hidden; }
-    .ns-label {
-      font-size:8px;letter-spacing:2px;
-      color:var(--gold);font-weight:700;
-      text-transform:uppercase;
-    }
-    .ns-singer {
-      font-size:16px;font-weight:800;
-      color:#fff;line-height:1.1;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .ns-song {
-      font-size:12px;color:#c0c0d0;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      margin-top:1px;
-    }
+    .ns-label { font-size:8px;letter-spacing:2px;
+      color:var(--gold);font-weight:700;text-transform:uppercase; }
+    .ns-singer { font-size:16px;font-weight:800;color:#fff;line-height:1.1;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .ns-song { font-size:12px;color:#c0c0d0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px; }
 
-    .q-section {
-      flex:1;
-      display:flex;align-items:center;gap:8px;
-      min-width:0;
-    }
-    .q-label {
-      display:flex;align-items:center;gap:6px;
-      padding:5px 12px;
-      background:rgba(255,215,0,0.12);
-      border:1px solid rgba(255,215,0,0.35);
-      border-radius:14px;
-      flex-shrink:0;
-    }
+    .q-section { flex:1;display:flex;align-items:center;gap:8px;min-width:0; }
+    .q-label { display:flex;align-items:center;gap:6px;
+      padding:5px 12px;background:rgba(255,215,0,0.12);
+      border:1px solid rgba(255,215,0,0.35);border-radius:14px;flex-shrink:0; }
     .q-label .q-icon { font-size:14px; }
-    .q-label .q-title {
-      font-size:10px;font-weight:800;letter-spacing:2px;
-      color:var(--gold);text-transform:uppercase;
-    }
-    .q-label .q-count {
-      background:var(--red);color:#fff;
-      font-size:10px;font-weight:800;
-      padding:2px 7px;border-radius:8px;
-      min-width:20px;text-align:center;
-    }
+    .q-label .q-title { font-size:10px;font-weight:800;letter-spacing:2px;
+      color:var(--gold);text-transform:uppercase; }
+    .q-label .q-count { background:var(--red);color:#fff;
+      font-size:10px;font-weight:800;padding:2px 7px;
+      border-radius:8px;min-width:20px;text-align:center; }
 
-    .qp-list {
-      display:flex;flex-direction:row;gap:6px;
-      overflow-x:auto;flex:1;
-      padding-bottom:2px;
-    }
+    .qp-list { display:flex;flex-direction:row;gap:6px;
+      overflow-x:auto;flex:1;padding-bottom:2px; }
     .qp-list::-webkit-scrollbar { height:3px; }
     .qp-list::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
 
-    .qp-item {
-      display:flex;align-items:center;gap:6px;
-      padding:6px 12px;
-      background:rgba(255,255,255,0.06);
+    .qp-item { display:flex;align-items:center;gap:6px;
+      padding:6px 12px;background:rgba(255,255,255,0.06);
       border-left:3px solid rgba(255,255,255,0.15);
-      border-radius:8px;
-      font-size:11px;
-      flex-shrink:0;
-      max-width:260px;
-      min-width:180px;
-    }
+      border-radius:8px;font-size:11px;flex-shrink:0;
+      max-width:260px;min-width:180px; }
     .qp-item.first {
       background:linear-gradient(135deg,rgba(255,215,0,0.25),rgba(255,138,0,0.1));
-      border-left-color:var(--gold);
-      box-shadow:0 0 15px rgba(255,215,0,0.15);
-    }
-    .qp-item .qp-num {
-      font-size:11px;font-weight:800;color:var(--dim);
-      min-width:14px;text-align:center;
-    }
+      border-left-color:var(--gold);box-shadow:0 0 15px rgba(255,215,0,0.15); }
+    .qp-item .qp-num { font-size:11px;font-weight:800;color:var(--dim);
+      min-width:14px;text-align:center; }
     .qp-item.first .qp-num { color:var(--gold); }
     .qp-item .qp-info { min-width:0;overflow:hidden;flex:1; }
-    .qp-item .qp-singer {
-      font-size:11px;font-weight:700;color:#fff;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .qp-item .qp-song {
-      font-size:10px;color:#c0c0d0;
-      overflow:hidden;
-      display:-webkit-box;
-      -webkit-line-clamp:2;
-      -webkit-box-orient:vertical;
-      line-height:1.2;
-      max-width:220px;
-    }
-    .qp-item .qp-wait {
-      font-size:10px;color:var(--gold);font-weight:700;
-      margin-left:6px;flex-shrink:0;
-    }
+    .qp-item .qp-singer { font-size:11px;font-weight:700;color:#fff;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .qp-item .qp-song { font-size:10px;color:#c0c0d0;
+      overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical;
+      line-height:1.2;max-width:220px; }
+    .qp-item .qp-wait { font-size:10px;color:var(--gold);font-weight:700;
+      margin-left:6px;flex-shrink:0; }
     .qp-empty { color:var(--dim);font-size:11px;font-style:italic;padding:6px; }
 
-    .toggle-bar-btn {
-      width:36px;height:36px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,0.15);
-      background:rgba(0,0,0,0.4);
-      color:#fff;cursor:pointer;
-      font-size:16px;
-      flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-      transition:all 0.15s;
-    }
+    .toggle-bar-btn { width:36px;height:36px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.4);
+      color:#fff;cursor:pointer;font-size:16px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;transition:all 0.15s; }
     .toggle-bar-btn:hover { background:rgba(255,215,0,0.2); }
 
-    #fullQueueModal {
-      position:fixed;
-      top:68px;
-      right:20px;
-      width:540px;
-      max-width:90vw;
-      max-height:80vh;
-      z-index:500;
-      background:rgba(10,5,18,0.96);
-      backdrop-filter:blur(30px);
-      border:1px solid rgba(255,215,0,0.3);
-      border-radius:16px;
+    #fullQueueModal { position:fixed;top:68px;right:20px;
+      width:540px;max-width:90vw;max-height:80vh;z-index:500;
+      background:rgba(10,5,18,0.96);backdrop-filter:blur(30px);
+      border:1px solid rgba(255,215,0,0.3);border-radius:16px;
       box-shadow:0 20px 60px rgba(0,0,0,0.7);
-      padding:18px;
-      display:none;
-      flex-direction:column;
-      animation:slideInRight 0.3s;
-    }
+      padding:18px;display:none;flex-direction:column;
+      animation:slideInRight 0.3s; }
     #fullQueueModal.show { display:flex; }
     @keyframes slideInRight {
       from { transform: translateX(30px); opacity:0; }
       to { transform: translateX(0); opacity:1; }
     }
-
-    .fq-header {
-      display:flex;align-items:center;gap:10px;
-      padding-bottom:14px;
-      margin-bottom:14px;
-      border-bottom:1px solid rgba(255,215,0,0.2);
-      flex-shrink:0;
-    }
+    .fq-header { display:flex;align-items:center;gap:10px;
+      padding-bottom:14px;margin-bottom:14px;
+      border-bottom:1px solid rgba(255,215,0,0.2);flex-shrink:0; }
     .fq-icon { font-size:20px; }
-    .fq-title {
-      flex:1;
-      font-size:14px;font-weight:800;
-      letter-spacing:2px;
-      color:var(--gold);
-      text-transform:uppercase;
-    }
-    .fq-count {
-      background:var(--red);color:#fff;
-      font-size:12px;font-weight:800;
-      padding:3px 10px;border-radius:12px;
-      min-width:26px;text-align:center;
-    }
-    .fq-close {
-      width:36px;height:36px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,0.15);
-      background:rgba(0,0,0,0.4);
-      color:#fff;cursor:pointer;
-      font-size:18px;
-      display:flex;align-items:center;justify-content:center;
-    }
+    .fq-title { flex:1;font-size:14px;font-weight:800;
+      letter-spacing:2px;color:var(--gold);text-transform:uppercase; }
+    .fq-count { background:var(--red);color:#fff;
+      font-size:12px;font-weight:800;padding:3px 10px;
+      border-radius:12px;min-width:26px;text-align:center; }
+    .fq-close { width:36px;height:36px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.4);
+      color:#fff;cursor:pointer;font-size:18px;
+      display:flex;align-items:center;justify-content:center; }
     .fq-close:hover { background:rgba(255,46,85,0.8); }
-
-    .fq-list {
-      display:flex;flex-direction:column;gap:8px;
-      overflow-y:auto;
-      flex:1;
-      padding-right:6px;
-    }
+    .fq-list { display:flex;flex-direction:column;gap:8px;
+      overflow-y:auto;flex:1;padding-right:6px; }
     .fq-list::-webkit-scrollbar { width:5px; }
-    .fq-list::-webkit-scrollbar-thumb {
-      background:rgba(255,215,0,0.3);
-      border-radius:3px;
-    }
-
-    .fq-item {
-      display:flex;align-items:center;gap:12px;
-      padding:12px 14px;
-      background:rgba(255,255,255,0.04);
+    .fq-list::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:3px; }
+    .fq-item { display:flex;align-items:center;gap:12px;
+      padding:12px 14px;background:rgba(255,255,255,0.04);
       border-left:4px solid rgba(255,255,255,0.15);
-      border-radius:10px;
-      transition:all 0.2s;
-    }
+      border-radius:10px;transition:all 0.2s; }
     .fq-item.first {
       background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,138,0,0.08));
-      border-left-color:var(--gold);
-      box-shadow:0 0 20px rgba(255,215,0,0.15);
-    }
-    .fq-item .fq-num {
-      font-size:20px;font-weight:900;
-      color:var(--dim);
-      min-width:32px;text-align:center;
-      font-family:monospace;
-    }
+      border-left-color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,0.15); }
+    .fq-item .fq-num { font-size:20px;font-weight:900;color:var(--dim);
+      min-width:32px;text-align:center;font-family:monospace; }
     .fq-item.first .fq-num { color:var(--gold); }
     .fq-item .fq-info { flex:1;min-width:0; }
-    .fq-item .fq-singer {
-      font-size:16px;font-weight:800;
-      color:#fff;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .fq-item .fq-song {
-      font-size:13px;color:#c0c0d0;
-      margin-top:3px;
-      line-height:1.3;
-      overflow:hidden;
-      display:-webkit-box;
-      -webkit-line-clamp:2;
-      -webkit-box-orient:vertical;
-    }
-    .fq-item .fq-wait {
-      font-size:11px;color:var(--gold);
-      font-weight:700;
-      padding:4px 10px;
-      background:rgba(255,215,0,0.1);
-      border:1px solid rgba(255,215,0,0.3);
-      border-radius:12px;
-      white-space:nowrap;
-      flex-shrink:0;
-    }
-    .fq-empty {
-      text-align:center;padding:40px 20px;
-      color:var(--dim);font-size:14px;font-style:italic;
-    }
+    .fq-item .fq-singer { font-size:16px;font-weight:800;color:#fff;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .fq-item .fq-song { font-size:13px;color:#c0c0d0;margin-top:3px;
+      line-height:1.3;overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
+    .fq-item .fq-wait { font-size:11px;color:var(--gold);font-weight:700;
+      padding:4px 10px;background:rgba(255,215,0,0.1);
+      border:1px solid rgba(255,215,0,0.3);border-radius:12px;
+      white-space:nowrap;flex-shrink:0; }
+    .fq-empty { text-align:center;padding:40px 20px;
+      color:var(--dim);font-size:14px;font-style:italic; }
 
     #countdown { position:fixed;inset:0;z-index:200;
       display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -359,55 +243,31 @@
     .cd-queue-item .cd-song { font-size:10px;color:var(--dim);
       margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
-    #errorOverlay {
-      position:fixed;inset:0;z-index:900;
+    #errorOverlay { position:fixed;inset:0;z-index:900;
       display:none;flex-direction:column;align-items:center;justify-content:center;
       background:radial-gradient(ellipse at center,#4a0010 0%,#0a0512 100%);
-      text-align:center;padding:40px;
-    }
+      text-align:center;padding:40px; }
     #errorOverlay.show { display:flex; }
-    #errorOverlay .icon {
-      font-size:140px;
+    #errorOverlay .icon { font-size:140px;
       filter:drop-shadow(0 0 40px rgba(255,46,85,0.8));
-      animation:errPulse 1.5s ease-in-out infinite;
-    }
-    @keyframes errPulse {
-      0%,100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    #errorOverlay .title {
-      font-size:64px;font-weight:900;
-      color:#ff6b6b;letter-spacing:-2px;
-      margin-top:20px;
-      text-shadow:0 0 30px rgba(255,107,107,0.5);
-    }
-    #errorOverlay .msg {
-      font-size:24px;color:#c0c0d0;
-      text-align:center;max-width:80vw;
-      line-height:1.5;margin-top:20px;
-    }
-    #errorOverlay .song-title {
-      font-size:18px;color:#888;
-      margin-top:10px;font-style:italic;
-    }
-    #errorOverlay .sub {
-      margin-top:40px;
-      font-size:18px;color:var(--gold);
-      letter-spacing:3px;text-transform:uppercase;
-      font-weight:700;
-      animation:pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    #errorOverlay .countdown-num {
-      margin-top:20px;
+      animation:errPulse 1.5s ease-in-out infinite; }
+    @keyframes errPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    #errorOverlay .title { font-size:64px;font-weight:900;
+      color:#ff6b6b;letter-spacing:-2px;margin-top:20px;
+      text-shadow:0 0 30px rgba(255,107,107,0.5); }
+    #errorOverlay .msg { font-size:24px;color:#c0c0d0;
+      text-align:center;max-width:80vw;line-height:1.5;margin-top:20px; }
+    #errorOverlay .song-title { font-size:18px;color:#888;
+      margin-top:10px;font-style:italic; }
+    #errorOverlay .sub { margin-top:40px;font-size:18px;color:var(--gold);
+      letter-spacing:3px;text-transform:uppercase;font-weight:700;
+      animation:pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    #errorOverlay .countdown-num { margin-top:20px;
       font-size:80px;font-weight:900;
       background:linear-gradient(135deg,#ff2e55,#ff8a00);
       -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
+      -webkit-text-fill-color:transparent; }
 
     #hostControls { position:fixed;top:80px;right:30px;z-index:60;
       display:none;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:400px; }
@@ -462,6 +322,8 @@
   <div id="ytContainer"><div id="ytPlayer"></div></div>
   <canvas id="fx"></canvas>
 
+  <div id="loadSpinner"><div class="spinner"></div></div>
+
   <div id="startScreen" tabindex="0">
     <div class="mic">🎤</div>
     <h1>VIDEOKE</h1>
@@ -514,7 +376,6 @@
         <div class="ns-song" id="nsSong">—</div>
       </div>
     </div>
-
     <div class="q-section">
       <div class="q-label">
         <span class="q-icon">📋</span>
@@ -525,7 +386,6 @@
         <div class="qp-empty">Walang naka-reserve</div>
       </div>
     </div>
-
     <button class="toggle-bar-btn" onclick="toggleFullQueue()" id="expandBtn" title="View all">📋</button>
   </div>
 
@@ -545,7 +405,7 @@
     <div class="upnext" id="cdLabel">UP NEXT</div>
     <div class="singer" id="cdSinger">—</div>
     <div class="song" id="cdSong">—</div>
-    <div class="number" id="cdNumber">5</div>
+    <div class="number" id="cdNumber">3</div>
     <div class="cd-queue" id="cdQueue"></div>
   </div>
 
@@ -594,8 +454,9 @@
     let lastState = null;
     let forceRetryTimer = null;
     let errorCountdownTimer = null;
-    let songEndedFired = false;  // ⬅️ BAGO: prevent double-fire
-    let endPollTimer = null;      // ⬅️ BAGO: polling timer
+    let songEndedFired = false;
+    let endPollTimer = null;
+    let cueTimeout = null;
 
     function debugLog(msg, type = '') {
       const el = document.getElementById('debugLog');
@@ -611,6 +472,8 @@
     function toggleDebug() {
       document.getElementById('debugLog').classList.toggle('show');
     }
+    function showSpinner() { document.getElementById('loadSpinner').classList.add('show'); }
+    function hideSpinner() { document.getElementById('loadSpinner').classList.remove('show'); }
     debugLog('Boot started');
 
     function resizeCanvas() { fx.width = window.innerWidth; fx.height = window.innerHeight; }
@@ -708,7 +571,6 @@
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     }
 
-    // ===== FULL QUEUE TOGGLE =====
     function toggleFullQueue() {
       const modal = document.getElementById('fullQueueModal');
       modal.classList.toggle('show');
@@ -722,14 +584,11 @@
       const list = document.getElementById('fqList');
       const count = document.getElementById('fqCount');
       const queue = s.queue || [];
-
       count.textContent = queue.length;
-
       if (queue.length === 0) {
         list.innerHTML = '<div class="fq-empty">Walang naka-reserve</div>';
         return;
       }
-
       list.innerHTML = queue.map((q, i) => `
         <div class="fq-item ${i === 0 ? 'first' : ''}">
           <div class="fq-num">${i + 1}</div>
@@ -742,22 +601,19 @@
       `).join('');
     }
 
-    // ===== ERROR OVERLAY =====
     function showErrorOverlay(songTitle, errorMsg) {
       debugLog('Showing error overlay: ' + errorMsg, 'err');
+      hideSpinner();
       document.getElementById('ytContainer').style.display = 'none';
       document.getElementById('errorOverlay').classList.add('show');
       document.getElementById('errorSongTitle').textContent = songTitle ? `"${songTitle}"` : '';
       document.getElementById('errorCountdown').textContent = '3';
-
       let remaining = 3;
       clearInterval(errorCountdownTimer);
       errorCountdownTimer = setInterval(() => {
         remaining--;
         document.getElementById('errorCountdown').textContent = remaining;
-        if (remaining <= 0) {
-          clearInterval(errorCountdownTimer);
-        }
+        if (remaining <= 0) clearInterval(errorCountdownTimer);
       }, 1000);
     }
 
@@ -767,20 +623,16 @@
       document.getElementById('ytContainer').style.display = 'block';
     }
 
-    // ===== VIDEO ENDED HANDLER (single source of truth) =====
     function handleVideoEnded() {
-      if (songEndedFired) {
-        debugLog('songEnded already fired — skipping', 'warn');
-        return;
-      }
+      if (songEndedFired) return;
       songEndedFired = true;
       debugLog('▶ Video ended → next song');
       stopEndPolling();
+      hideSpinner();
       currentVideoId = null;
       socket.emit('songEnded');
     }
 
-    // ===== START END-OF-VIDEO POLLING =====
     function startEndPolling() {
       stopEndPolling();
       endPollTimer = setInterval(() => {
@@ -789,43 +641,24 @@
           const state = ytPlayer.getPlayerState();
           const current = ytPlayer.getCurrentTime();
           const duration = ytPlayer.getDuration();
-
-          // State 0 = ENDED
-          if (state === 0) {
-            debugLog('Poll: state=0 (ended)');
-            handleVideoEnded();
-            return;
-          }
-
-          // Near end — currentTime >= duration - 1.5s at playing (state=1)
+          if (state === 0) { handleVideoEnded(); return; }
           if (duration > 5 && current >= duration - 1.5 && state === 1) {
-            debugLog(`Poll: near end (${current.toFixed(1)}/${duration.toFixed(1)}) → next in 1.5s`);
-            // Hintayin ng 1.5s tapos i-trigger kung hindi pa nag-end
             const endedId = currentVideoId;
             setTimeout(() => {
               if (currentVideoId === endedId && !songEndedFired) {
                 try {
                   const s = ytPlayer.getPlayerState();
-                  if (s === 0 || s === 1) {
-                    debugLog('Poll: forcing end after timeout');
-                    handleVideoEnded();
-                  }
+                  if (s === 0 || s === 1) handleVideoEnded();
                 } catch (e) {}
               }
             }, 1500);
           }
-        } catch (e) {
-          // ignore
-        }
-      }, 1500); // Check every 1.5 seconds
-      debugLog('End polling started');
+        } catch (e) {}
+      }, 1500);
     }
 
     function stopEndPolling() {
-      if (endPollTimer) {
-        clearInterval(endPollTimer);
-        endPollTimer = null;
-      }
+      if (endPollTimer) { clearInterval(endPollTimer); endPollTimer = null; }
     }
 
     const startScreen = document.getElementById('startScreen');
@@ -844,14 +677,13 @@
             try {
               ytPlayer.pauseVideo();
               ytPlayer.unMute();
-              debugLog('Autoplay unlocked ✓');
             } catch (e) {}
-          }, 800);
+          }, 500);
         } catch (e) {}
       }
 
       if (lastCommand && lastCommand.type !== 'idle' && lastCommand.type !== 'stop') {
-        setTimeout(() => handleCommand(lastCommand), 900);
+        setTimeout(() => handleCommand(lastCommand), 500);
       } else {
         show(document.getElementById('idleScreen'));
       }
@@ -899,7 +731,6 @@
       const el = document.getElementById('qrcode');
       if (!el) return;
       el.innerHTML = '';
-
       if (typeof QRCode === 'undefined') {
         const img = document.createElement('img');
         img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
@@ -907,7 +738,6 @@
         el.appendChild(img);
         return;
       }
-
       try {
         new QRCode(el, {
           text: url, width: 240, height: 240,
@@ -918,7 +748,7 @@
           const img = el.querySelector('img');
           if (img) img.remove();
         }, 50);
-      } catch (e) { debugLog('QR error: ' + e.message, 'err'); }
+      } catch (e) {}
     }
 
     function initQRFlow() {
@@ -951,7 +781,9 @@
           autoplay: 0, controls: 0, rel: 0,
           modestbranding: 1, fs: 0, disablekb: 1,
           iv_load_policy: 3, playsinline: 1,
-          enablejsapi: 1
+          enablejsapi: 1,
+          origin: window.location.origin,
+          host: 'https://www.youtube-nocookie.com'
         },
         events: {
           onReady: () => {
@@ -962,17 +794,14 @@
           onStateChange: (e) => {
             const states = ['ended','playing','paused','buffering','cued'];
             debugLog('YT state: ' + (states[e.data] || e.data));
-            
-            // ⬇️ VIDEO ENDED — i-trigger ang next song
+            if (e.data === 1) hideSpinner();
             if (e.data === 0 && currentVideoId && !songEndedFired) {
-              debugLog('State 0 (ENDED) detected');
               handleVideoEnded();
             }
           },
           onError: (e) => {
             const errMsgs = {
-              2: 'Invalid video ID',
-              5: 'HTML5 player error',
+              2: 'Invalid video ID', 5: 'HTML5 player error',
               100: 'Video not found o deleted na.',
               101: 'Hindi pinapayagan ng owner na i-embed.',
               150: 'Hindi pinapayagan ng owner na i-embed.'
@@ -980,21 +809,15 @@
             const msg = errMsgs[e.data] || ('Error ' + e.data);
             debugLog('YT error: ' + msg, 'err');
             stopEndPolling();
+            hideSpinner();
 
             if (currentVideoId) {
               const failedId = currentVideoId;
               const failedTitle = document.getElementById('nsSong')?.textContent || '';
-
               showErrorOverlay(failedTitle, msg);
-
-              socket.emit('videoFailed', {
-                videoId: failedId,
-                title: failedTitle
-              });
-
+              socket.emit('videoFailed', { videoId: failedId, title: failedTitle });
               currentVideoId = null;
               songEndedFired = true;
-
               setTimeout(() => {
                 hideErrorOverlay();
                 socket.emit('skip');
@@ -1005,17 +828,35 @@
       });
     }
 
+    function preloadVideo(videoId) {
+      if (!ytReady || !ytPlayer || !ytPlayer.cueVideoById) return;
+      if (videoId === currentVideoId) return;
+      try {
+        debugLog('Preloading: ' + videoId);
+        ytPlayer.cueVideoById(videoId);
+      } catch (e) {
+        debugLog('Preload failed: ' + e.message, 'warn');
+      }
+    }
+
     function playVideo(videoId) {
       debugLog('playVideo: ' + videoId);
       hideErrorOverlay();
+      showSpinner();
       currentVideoId = videoId;
-      songEndedFired = false;  // ⬅️ Reset ang flag para sa bagong kanta
-      if (!ytReady) { pendingPlay = videoId; return; }
+      songEndedFired = false;
+
+      if (!ytReady) {
+        debugLog('YT not ready, pending', 'warn');
+        pendingPlay = videoId;
+        return;
+      }
 
       try {
         ytPlayer.loadVideoById(videoId);
+        clearTimeout(cueTimeout);
+        cueTimeout = setTimeout(() => hideSpinner(), 3000);
 
-        // ⬇️ Start ang end-of-video polling bilang fallback
         setTimeout(() => startEndPolling(), 500);
 
         clearTimeout(forceRetryTimer);
@@ -1033,15 +874,17 @@
                 }
                 if (ytPlayer.getPlayerState() === 1) {
                   clearInterval(check);
+                  hideSpinner();
                   setTimeout(() => { try { ytPlayer.unMute(); } catch(e) {} }, 300);
                 }
-              }, 300);
-              setTimeout(() => clearInterval(check), 6000);
+              }, 200);
+              setTimeout(() => clearInterval(check), 4000);
             } catch (e) {}
           }
-        }, 2000);
+        }, 1500);
       } catch (e) {
         debugLog('playVideo error: ' + e.message, 'err');
+        hideSpinner();
       }
     }
 
@@ -1071,11 +914,8 @@
       const list = document.getElementById('qpList');
       const count = document.getElementById('qpCount');
 
-      if (nowPlaying) {
-        bar.classList.add('show');
-      } else {
-        bar.classList.remove('show');
-      }
+      if (nowPlaying) bar.classList.add('show');
+      else bar.classList.remove('show');
 
       count.textContent = queue.length;
 
@@ -1143,6 +983,10 @@
         `).join('');
       }
 
+      if (queue.length > 0 && queue[0].videoId) {
+        preloadVideo(queue[0].videoId);
+      }
+
       const modal = document.getElementById('fullQueueModal');
       if (modal && modal.classList.contains('show')) {
         renderFullQueue(s);
@@ -1151,7 +995,6 @@
 
     function show(el) { el.style.display = 'flex'; }
     function hide(el) { el.style.display = 'none'; }
-    function showB(el) { el.style.display = 'block'; }
 
     function handleCommand(cmd) {
       debugLog('CMD: ' + cmd.type);
@@ -1165,7 +1008,7 @@
           document.getElementById('nsSinger').textContent = cmd.song.singer || 'Guest';
           document.getElementById('nsSong').textContent = cmd.song.title || '';
           playVideo(cmd.song.videoId);
-          spawnFireworks(60);
+          spawnFireworks(40);
           break;
 
         case 'countdown':
@@ -1176,6 +1019,7 @@
           document.getElementById('cdSong').textContent = cmd.song.title || '';
           document.getElementById('cdNumber').textContent = cmd.seconds;
           announce(cmd.song.singer || 'Guest', cmd.song.title || '');
+          if (cmd.song.videoId) preloadVideo(cmd.song.videoId);
           break;
 
         case 'countdownTick':
@@ -1186,6 +1030,7 @@
         case 'stop':
           if (ytReady) ytPlayer.stopVideo();
           stopEndPolling();
+          hideSpinner();
           currentVideoId = null;
           songEndedFired = false;
           hide(document.getElementById('countdown'));
@@ -1197,15 +1042,12 @@
         case 'pause':
           if (ytReady) ytPlayer.pauseVideo();
           break;
-
         case 'resume':
           if (ytReady) ytPlayer.playVideo();
           break;
-
         case 'seek':
           if (ytReady) ytPlayer.seekTo(cmd.seconds, true);
           break;
-
         case 'volume':
           if (ytReady) ytPlayer.setVolume(cmd.value);
           break;
