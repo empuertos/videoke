@@ -327,6 +327,20 @@
     #partyGate .err { color:#ff6b6b; font-size:12px;
       margin-top:12px; min-height:16px; font-weight:600; }
 
+    /* ⭐ Admin access button sa loob ng party gate */
+    #partyGate .admin-link {
+      margin-top:30px;
+      padding:10px 20px;
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.15);
+      color:#8888a0;
+      border-radius:8px;
+      font-size:12px;
+      cursor:pointer;
+      font-family:inherit;
+    }
+    #partyGate .admin-link:active { background:rgba(255,255,255,0.05); }
+
     /* Party ended banner */
     #partyEndedBanner { display:none; position:fixed; top:0; left:0; right:0;
       z-index:8000; padding:14px 20px;
@@ -518,6 +532,7 @@
       maxlength="6" autocomplete="off" autocapitalize="characters">
     <button onclick="submitPartyCode()">Sumali sa Party</button>
     <div class="err" id="partyGateErr"></div>
+    <button class="admin-link" onclick="openAdminFromGate()">⚙️ Admin Access</button>
   </div>
 
   <!-- ⭐ Party ended banner -->
@@ -1070,6 +1085,14 @@
       if (adminToken) showAdminPanel();
     }
 
+    // ⭐ Admin access mula sa party gate — pinapataas ang z-index
+    function openAdminFromGate() {
+      const modal = document.getElementById('adminModal');
+      modal.style.zIndex = '9999';
+      openModal('adminModal');
+      if (adminToken) showAdminPanel();
+    }
+
     // =====================================================
     // ADMIN LOGIN
     // =====================================================
@@ -1167,7 +1190,7 @@
       lastTouch = now;
     }, { passive: false });
 
-    // Party code input — auto-submit sa Enter
+    // Party code input — auto-uppercase at auto-submit sa Enter
     document.getElementById('partyCodeInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') submitPartyCode();
     });
