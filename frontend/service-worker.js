@@ -1,4 +1,4 @@
-const CACHE = 'videoke-yt-v2';
+const CACHE = 'videoke-yt-v5';
 const ASSETS = [
   '/',
   '/remote.html',
@@ -21,11 +21,23 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  if (url.pathname.startsWith('/socket.io')) return;
 
-  // Skip CDN requests (galing sa labas)
-  if (url.origin !== location.origin) return;
+  // HUWAG i-intercept ang cross-origin requests (Render backend)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
 
+  // HUWAG i-intercept ang socket.io
+  if (url.pathname.startsWith('/socket.io')) {
+    return;
+  }
+
+  // HUWAG i-intercept ang /api/
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // Cache-first para sa static assets lang
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
       if (e.request.method === 'GET' && res.ok) {
