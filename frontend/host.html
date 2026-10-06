@@ -16,7 +16,6 @@
     #ytPlayer { width:100%;height:100%; }
     canvas#fx { position:fixed;inset:0;pointer-events:none;z-index:30; }
 
-    /* ===== START SCREEN ===== */
     #startScreen { position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;
       align-items:center;justify-content:center;cursor:pointer;text-align:center;
       background:radial-gradient(ellipse at center,#2a0a4a 0%,#0a0512 100%); }
@@ -43,7 +42,6 @@
       border-radius:12px;font-size:16px;color:#a0b0c0;letter-spacing:1px; }
     .tv-hint b { color:#60a5fa;font-weight:800; }
 
-    /* ===== IDLE SCREEN ===== */
     #idleScreen {
       position:fixed;inset:0;z-index:500;display:none;
       flex-direction:row;align-items:center;justify-content:center;
@@ -89,7 +87,6 @@
     #idleQueue::-webkit-scrollbar { width:4px; }
     #idleQueue::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
 
-    /* ===== TOP BAR — ALWAYS VISIBLE when playing ===== */
     #topBar {
       position:fixed;
       top:0;left:0;right:0;
@@ -216,12 +213,7 @@
       transition:all 0.15s;
     }
     .toggle-bar-btn:hover { background:rgba(255,215,0,0.2); }
-    .toggle-bar-btn.active {
-      background:rgba(255,215,0,0.3);
-      border-color:var(--gold);
-    }
 
-    /* ===== FULL QUEUE MODAL ===== */
     #fullQueueModal {
       position:fixed;
       top:68px;
@@ -340,7 +332,6 @@
       color:var(--dim);font-size:14px;font-style:italic;
     }
 
-    /* ===== COUNTDOWN ===== */
     #countdown { position:fixed;inset:0;z-index:200;
       display:none;flex-direction:column;align-items:center;justify-content:center;
       background:rgba(5,0,15,0.96);backdrop-filter:blur(30px); }
@@ -368,7 +359,6 @@
     .cd-queue-item .cd-song { font-size:10px;color:var(--dim);
       margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
-    /* ===== ERROR OVERLAY ===== */
     #errorOverlay {
       position:fixed;inset:0;z-index:900;
       display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -419,7 +409,6 @@
       -webkit-text-fill-color:transparent;
     }
 
-    /* ===== CONTROLS ===== */
     #hostControls { position:fixed;top:80px;right:30px;z-index:60;
       display:none;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:400px; }
     #hostControls button { min-width:56px;height:56px;padding:0 14px;
@@ -473,7 +462,6 @@
   <div id="ytContainer"><div id="ytPlayer"></div></div>
   <canvas id="fx"></canvas>
 
-  <!-- START SCREEN -->
   <div id="startScreen" tabindex="0">
     <div class="mic">🎤</div>
     <h1>VIDEOKE</h1>
@@ -485,7 +473,6 @@
     </div>
   </div>
 
-  <!-- IDLE SCREEN -->
   <div id="idleScreen">
     <div class="left">
       <div class="mic-big">🎤</div>
@@ -518,7 +505,6 @@
     </div>
   </div>
 
-  <!-- TOP BAR -->
   <div id="topBar">
     <div class="ns-section">
       <span class="ns-mic">🎤</span>
@@ -543,7 +529,6 @@
     <button class="toggle-bar-btn" onclick="toggleFullQueue()" id="expandBtn" title="View all">📋</button>
   </div>
 
-  <!-- FULL QUEUE MODAL -->
   <div id="fullQueueModal">
     <div class="fq-header">
       <span class="fq-icon">📋</span>
@@ -556,7 +541,6 @@
     </div>
   </div>
 
-  <!-- COUNTDOWN -->
   <div id="countdown">
     <div class="upnext" id="cdLabel">UP NEXT</div>
     <div class="singer" id="cdSinger">—</div>
@@ -565,7 +549,6 @@
     <div class="cd-queue" id="cdQueue"></div>
   </div>
 
-  <!-- ERROR OVERLAY -->
   <div id="errorOverlay">
     <div class="icon">⛔</div>
     <div class="title">HINDI MA-PLAY</div>
@@ -575,7 +558,6 @@
     <div class="countdown-num" id="errorCountdown">3</div>
   </div>
 
-  <!-- CONTROLS -->
   <div id="hostControls">
     <button class="force-play" onclick="forcePlay()" title="Force play">▶ PLAY NOW</button>
     <button onclick="socket.emit('skip')" title="Skip">⏭ SKIP</button>
@@ -612,6 +594,8 @@
     let lastState = null;
     let forceRetryTimer = null;
     let errorCountdownTimer = null;
+    let songEndedFired = false;  // ⬅️ BAGO: prevent double-fire
+    let endPollTimer = null;      // ⬅️ BAGO: polling timer
 
     function debugLog(msg, type = '') {
       const el = document.getElementById('debugLog');
@@ -783,7 +767,67 @@
       document.getElementById('ytContainer').style.display = 'block';
     }
 
-    // ===== START =====
+    // ===== VIDEO ENDED HANDLER (single source of truth) =====
+    function handleVideoEnded() {
+      if (songEndedFired) {
+        debugLog('songEnded already fired — skipping', 'warn');
+        return;
+      }
+      songEndedFired = true;
+      debugLog('▶ Video ended → next song');
+      stopEndPolling();
+      currentVideoId = null;
+      socket.emit('songEnded');
+    }
+
+    // ===== START END-OF-VIDEO POLLING =====
+    function startEndPolling() {
+      stopEndPolling();
+      endPollTimer = setInterval(() => {
+        if (!currentVideoId || !ytReady || !ytPlayer || !ytPlayer.getCurrentTime) return;
+        try {
+          const state = ytPlayer.getPlayerState();
+          const current = ytPlayer.getCurrentTime();
+          const duration = ytPlayer.getDuration();
+
+          // State 0 = ENDED
+          if (state === 0) {
+            debugLog('Poll: state=0 (ended)');
+            handleVideoEnded();
+            return;
+          }
+
+          // Near end — currentTime >= duration - 1.5s at playing (state=1)
+          if (duration > 5 && current >= duration - 1.5 && state === 1) {
+            debugLog(`Poll: near end (${current.toFixed(1)}/${duration.toFixed(1)}) → next in 1.5s`);
+            // Hintayin ng 1.5s tapos i-trigger kung hindi pa nag-end
+            const endedId = currentVideoId;
+            setTimeout(() => {
+              if (currentVideoId === endedId && !songEndedFired) {
+                try {
+                  const s = ytPlayer.getPlayerState();
+                  if (s === 0 || s === 1) {
+                    debugLog('Poll: forcing end after timeout');
+                    handleVideoEnded();
+                  }
+                } catch (e) {}
+              }
+            }, 1500);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }, 1500); // Check every 1.5 seconds
+      debugLog('End polling started');
+    }
+
+    function stopEndPolling() {
+      if (endPollTimer) {
+        clearInterval(endPollTimer);
+        endPollTimer = null;
+      }
+    }
+
     const startScreen = document.getElementById('startScreen');
     function startVideoke() {
       if (started) return;
@@ -918,9 +962,11 @@
           onStateChange: (e) => {
             const states = ['ended','playing','paused','buffering','cued'];
             debugLog('YT state: ' + (states[e.data] || e.data));
-            if (e.data === 0 && currentVideoId) {
-              socket.emit('songEnded');
-              currentVideoId = null;
+            
+            // ⬇️ VIDEO ENDED — i-trigger ang next song
+            if (e.data === 0 && currentVideoId && !songEndedFired) {
+              debugLog('State 0 (ENDED) detected');
+              handleVideoEnded();
             }
           },
           onError: (e) => {
@@ -933,6 +979,7 @@
             };
             const msg = errMsgs[e.data] || ('Error ' + e.data);
             debugLog('YT error: ' + msg, 'err');
+            stopEndPolling();
 
             if (currentVideoId) {
               const failedId = currentVideoId;
@@ -946,6 +993,7 @@
               });
 
               currentVideoId = null;
+              songEndedFired = true;
 
               setTimeout(() => {
                 hideErrorOverlay();
@@ -961,10 +1009,14 @@
       debugLog('playVideo: ' + videoId);
       hideErrorOverlay();
       currentVideoId = videoId;
+      songEndedFired = false;  // ⬅️ Reset ang flag para sa bagong kanta
       if (!ytReady) { pendingPlay = videoId; return; }
 
       try {
         ytPlayer.loadVideoById(videoId);
+
+        // ⬇️ Start ang end-of-video polling bilang fallback
+        setTimeout(() => startEndPolling(), 500);
 
         clearTimeout(forceRetryTimer);
         forceRetryTimer = setTimeout(() => {
@@ -1019,7 +1071,6 @@
       const list = document.getElementById('qpList');
       const count = document.getElementById('qpCount');
 
-      // ⬇️ LAGING KITA ang top bar kapag may nowPlaying
       if (nowPlaying) {
         bar.classList.add('show');
       } else {
@@ -1092,7 +1143,6 @@
         `).join('');
       }
 
-      // I-update ang full queue modal kung bukas
       const modal = document.getElementById('fullQueueModal');
       if (modal && modal.classList.contains('show')) {
         renderFullQueue(s);
@@ -1135,7 +1185,9 @@
         case 'idle':
         case 'stop':
           if (ytReady) ytPlayer.stopVideo();
+          stopEndPolling();
           currentVideoId = null;
+          songEndedFired = false;
           hide(document.getElementById('countdown'));
           hideErrorOverlay();
           document.getElementById('topBar').classList.remove('show');
