@@ -186,6 +186,10 @@
       transition:all 0.15s;align-items:center; }
     .search-result:active { background:rgba(255,46,85,0.1);
       border-color:var(--red); }
+    .search-result.failed {
+      opacity: 0.6;
+      border-color: rgba(255,107,107,0.3);
+    }
     .search-result img { width:80px;height:60px;border-radius:6px;
       object-fit:cover;flex-shrink:0;background:#000; }
     .search-result .sr-info { flex:1;min-width:0; }
@@ -208,6 +212,8 @@
       color:#000; }
     .hd-badge.uhd { background:linear-gradient(135deg,#ffd700,#ff8a00);
       color:#000; }
+    .hd-badge.failed { background:linear-gradient(135deg,#ff6b6b,#c41136);
+      color:#fff; }
 
     .trend-badge { font-size:10px;background:rgba(255,215,0,0.15);
       color:var(--gold);padding:1px 6px;border-radius:4px;
@@ -502,7 +508,7 @@
           <span class="filter-check"></span>
           <div class="filter-info">
             <b>Karaoke Only (Strict)</b>
-            <small>Kung walang nakita, subukan i-OFF para sa mas maraming results</small>
+            <small>Kung walang nakita, subukan i-OFF</small>
           </div>
         </label>
 
@@ -697,6 +703,8 @@
           style="width:100%;margin-bottom:8px">🕒 Clear Recent</button>
         <button class="primary" onclick="adminAction('clear-trending')"
           style="width:100%;margin-bottom:8px">🔥 Clear Trending</button>
+        <button class="primary" onclick="adminAction('clear-failed')"
+          style="width:100%;margin-bottom:8px">⛔ Clear Failed Videos</button>
       </div>
       <div class="row">
         <button class="secondary" onclick="closeModal('adminModal')">Close</button>
@@ -982,7 +990,9 @@
             ? `<span class="trend-badge">🔥 ${v.trendingCount}</span>` : '';
 
           let hdBadge = '';
-          if (/\b4k\b/i.test(v.title)) {
+          if (v.previouslyFailed) {
+            hdBadge = '<span class="hd-badge failed">⛔ FAILED</span>';
+          } else if (/\b4k\b/i.test(v.title)) {
             hdBadge = '<span class="hd-badge uhd">4K</span>';
           } else if (v.isHD || v.titleHD || hasHDKeyword(v.title)) {
             hdBadge = '<span class="hd-badge hd">HD</span>';
@@ -994,7 +1004,8 @@
           }
 
           return `
-            <div class="search-result" onclick="quickAddFromSearch('${v.videoId}', '${escapeAttr(v.title)}')">
+            <div class="search-result ${v.previouslyFailed ? 'failed' : ''}"
+              onclick="quickAddFromSearch('${v.videoId}', '${escapeAttr(v.title)}')">
               <img src="${v.thumbnail}" loading="lazy"
                 onerror="this.style.display='none'">
               <div class="sr-info">
@@ -1079,7 +1090,9 @@
         fetch(API + `/api/yt-info/${videoId}`).then(r => r.json()).then(data => {
           if (previewVideoId !== videoId) return;
           let hdBadge = '';
-          if (data.isHD || data.titleHD) {
+          if (data.previouslyFailed) {
+            hdBadge = ' <span class="hd-badge failed">⛔ FAILED</span>';
+          } else if (data.isHD || data.titleHD) {
             hdBadge = ' <span class="hd-badge hd">HD</span>';
           }
           if (/\b4k\b/i.test(data.title)) {
@@ -1107,15 +1120,25 @@
 
       let title = document.getElementById('ytTitle').textContent;
       let isHD = false;
+      let previouslyFailed = false;
       if (!title || title === 'Loading...' || title === '—') {
         try {
           const r = await fetch(API + `/api/yt-info/${videoId}`);
           const data = await r.json();
           title = data.title;
           isHD = data.isHD;
+          previouslyFailed = data.previouslyFailed;
         } catch {
           title = 'YouTube: ' + videoId;
         }
+      }
+
+      if (previouslyFailed) {
+        const proceed = confirm(
+          `⚠️ Naka-blacklist ang video na ito dati (hindi ma-play).\n\n` +
+          `"${title}"\n\nSigurado ka bang i-reserve pa rin?`
+        );
+        if (!proceed) return;
       }
 
       const looksKaraoke = /karaoke|videoke|minus[\s-]?one|instrumental|backing|sing[\s-]?along/i.test(title);
@@ -1125,7 +1148,7 @@
       if (!looksKaraoke) warnings.push('⚠️ Mukhang HINDI karaoke');
       if (filters.hdOnly && !looksHD) warnings.push('⚠️ Mukhang HINDI HD');
 
-      if (warnings.length > 0) {
+      if (warnings.length > 0 && !previouslyFailed) {
         const proceed = confirm(
           `${warnings.join('\n')}\n\n"${title}"\n\nSigurado ka?`
         );
@@ -1304,7 +1327,17 @@
       socket.emit('moveSong', { id, direction: dir });
     }
 
-    socket.on('error', msg => toast(msg, 'error'));
+    socket.on('error', msg => {
+      toast(msg, 'error');
+      if (msg && msg.includes('Hindi ma-embed')) {
+        document.getElementById('ytSearch').focus();
+      }
+    });
+
+    socket.on('videoBlacklisted', ({ videoId, title }) => {
+      toast(`⚠️ Hindi ma-play: "${(title || '').substring(0, 30)}" — tinanggal sa queue`, 'error');
+    });
+
     socket.on('historyCleared', () => {
       if (document.getElementById('tab-history').style.display !== 'none') loadHistory();
     });
@@ -1361,6 +1394,7 @@
     async function adminAction(action) {
       if (!adminToken) return;
       if (action === 'clear-history' && !confirm('I-clear lahat ng history?')) return;
+      if (action === 'clear-failed' && !confirm('I-clear ang failed videos list?')) return;
       try {
         const r = await fetch(API + '/api/admin/' + action, {
           method: 'POST', headers: { 'x-admin-token': adminToken }
