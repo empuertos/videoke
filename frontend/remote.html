@@ -454,7 +454,7 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
     // =====================================================
-    // FORCE UNREGISTER SERVICE WORKER (para sa fresh load)
+    // FORCE UNREGISTER SERVICE WORKER
     // =====================================================
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -519,7 +519,6 @@
       return m ? m[1] : null;
     }
 
-    // CLIENT-SIDE OEMBED FETCH
     async function fetchTitleClientSide(videoId) {
       try {
         const r = await fetch(
@@ -861,24 +860,43 @@
       openModal('adminModal');
       if (adminToken) showAdminPanel();
     }
+
+    // =====================================================
+    // LOGIN — with detailed error reporting
+    // =====================================================
     async function doLogin() {
       const pw = document.getElementById('adminPw').value;
+      if (!pw) return toast('Ilagay ang password', 'error');
+
       try {
         const r = await fetch(API + '/api/admin/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: pw })
         });
-        if (!r.ok) throw new Error('Maling password');
+
+        if (!r.ok) {
+          if (r.status === 401) throw new Error('Maling password');
+          throw new Error('Server error ' + r.status);
+        }
+
         const { token } = await r.json();
         adminToken = token;
         localStorage.setItem('videoke:adminToken', token);
         showAdminPanel();
         toast('✓ Logged in', 'success');
+
       } catch (e) {
-        toast(e.message, 'error');
+        // Detailed error alert
+        alert(
+          '🔴 LOGIN ERROR\n\n' +
+          'Type: ' + e.name + '\n' +
+          'Message: ' + e.message + '\n\n' +
+          'API URL: ' + API + '/api/admin/login'
+        );
       }
     }
+
     function showAdminPanel() {
       document.getElementById('adminLoginForm').style.display = 'none';
       document.getElementById('adminPanel').style.display = 'block';
