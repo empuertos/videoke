@@ -100,6 +100,45 @@
     #idleQueue::-webkit-scrollbar { width:4px; }
     #idleQueue::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3);border-radius:2px; }
 
+    /* ===== START PLAYING BUTTON ===== */
+    #startPlayingBtn {
+      position:fixed;
+      bottom:40px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:600;
+      padding:20px 50px;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:2px;
+      color:#fff;
+      background:linear-gradient(135deg,#ff2e55,#ff0044);
+      border:2px solid rgba(255,215,0,0.5);
+      border-radius:60px;
+      cursor:pointer;
+      box-shadow:0 20px 60px rgba(255,46,85,0.6),
+                  0 0 40px rgba(255,215,0,0.3);
+      display:none;
+      font-family:inherit;
+      animation:startPulse 1.5s ease-in-out infinite;
+    }
+    #startPlayingBtn.show { display:block; }
+    #startPlayingBtn:hover {
+      background:linear-gradient(135deg,#ff0044,#cc0033);
+      transform:translateX(-50%) scale(1.05);
+    }
+    #startPlayingBtn:active { transform:translateX(-50%) scale(0.95); }
+    @keyframes startPulse {
+      0%, 100% {
+        box-shadow:0 20px 60px rgba(255,46,85,0.6),
+                   0 0 40px rgba(255,215,0,0.3);
+      }
+      50% {
+        box-shadow:0 20px 80px rgba(255,46,85,0.9),
+                   0 0 60px rgba(255,215,0,0.6);
+      }
+    }
+
     #topBar { position:fixed;top:0;left:0;right:0;z-index:45;
       min-height:56px;padding:8px 16px;
       background:linear-gradient(180deg, rgba(10,5,18,0.95), rgba(10,5,18,0.75));
@@ -367,6 +406,11 @@
     </div>
   </div>
 
+  <!-- ⬇️ START PLAYING BUTTON -->
+  <button id="startPlayingBtn" onclick="startPlaying()">
+    ▶ SIMULAN ANG VIDEOKE
+  </button>
+
   <div id="topBar">
     <div class="ns-section">
       <span class="ns-mic">🎤</span>
@@ -594,7 +638,7 @@
           <div class="fq-num">${i + 1}</div>
           <div class="fq-info">
             <div class="fq-singer">${escapeHtml(q.singer)}</div>
-            <div class="fq-song">${escapeHtml(q.title)}</div>
+            <div class="fq-song">${escapeHtml(q.title || q.videoId)}</div>
           </div>
           ${q.waitText ? `<div class="fq-wait">⏱️ ${q.waitText}</div>` : ''}
         </div>
@@ -682,11 +726,8 @@
         } catch (e) {}
       }
 
-      if (lastCommand && lastCommand.type !== 'idle' && lastCommand.type !== 'stop') {
-        setTimeout(() => handleCommand(lastCommand), 500);
-      } else {
-        show(document.getElementById('idleScreen'));
-      }
+      // ⬇️ Sa start, LAGING idle screen (walang auto-play)
+      show(document.getElementById('idleScreen'));
 
       if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
     }
@@ -888,23 +929,36 @@
       }
     }
 
+    // ⬇️ START PLAYING — para sa SIMULAN button
+    function startPlaying() {
+      debugLog('▶ START PLAYING tapped');
+      // Hide idle screen at trigger ang backend
+      hide(document.getElementById('idleScreen'));
+      document.getElementById('startPlayingBtn').classList.remove('show');
+      socket.emit('startPlaying');
+    }
+
     function forcePlay() {
       debugLog('FORCE PLAY tapped');
+      // Kung may lastCommand play, i-replay
       if (lastCommand && lastCommand.song && lastCommand.song.videoId) {
         hide(document.getElementById('idleScreen'));
         hide(document.getElementById('countdown'));
         hideErrorOverlay();
+        document.getElementById('startPlayingBtn').classList.remove('show');
         document.getElementById('nsSinger').textContent = lastCommand.song.singer || 'Guest';
         document.getElementById('nsSong').textContent = lastCommand.song.title || '';
         playVideo(lastCommand.song.videoId);
       } else if (lastNowPlaying) {
         hide(document.getElementById('idleScreen'));
         hideErrorOverlay();
+        document.getElementById('startPlayingBtn').classList.remove('show');
         document.getElementById('nsSinger').textContent = lastNowPlaying.singer || 'Guest';
         document.getElementById('nsSong').textContent = lastNowPlaying.title || '';
         playVideo(lastNowPlaying.videoId);
       } else {
-        socket.emit('skip');
+        // Trigger manual start
+        socket.emit('startPlaying');
       }
     }
 
@@ -927,7 +981,7 @@
             <div class="qp-num">${i + 1}</div>
             <div class="qp-info">
               <div class="qp-singer">${escapeHtml(q.singer)}</div>
-              <div class="qp-song">${escapeHtml(q.title)}</div>
+              <div class="qp-song">${escapeHtml(q.title || q.videoId)}</div>
             </div>
             ${q.waitText ? `<div class="qp-wait">${q.waitText}</div>` : ''}
           </div>
@@ -960,7 +1014,7 @@
               </div>
               <div style="font-size:10px;color:var(--dim);
                 margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                ${escapeHtml(q.title)}
+                ${escapeHtml(q.title || q.videoId)}
               </div>
             </div>
             ${q.waitText ? `<div style="font-size:10px;
@@ -978,13 +1032,21 @@
           <div class="cd-queue-item">
             <span class="cd-num">SUSUNOD ${i + 1}</span>
             <div class="cd-name">${escapeHtml(q.singer)}</div>
-            <div class="cd-song">${escapeHtml(q.title)}</div>
+            <div class="cd-song">${escapeHtml(q.title || q.videoId)}</div>
           </div>
         `).join('');
       }
 
       if (queue.length > 0 && queue[0].videoId) {
         preloadVideo(queue[0].videoId);
+      }
+
+      // ⬇️ SHOW START BUTTON kung may queue at walang tumutugtog
+      const startBtn = document.getElementById('startPlayingBtn');
+      if (!nowPlaying && queue.length > 0) {
+        startBtn.classList.add('show');
+      } else {
+        startBtn.classList.remove('show');
       }
 
       const modal = document.getElementById('fullQueueModal');
@@ -1001,6 +1063,7 @@
 
       switch (cmd.type) {
         case 'play':
+          document.getElementById('startPlayingBtn').classList.remove('show');
           hide(document.getElementById('countdown'));
           hide(document.getElementById('idleScreen'));
           hideErrorOverlay();
@@ -1012,6 +1075,7 @@
           break;
 
         case 'countdown':
+          document.getElementById('startPlayingBtn').classList.remove('show');
           hide(document.getElementById('idleScreen'));
           hideErrorOverlay();
           show(document.getElementById('countdown'));
@@ -1036,6 +1100,7 @@
           hide(document.getElementById('countdown'));
           hideErrorOverlay();
           document.getElementById('topBar').classList.remove('show');
+          document.getElementById('startPlayingBtn').classList.remove('show');
           if (started) show(document.getElementById('idleScreen'));
           break;
 
