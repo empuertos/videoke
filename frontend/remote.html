@@ -327,7 +327,6 @@
     #partyGate .err { color:#ff6b6b; font-size:12px;
       margin-top:12px; min-height:16px; font-weight:600; }
 
-    /* ⭐ Admin access button sa loob ng party gate */
     #partyGate .admin-link {
       margin-top:30px;
       padding:10px 20px;
@@ -341,7 +340,6 @@
     }
     #partyGate .admin-link:active { background:rgba(255,255,255,0.05); }
 
-    /* Party ended banner */
     #partyEndedBanner { display:none; position:fixed; top:0; left:0; right:0;
       z-index:8000; padding:14px 20px;
       background:linear-gradient(135deg,#ff0044,#c41136);
@@ -518,12 +516,14 @@
           style="width:100%;margin-bottom:8px">⛔ Clear Failed Videos</button>
       </div>
       <div class="row">
+        <button class="secondary" onclick="adminLogout()" id="logoutBtn"
+          style="background:#4b1a1a;display:none">🚪 Logout</button>
         <button class="secondary" onclick="closeModal('adminModal')">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- ⭐ Party Gate — blocking screen -->
+  <!-- ⭐ Party Gate -->
   <div id="partyGate">
     <div class="icon">🎤</div>
     <h2>Videoke Party</h2>
@@ -535,7 +535,6 @@
     <button class="admin-link" onclick="openAdminFromGate()">⚙️ Admin Access</button>
   </div>
 
-  <!-- ⭐ Party ended banner -->
   <div id="partyEndedBanner">
     <h2>🎉 Tapos na ang Party!</h2>
     <p>Salamat sa pagsali. Hindi na tumatanggap ng bagong kanta.</p>
@@ -545,7 +544,6 @@
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
-    // Force unregister SW
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
         regs.forEach(reg => reg.unregister());
@@ -564,18 +562,18 @@
 
     let favorites = [];
     let adminToken = localStorage.getItem('videoke:adminToken') || null;
+    let adminVerified = false;
     let previewVideoId = null;
     let previewTimer = null;
     let lastState = null;
     let currentTitle = '';
     let currentAuthor = '';
 
-    // ⭐ PARTY CODE STATE
     let partyCode = null;
     let partyVerified = false;
 
     // =====================================================
-    // PARTY GATE FUNCTIONS
+    // PARTY GATE
     // =====================================================
     function showPartyGate(msg) {
       document.getElementById('partyGate').classList.add('show');
@@ -621,25 +619,19 @@
       toast('✓ Sumali sa party!', 'success');
     }
 
-    // Auto-check sa page load
     (async function initPartyAccess() {
       const urlParams = new URLSearchParams(window.location.search);
       const urlCode = urlParams.get('party');
       const savedCode = localStorage.getItem('videoke:partyCode');
       const codeToTry = ((urlCode || savedCode) || '').toUpperCase();
 
-      if (!codeToTry) {
-        showPartyGate();
-        return;
-      }
+      if (!codeToTry) { showPartyGate(); return; }
       const valid = await verifyPartyCode(codeToTry);
       if (valid) {
         partyCode = codeToTry;
         partyVerified = true;
         localStorage.setItem('videoke:partyCode', codeToTry);
-        if (urlCode) {
-          window.history.replaceState({}, '', window.location.pathname);
-        }
+        if (urlCode) window.history.replaceState({}, '', window.location.pathname);
         if (socket.connected) socket.emit('joinParty', { code: partyCode });
         hidePartyGate();
       } else {
@@ -666,9 +658,7 @@
     socket.on('connect', () => {
       document.getElementById('statusDot').classList.remove('offline');
       document.getElementById('statusText').textContent = 'Connected';
-      if (partyCode && partyVerified) {
-        socket.emit('joinParty', { code: partyCode });
-      }
+      if (partyCode && partyVerified) socket.emit('joinParty', { code: partyCode });
     });
     socket.on('disconnect', () => {
       document.getElementById('statusDot').classList.add('offline');
@@ -767,22 +757,17 @@
       const value = e.target.value.trim();
       if (!value) {
         document.getElementById('ytPreview').classList.remove('show');
-        previewVideoId = null;
-        currentTitle = '';
-        currentAuthor = '';
+        previewVideoId = null; currentTitle = ''; currentAuthor = '';
         return;
       }
       const videoId = parseYouTubeUrl(value);
       if (!videoId) {
         document.getElementById('ytPreview').classList.remove('show');
-        previewVideoId = null;
-        currentTitle = '';
-        currentAuthor = '';
+        previewVideoId = null; currentTitle = ''; currentAuthor = '';
         return;
       }
       previewVideoId = videoId;
-      currentTitle = '';
-      currentAuthor = '';
+      currentTitle = ''; currentAuthor = '';
 
       document.getElementById('ytThumb').src =
         `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
@@ -821,9 +806,7 @@
     // ADD SONG
     // =====================================================
     async function addYouTube() {
-      if (!partyVerified) {
-        return toast('🚫 Kailangan munang sumali sa party.', 'error');
-      }
+      if (!partyVerified) return toast('🚫 Kailangan munang sumali sa party.', 'error');
 
       const input = document.getElementById('ytUrl').value.trim();
       const singer = document.getElementById('singer').value.trim() || 'Guest';
@@ -868,9 +851,7 @@
 
       document.getElementById('ytUrl').value = '';
       document.getElementById('ytPreview').classList.remove('show');
-      previewVideoId = null;
-      currentTitle = '';
-      currentAuthor = '';
+      previewVideoId = null; currentTitle = ''; currentAuthor = '';
 
       if (navigator.vibrate) navigator.vibrate(20);
       toast('✓ Na-reserve: ' + title.substring(0, 40), 'success');
@@ -1082,19 +1063,75 @@
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
     function openAdmin() {
       openModal('adminModal');
-      if (adminToken) showAdminPanel();
+      checkAdminAccess();
     }
 
-    // ⭐ Admin access mula sa party gate — pinapataas ang z-index
     function openAdminFromGate() {
       const modal = document.getElementById('adminModal');
       modal.style.zIndex = '9999';
       openModal('adminModal');
-      if (adminToken) showAdminPanel();
+      checkAdminAccess();
     }
 
     // =====================================================
-    // ADMIN LOGIN
+    // ADMIN ACCESS VERIFICATION
+    // =====================================================
+    async function checkAdminAccess() {
+      if (!adminToken) {
+        showLoginForm();
+        return;
+      }
+      // Show login form with loading state habang nagve-verify
+      document.getElementById('adminLoginForm').style.display = 'block';
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'none';
+
+      const valid = await verifyAdminToken();
+      if (valid) {
+        adminVerified = true;
+        showAdminPanel();
+        try {
+          const r = await fetch(API + '/api/party');
+          const d = await r.json();
+          if (d.active && d.code) showAdminQR(d.code);
+          else hideAdminQR();
+        } catch (e) {}
+      } else {
+        adminVerified = false;
+        adminToken = null;
+        localStorage.removeItem('videoke:adminToken');
+        showLoginForm();
+        // Huwag mag-toast kung first time pa lang nag-open
+      }
+    }
+
+    async function verifyAdminToken() {
+      if (!adminToken) return false;
+      try {
+        const r = await fetch(
+          API + '/api/admin/clear-trending?token=' + encodeURIComponent(adminToken)
+        );
+        if (r.status === 401) return false;
+        if (!r.ok) return false;
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function showLoginForm() {
+      document.getElementById('adminLoginForm').style.display = 'block';
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('adminPw').value = '';
+    }
+
+    function showAdminPanel() {
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      document.getElementById('logoutBtn').style.display = 'block';
+    }
+
+    // =====================================================
+    // ADMIN LOGIN / LOGOUT
     // =====================================================
     async function doLogin() {
       const pw = document.getElementById('adminPw').value;
@@ -1110,22 +1147,35 @@
         }
         const { token, partyActive, partyCode } = await r.json();
         adminToken = token;
+        adminVerified = true;
         localStorage.setItem('videoke:adminToken', token);
         showAdminPanel();
         if (partyActive && partyCode) showAdminQR(partyCode);
+        else hideAdminQR();
         toast('✓ Logged in', 'success');
       } catch (e) {
         alert('🔴 Login Error\n\n' + e.message);
       }
     }
 
-    function showAdminPanel() {
-      document.getElementById('adminLoginForm').style.display = 'none';
-      document.getElementById('adminPanel').style.display = 'block';
+    function adminLogout() {
+      adminToken = null;
+      adminVerified = false;
+      localStorage.removeItem('videoke:adminToken');
+      showLoginForm();
+      hideAdminQR();
+      toast('✓ Naka-logout', 'success');
     }
 
+    // =====================================================
+    // ADMIN ACTIONS
+    // =====================================================
     async function adminAction(action) {
-      if (!adminToken) return;
+      if (!adminToken) {
+        toast('Kailangan mag-login', 'error');
+        showLoginForm();
+        return;
+      }
       if (action === 'clear-history' && !confirm('I-clear lahat ng history?')) return;
       if (action === 'clear-failed' && !confirm('I-clear ang failed videos list?')) return;
       if (action === 'end-party' && !confirm('Tapusin ang party? Hindi na makakapag-reserve ang guests.')) return;
@@ -1134,7 +1184,22 @@
         const r = await fetch(
           API + '/api/admin/' + action + '?token=' + encodeURIComponent(adminToken)
         );
-        if (!r.ok) throw new Error('Failed');
+
+        if (r.status === 401) {
+          adminToken = null;
+          adminVerified = false;
+          localStorage.removeItem('videoke:adminToken');
+          showLoginForm();
+          throw new Error('Session expired. Mag-login ulit.');
+        }
+        if (r.status === 404) {
+          throw new Error('Endpoint wala sa backend.\n\nSiguraduhing naka-deploy ang pinakabagong server.js sa Render (Manual Deploy → Clear build cache & deploy).');
+        }
+        if (!r.ok) {
+          const errData = await r.json().catch(() => ({}));
+          throw new Error(errData.error || ('HTTP ' + r.status));
+        }
+
         const data = await r.json();
 
         if (action === 'start-party' && data.code) {
@@ -1146,7 +1211,10 @@
         } else {
           toast('✓ ' + action, 'success');
         }
-      } catch (e) { toast('Error', 'error'); }
+      } catch (e) {
+        console.error('adminAction error:', e);
+        alert('❌ Admin Error\n\n' + e.message);
+      }
     }
 
     function showAdminQR(code) {
@@ -1182,7 +1250,6 @@
 
     refreshFavorites();
 
-    // Prevent double-tap zoom
     let lastTouch = 0;
     document.addEventListener('touchend', e => {
       const now = Date.now();
@@ -1190,7 +1257,6 @@
       lastTouch = now;
     }, { passive: false });
 
-    // Party code input — auto-uppercase at auto-submit sa Enter
     document.getElementById('partyCodeInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') submitPartyCode();
     });
