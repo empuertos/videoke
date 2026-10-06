@@ -54,6 +54,40 @@
     #qrUrl { font-size:11px; color:#8888a0;
       margin-top:10px; word-break:break-all; max-width:280px; }
 
+    /* Host control panel (idle only) */
+    #hostControls { margin-top:24px; display:flex; gap:10px;
+      flex-wrap:wrap; justify-content:center; }
+    #hostControls button { padding:12px 24px;
+      border:none; border-radius:12px;
+      font-size:14px; font-weight:700; cursor:pointer;
+      font-family:inherit; color:#fff; }
+    #startPartyBtn { background:linear-gradient(135deg,#22c55e,#16a34a); }
+    #stopPartyBtn { background:linear-gradient(135deg,#6b7280,#4b5563); }
+    #hostControls button:active { transform:scale(0.97); }
+    #hostControls button:disabled { opacity:0.4; cursor:not-allowed; }
+
+    /* Password prompt (for host start) */
+    #hostPwBox { margin-top:20px; padding:20px;
+      background:rgba(0,0,0,0.6);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:14px; display:none; }
+    #hostPwBox.show { display:block; }
+    #hostPwBox input { padding:12px 16px;
+      background:#1e1630; color:#fff; border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px; font-size:15px;
+      font-family:inherit; width:220px; text-align:center; }
+    #hostPwBox input:focus { outline:none; border-color:var(--gold); }
+    #hostPwBox .row { display:flex; gap:8px; margin-top:12px;
+      justify-content:center; }
+    #hostPwBox .row button { padding:10px 20px;
+      border:none; border-radius:10px; font-weight:700;
+      cursor:pointer; font-family:inherit; font-size:13px; }
+    #hostPwBox .row .primary { background:var(--red); color:#fff; }
+    #hostPwBox .row .secondary { background:#1e1630; color:#fff;
+      border:1px solid rgba(255,255,255,0.1); }
+    #hostPwErr { color:#ff6b6b; font-size:12px;
+      margin-top:10px; min-height:14px; }
+
     /* Now playing HUD */
     #nowHud { position:fixed; top:20px; left:20px; right:20px;
       z-index:50; padding:16px 24px;
@@ -111,6 +145,18 @@
     #connDot { width:8px; height:8px; border-radius:50%;
       background:var(--green); box-shadow:0 0 10px var(--green); }
     #connDot.offline { background:var(--red); box-shadow:0 0 10px var(--red); }
+
+    /* Sync indicator */
+    #syncTag { position:fixed; top:60px; right:20px;
+      z-index:60; padding:6px 14px;
+      background:rgba(74,222,128,0.15);
+      border:1px solid rgba(74,222,128,0.4);
+      border-radius:20px; font-size:11px;
+      color:var(--green); font-weight:700;
+      display:none; }
+    #syncTag.show { display:block; }
+    #syncTag.stale { background:rgba(255,107,107,0.15);
+      border-color:rgba(255,107,107,0.4); color:#ff6b6b; }
   </style>
 </head>
 <body>
@@ -119,7 +165,7 @@
   <!-- Idle screen with QR -->
   <div id="idleScreen">
     <div class="logo">🎤 VIDEoke</div>
-    <div class="sub">Let's sing! Scan the QR code to join.</div>
+    <div class="sub" id="subText">Let's sing! Scan the QR code to join.</div>
     <div id="qrOverlay" class="hidden">
       <div class="title">📱 Scan to join Videoke</div>
       <img id="qrImg" src="" alt="QR Code">
@@ -128,6 +174,24 @@
     </div>
     <div id="noPartyMsg" style="margin-top:20px;color:#8888a0;font-size:14px">
       ⏳ Waiting for the host to start the party...
+    </div>
+
+    <!-- Host controls: start/stop party direkta sa TV -->
+    <div id="hostControls">
+      <button id="startPartyBtn" onclick="hostStartParty()">🎉 Start Party</button>
+      <button id="stopPartyBtn" onclick="hostStopParty()" style="display:none">🚫 End Party</button>
+    </div>
+
+    <div id="hostPwBox">
+      <div style="font-size:13px;color:#a0b0c0;margin-bottom:8px">
+        Enter admin password:
+      </div>
+      <input type="password" id="hostPwInput" placeholder="••••••••">
+      <div class="row">
+        <button class="primary" onclick="hostConfirmPassword()">Confirm</button>
+        <button class="secondary" onclick="hostCancelPassword()">Cancel</button>
+      </div>
+      <div id="hostPwErr"></div>
     </div>
   </div>
 
@@ -159,6 +223,9 @@
     <span id="connText">Connected</span>
   </div>
 
+  <!-- Sync indicator -->
+  <div id="syncTag">✓ Synced</div>
+
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
@@ -168,8 +235,17 @@
     let ytPlayer = null;
     let ytReady = false;
     let currentVideoId = null;
-    let playerCheckInterval = null;
     let errorCheckTimeout = null;
+    let lastPartyCode = null;
+    let hostAdminToken = null;  // Para sa host-side party start
+    let pendingAdminAction = null;
+
+    // ⭐ Check URL for ?party=CODE
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPartyCode = (urlParams.get('party') || '').toUpperCase() || null;
+    if (urlPartyCode) {
+      console.log('📌 Locked to party code from URL:', urlPartyCode);
+    }
 
     // =====================================================
     // SOCKET
@@ -189,6 +265,7 @@
     socket.on('disconnect', () => {
       document.getElementById('connDot').classList.add('offline');
       document.getElementById('connText').textContent = 'Disconnected';
+      setSyncStatus(false);
     });
 
     // =====================================================
@@ -221,7 +298,6 @@
 
     function onPlayerStateChange(event) {
       const state = event.data;
-      // YT.PlayerState.ENDED = 0
       if (state === 0 && currentVideoId) {
         console.log('♪ Song ended');
         socket.emit('songEnded');
@@ -233,7 +309,6 @@
       console.error('✗ Player error:', code);
       if (!currentVideoId) return;
 
-      // 2=invalid param, 5=HTML5 error, 100=not found, 101/150=embedding disabled
       if ([2, 5, 100, 101, 150].includes(code)) {
         console.log('🚫 Blacklisting:', currentVideoId);
         socket.emit('videoFailed', {
@@ -249,33 +324,15 @@
     socket.on('command', cmd => {
       console.log('📡 Command:', cmd);
       switch (cmd.type) {
-        case 'play':
-          playVideo(cmd.song);
-          break;
-        case 'countdown':
-          showCountdown(cmd.seconds || 3, cmd.song);
-          break;
-        case 'countdownTick':
-          updateCountdown(cmd.seconds);
-          break;
-        case 'pause':
-          if (ytPlayer && ytReady) ytPlayer.pauseVideo();
-          break;
-        case 'resume':
-          if (ytPlayer && ytReady) ytPlayer.playVideo();
-          break;
-        case 'stop':
-          stopVideo();
-          break;
-        case 'seek':
-          if (ytPlayer && ytReady) ytPlayer.seekTo(cmd.seconds, true);
-          break;
-        case 'volume':
-          if (ytPlayer && ytReady) ytPlayer.setVolume(cmd.value);
-          break;
-        case 'idle':
-          showIdle();
-          break;
+        case 'play': playVideo(cmd.song); break;
+        case 'countdown': showCountdown(cmd.seconds || 3, cmd.song); break;
+        case 'countdownTick': updateCountdown(cmd.seconds); break;
+        case 'pause': if (ytPlayer && ytReady) ytPlayer.pauseVideo(); break;
+        case 'resume': if (ytPlayer && ytReady) ytPlayer.playVideo(); break;
+        case 'stop': stopVideo(); break;
+        case 'seek': if (ytPlayer && ytReady) ytPlayer.seekTo(cmd.seconds, true); break;
+        case 'volume': if (ytPlayer && ytReady) ytPlayer.setVolume(cmd.value); break;
+        case 'idle': showIdle(); break;
       }
     });
 
@@ -287,15 +344,16 @@
         showIdle();
       }
 
-      // Update QR visibility based on party status
       if (typeof s.partyActive === 'boolean') {
         updatePartyVisibility(s.partyActive);
+        toggleHostButtons(s.partyActive);
       }
     });
 
     socket.on('partyStatus', ({ active, code }) => {
       updateQR(active, code);
       updatePartyVisibility(active);
+      toggleHostButtons(active);
     });
 
     socket.on('partyChanged', ({ active }) => {
@@ -305,11 +363,13 @@
           .then(d => {
             updateQR(d.active, d.code);
             updatePartyVisibility(true);
+            toggleHostButtons(true);
           })
           .catch(() => {});
       } else {
         updateQR(false, null);
         updatePartyVisibility(false);
+        toggleHostButtons(false);
       }
     });
 
@@ -335,13 +395,11 @@
       ytPlayer.setVolume(80);
       ytPlayer.playVideo();
 
-      // Auto-check for errors after 6 seconds
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         if (!ytReady || !ytPlayer) return;
         try {
           const state = ytPlayer.getPlayerState();
-          // -1 = unstarted, 5 = cued; meaning it hasn't played yet
           if (state === -1 || state === 5) {
             console.log('⚠️ Video did not play, flagging as failed');
             socket.emit('videoFailed', {
@@ -409,18 +467,24 @@
     }
 
     // =====================================================
-    // QR CODE
+    // QR CODE — Auto sync sa party code
     // =====================================================
     function updateQR(active, code) {
       const overlay = document.getElementById('qrOverlay');
       const noPartyMsg = document.getElementById('noPartyMsg');
+      const subText = document.getElementById('subText');
 
       if (!active || !code) {
         overlay.classList.add('hidden');
         noPartyMsg.style.display = 'block';
+        subText.textContent = "Waiting for the party to start...";
+        lastPartyCode = null;
+        setSyncStatus(false);
         return;
       }
 
+      // ⭐ Kung may URL lock at iba ang code — hindi dapat mangyari dahil iisa lang ang party sa server
+      // Pero ipakita pa rin ang totoong code mula sa server
       const url = window.location.origin + '/remote.html?party=' + code;
       document.getElementById('qrImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' +
@@ -429,6 +493,14 @@
       document.getElementById('qrUrl').textContent = url;
       overlay.classList.remove('hidden');
       noPartyMsg.style.display = 'none';
+      subText.textContent = "Let's sing! Scan the QR code to join.";
+
+      // ⭐ Sync indicator
+      if (code !== lastPartyCode) {
+        console.log('✓ Synced to party code:', code);
+        lastPartyCode = code;
+      }
+      setSyncStatus(true);
     }
 
     function updatePartyVisibility(active) {
@@ -438,27 +510,172 @@
       }
     }
 
+    function setSyncStatus(ok) {
+      const tag = document.getElementById('syncTag');
+      if (ok) {
+        tag.classList.remove('stale');
+        tag.textContent = '✓ Synced with remote';
+        tag.classList.add('show');
+      } else {
+        tag.classList.add('stale');
+        tag.textContent = '⚠ Not synced';
+        tag.classList.add('show');
+      }
+    }
+
+    function toggleHostButtons(active) {
+      document.getElementById('startPartyBtn').style.display = active ? 'none' : 'inline-block';
+      document.getElementById('stopPartyBtn').style.display = active ? 'inline-block' : 'none';
+    }
+
     // =====================================================
-    // INITIAL LOAD
+    // HOST START/STOP PARTY — direkta sa TV
     // =====================================================
-    fetch(API + '/api/party')
-      .then(r => r.json())
-      .then(d => {
+    function hostStartParty() {
+      // Kailangan ng admin password para makapag-start ng party
+      document.getElementById('hostPwBox').classList.add('show');
+      document.getElementById('hostPwInput').value = '';
+      document.getElementById('hostPwErr').textContent = '';
+      document.getElementById('hostPwInput').focus();
+      pendingAdminAction = 'start-party';
+    }
+
+    function hostStopParty() {
+      if (!hostAdminToken) {
+        // Kailangan ng password para i-end ang party
+        document.getElementById('hostPwBox').classList.add('show');
+        document.getElementById('hostPwInput').value = '';
+        document.getElementById('hostPwErr').textContent = '';
+        document.getElementById('hostPwInput').focus();
+        pendingAdminAction = 'end-party';
+        return;
+      }
+      if (!confirm('End the party? Guests will no longer be able to reserve.')) return;
+      doHostAdminAction('end-party');
+    }
+
+    async function hostConfirmPassword() {
+      const pw = document.getElementById('hostPwInput').value;
+      if (!pw) {
+        document.getElementById('hostPwErr').textContent = 'Enter password';
+        return;
+      }
+      document.getElementById('hostPwErr').textContent = 'Checking...';
+
+      try {
+        const r = await fetch(API + '/api/admin/login?password=' + encodeURIComponent(pw));
+        if (!r.ok) {
+          if (r.status === 401) throw new Error('Wrong password');
+          throw new Error('Server error ' + r.status);
+        }
+        const { token } = await r.json();
+        hostAdminToken = token;
+        localStorage.setItem('videoke:hostAdminToken', token);
+        document.getElementById('hostPwBox').classList.remove('show');
+        document.getElementById('hostPwErr').textContent = '';
+        // Ituloy ang action
+        if (pendingAdminAction) {
+          if (pendingAdminAction === 'end-party' &&
+              !confirm('End the party? Guests will no longer be able to reserve.')) {
+            pendingAdminAction = null;
+            return;
+          }
+          doHostAdminAction(pendingAdminAction);
+          pendingAdminAction = null;
+        }
+      } catch (e) {
+        document.getElementById('hostPwErr').textContent = '❌ ' + e.message;
+      }
+    }
+
+    function hostCancelPassword() {
+      document.getElementById('hostPwBox').classList.remove('show');
+      document.getElementById('hostPwErr').textContent = '';
+      pendingAdminAction = null;
+    }
+
+    async function doHostAdminAction(action) {
+      if (!hostAdminToken) return;
+      try {
+        const r = await fetch(
+          API + '/api/admin/' + action + '?token=' + encodeURIComponent(hostAdminToken)
+        );
+        if (r.status === 401) {
+          hostAdminToken = null;
+          localStorage.removeItem('videoke:hostAdminToken');
+          document.getElementById('hostPwErr').textContent =
+            '❌ Session expired. Enter password again.';
+          return;
+        }
+        if (!r.ok) throw new Error('Server error ' + r.status);
+        const data = await r.json();
+        if (action === 'start-party' && data.code) {
+          console.log('🎉 Started party from host:', data.code);
+          // Socket event na 'partyChanged' ang mag-uupdate ng QR
+        } else if (action === 'end-party') {
+          console.log('🚫 Ended party from host');
+        }
+      } catch (e) {
+        alert('❌ Host action error\n\n' + e.message);
+      }
+    }
+
+    // =====================================================
+    // AUTO-SYNC — Fetch party status every 5 seconds
+    // =====================================================
+    async function syncPartyStatus() {
+      try {
+        const r = await fetch(API + '/api/party');
+        const d = await r.json();
         updateQR(d.active, d.code);
         updatePartyVisibility(d.active);
-      })
-      .catch(() => {
-        document.getElementById('noPartyMsg').textContent =
-          '⚠️ Cannot connect to backend.';
-      });
+        toggleHostButtons(d.active);
+      } catch (e) {
+        setSyncStatus(false);
+      }
+    }
 
-    // Re-check party status every 30 seconds (in case a socket event was missed)
-    setInterval(() => {
-      fetch(API + '/api/party')
-        .then(r => r.json())
-        .then(d => updateQR(d.active, d.code))
-        .catch(() => {});
-    }, 30000);
+    // Initial load
+    syncPartyStatus();
+
+    // Sync every 5 seconds (mabilis para sa brownout recovery)
+    setInterval(syncPartyStatus, 5000);
+
+    // Restore host admin token kung may naka-save
+    const savedHostToken = localStorage.getItem('videoke:hostAdminToken');
+    if (savedHostToken) hostAdminToken = savedHostToken;
+
+    // =====================================================
+    // KEYBOARD SHORTCUTS (para sa host laptop/PC)
+    // =====================================================
+    document.addEventListener('keydown', (e) => {
+      // P — Pause/Play
+      if (e.key === 'p' || e.key === 'P') {
+        if (ytPlayer && ytReady) {
+          const state = ytPlayer.getPlayerState();
+          if (state === 1) ytPlayer.pauseVideo();
+          else ytPlayer.playVideo();
+        }
+      }
+      // S — Skip
+      if (e.key === 's' || e.key === 'S') {
+        socket.emit('skip');
+      }
+      // F — Fullscreen
+      if (e.key === 'f' || e.key === 'F') {
+        const wrap = document.getElementById('playerWrap');
+        if (document.fullscreenElement) document.exitFullscreen();
+        else wrap.requestFullscreen().catch(() => {});
+      }
+      // Enter — submit password kung nakabukas ang box
+      if (e.key === 'Enter' && document.getElementById('hostPwBox').classList.contains('show')) {
+        hostConfirmPassword();
+      }
+      // Escape — cancel password
+      if (e.key === 'Escape' && document.getElementById('hostPwBox').classList.contains('show')) {
+        hostCancelPassword();
+      }
+    });
   </script>
 </body>
 </html>
