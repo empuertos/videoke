@@ -1,378 +1,345 @@
-# 🎤 VIDEoke — YouTube Karaoke System
+# 🎤 VIDEoke YT
 
-Professional YouTube-based videoke system with online remote control, real-time queue, scoring, and smart TV support.
-
-![Status](https://img.shields.io/badge/status-live-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green)
+A YouTube-powered videoke (karaoke) system built for parties, gatherings, and events. Guests scan a QR code, paste a YouTube link from their phone, and the song plays automatically on the host screen — no downloads, no local files, everything streams directly from YouTube.
 
 ---
 
 ## ✨ Features
 
-### 🎬 Host Player (TV/Laptop)
-- **Fullscreen YouTube player** — karaoke videos lang, walang music video
-- **QR code auto-join** — i-scan lang ng bisita para maka-reserve
-- **5-second countdown** bago mag-play ang bawat kanta
-- **Now Singing overlay** — pangalan ng kakanta at title ng kanta
-- **Live queue panel** — nakikita ang susunod na 8-10 kanta
-- **Stats badge** — bilang ng singers, kanta sa queue, at total wait time
-- **Particle effects** — confetti at fireworks para sa high scores
-- **Voice announcement** — TTS na nagsasabi kung sino ang susunod
-- **Smart TV support** — remote navigation, TV mode, simple mode
-
-### 📱 Phone Remote
-- **YouTube search** — karaoke-only results (walang music video)
-- **HD filter** — 1080p/4K karaoke lang by default
-- **Trusted channels** — auto-filter ang low-quality sources
-- **Duration range** — 2:00 - 12:00 default
-- **Advanced filters** — toggle sa settings
-- **Real-time queue** — nakikita ang buong pila
-- **Highlight sariling pangalan** — "IKAW" badge sa sariling entry
-- **Estimated wait time** — ilang minuto pa bago ka kumanta
-- **Singer stats** — bilang ng singers, kanta, at total wait
-- **Playback controls** — Pause, Play, Skip, Stop, Volume
-- **Scoring system** — vote 1-10 pagkatapos ng kanta
-- **History & Leaderboard** — track ng lahat ng kumanta
-- **Favorites** — i-save ang mga paboritong kanta
-- **Recent searches** — shared sa lahat ng bisita
-- **Trending** — pinaka-madalas i-reserve (session/today/all-time)
-- **PWA installable** — i-install sa phone home screen
-- **Offline UI** — naka-cache ang interface
-
-### 🌐 Multi-language
-- 🇵🇭 **Filipino** (default)
-- 🇺🇸 **English**
-- Toggle sa header ng remote
-
-### 🔐 Admin Panel
-- Force stop playback
-- Kick all guests
-- Clear history / recent / trending
-- Password protected
+- 🎵 **YouTube-based playback** — Lahat ng kanta galing YouTube. Walang download.
+- 📱 **Mobile remote** — Guests reserve songs from their phone via QR code.
+- 📋 **Smart queue system** — Automatic waiting time estimates, reorder, and skip.
+- ⭐ **Favorites** — Save frequently sung songs for quick access.
+- 📜 **History & Trending** — Track what's been played and what's hot.
+- ⛔ **Auto-blacklist** — Failed/blocked videos are automatically removed.
+- 🔐 **Admin panel** — Password-protected controls (force stop, kick all, clear data).
+- 🎨 **Modern UI** — Dark theme, gold/red accents, fully responsive.
+- 🌐 **Bilingual** — Filipino and English interface toggle.
+- ⚡ **Real-time sync** — Socket.IO keeps host and remotes in sync instantly.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐         ┌──────────────────┐
-│  VERCEL          │         │  RENDER          │
-│  (Frontend)      │◄───────►│  (Backend)       │
-│                  │   WSS   │                  │
-│  host.html       │         │  server.js       │
-│  remote.html     │         │  Socket.IO       │
-│  i18n.js         │         │  Queue state     │
-│  qrcode.min.js   │         │  JSON files      │
-└─────────────────┘         └──────────────────┘
+
+┌──────────────┐         ┌──────────────┐         ┌──────────────┐
+│   Guest      │         │   Host       │         │   Backend    │
+│  (Mobile)    │◄───────►│  (TV/Laptop) │◄───────►│  (Node.js)   │
+│  remote.html │ Socket  │  host.html   │ Socket  │  Express +   │
+│  Vercel      │   .IO   │  Vercel      │   .IO   │  Socket.IO   │
+└──────────────┘         └──────────────┘         │  Render      │
+└──────────────┘
+
 ```
 
-| Component | Platform | Purpose |
-|-----------|----------|---------|
-| **Frontend** | Vercel | Static files, CDN, fast worldwide |
-| **Backend** | Render | Socket.IO, queue, scoring, persistence |
-
----
-
-## 🚀 Deployment
-
-### Prerequisites
-- Node.js >= 18
-- GitHub account
-- Vercel account (free) — [vercel.com](https://vercel.com)
-- Render account (free) — [render.com](https://render.com)
-
-### Step 1: Clone the Repo
-
-```bash
-git clone https://github.com/YOUR_USERNAME/videoke.git
-cd videoke
-```
-
-### Step 2: Deploy Backend sa Render
-
-1. Pumunta sa [render.com](https://render.com) → **New +** → **Web Service**
-2. Connect ang GitHub repo `empuertos/videoke`
-3. Settings:
-   - **Name:** `videoke`
-   - **Root Directory:** `backend`
-   - **Language:** Node
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-   - **Instance Type:** Free
-4. **Environment Variables:**
-   | Key | Value |
-   |-----|-------|
-   | `ADMIN_PASSWORD` | `sekreto123` (palitan mo) |
-   | `FRONTEND_URL` | `https://your-app.vercel.app` (i-update pagkatapos) |
-5. Click **Create Web Service**
-6. Kopyahin ang URL — gaya ng `https://videoke.onrender.com`
-
-### Step 3: I-update ang Config
-
-I-edit ang `frontend/config.js`:
-
-```js
-window.VIDEOKE_CONFIG = {
-  BACKEND_URL: 'https://videoke.onrender.com',  // ⬅️ PALITAN
-  RECONNECT_ATTEMPTS: 5,
-  RECONNECT_DELAY: 2000
-};
-```
-
-I-commit at push:
-
-```bash
-git add .
-git commit -m "Update backend URL"
-git push
-```
-
-### Step 4: Deploy Frontend sa Vercel
-
-1. Pumunta sa [vercel.com](https://vercel.com) → **Add New...** → **Project**
-2. Import ang GitHub repo
-3. **⚠️ Importanteng Settings:**
-   - **Framework Preset:** Other
-   - **Root Directory:** `frontend` (⚠️ IMPORTANTE!)
-   - **Build Command:** (iwanan blanko)
-   - **Output Directory:** (iwanan blanko)
-4. Click **Deploy**
-5. Kopyahin ang URL — gaya ng `https://videoke-frontend.vercel.app`
-
-### Step 5: I-update ang Render
-
-Bumalik sa Render dashboard:
-1. Tap `videoke` service
-2. **Environment** tab
-3. I-edit ang `FRONTEND_URL` sa Vercel URL mo
-4. **Save Changes** → auto-redeploy
-
----
-
-## 🎮 Paano Gamitin
-
-### TV / Laptop (Host)
-
-1. Buksan: `https://your-app.vercel.app/host.html`
-2. Tap **"I-TAP PARA SIMULAN"** → mag-fullscreen
-3. Lalabas ang **QR code** at idle screen
-4. Hintayin ang mga bisita na mag-scan
-
-### Phone (Remote)
-
-1. I-scan ang QR code sa TV, o pumunta sa `https://your-app.vercel.app/remote.html`
-2. Mag-type ng **pangalan**
-3. Mag-search ng kanta:
-   - **Search bar** — type ang title/artist (auto "karaoke" filter)
-   - **O kaya i-paste ang YouTube link** — auto-detect
-4. **Tap ang resulta** → napunta sa queue
-5. Kapag tapos na ang kanta → **mag-vote 1-10**
-6. Auto-next sa susunod
-
-### Admin (optional)
-
-1. Tap **⚙️** sa remote header
-2. Login gamit ang `ADMIN_PASSWORD`
-3. Options:
-   - Force Stop
-   - Kick All Guests
-   - Clear History
-   - Clear Recent / Trending
-
----
-
-## 🎯 Filters
-
-Default settings (HD karaoke only):
-
-| Filter | Default | Purpose |
-|--------|---------|---------|
-| **HD Only** | ✅ ON | 1080p / 4K lang |
-| **Trusted Channels** | ✅ ON | Auto-block Vevo, T-Series, etc. |
-| **Duration** | 2:00 - 12:00 | Tanggalin ang clips at albums |
-
-I-tap ang **⚙️ Advanced Filters** para i-adjust.
-
----
-
-## 🌐 Language
-
-| Language | Code |
-|----------|------|
-| 🇵🇭 Filipino | `fil` (default) |
-| 🇺🇸 English | `en` |
-
-**Paano palitan:**
-- Tap ang **🌐 flag icon** sa header para mag-toggle
-- O i-set sa console: `localStorage.setItem('videoke:lang', 'en')`
+| Layer | Technology | Hosted On |
+|-------|-----------|-----------|
+| Frontend | HTML, CSS, Vanilla JS, Socket.IO Client | Vercel |
+| Backend | Node.js, Express, Socket.IO | Render |
+| Storage | JSON files (ephemeral) | Render filesystem |
+| Media | YouTube (embedded iframe) | YouTube |
 
 ---
 
 ## 📁 Project Structure
 
 ```
+
 videoke/
-├── README.md
-├── backend/                    ← Deploy sa RENDER
+├── backend/
+│   ├── server.js              # Main Express + Socket.IO server
 │   ├── package.json
-│   ├── server.js
-│   └── data/                   ← Auto-created
+│   └── data/                  # Auto-generated JSON storage
 │       ├── history.json
 │       ├── favorites.json
-│       ├── recent-searches.json
-│       └── trending.json
-└── frontend/                   ← Deploy sa VERCEL
-    ├── config.js               ← Backend URL
-    ├── i18n.js                 ← Languages
-    ├── manifest.json           ← PWA
-    ├── service-worker.js       ← PWA cache
-    ├── index.html              ← Redirect to remote
-    ├── host.html               ← TV player
-    ├── remote.html             ← Phone controller
-    └── lib/
-        └── qrcode.min.js
+│       ├── trending.json
+│       └── failed-videos.json
+├── frontend/
+│   ├── index.html             # Landing page
+│   ├── host.html              # TV/display screen (video player)
+│   ├── remote.html            # Guest mobile controller
+│   ├── config.js              # API base URL configuration
+│   ├── i18n.js                # Translations
+│   ├── manifest.json          # PWA manifest
+│   └── service-worker.js
+└── README.md
+
 ```
 
 ---
 
-## ⚙️ Environment Variables
+## 🚀 Local Development
 
-### Backend (Render)
+### Prerequisites
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3000` | Server port |
-| `ADMIN_PASSWORD` | `admin123` | Admin login password |
-| `FRONTEND_URL` | `*` | Vercel frontend URL (CORS) |
-| `DATA_DIR` | `./data` | Data folder (optional) |
+- Node.js **v18+** (needs native `fetch` and `AbortSignal.timeout`)
+- npm or yarn
 
----
+### 1. Clone the repository
 
-## 🔧 Tech Stack
+```bash
+git clone https://github.com/empuertos/videoke.git
+cd videoke
+```
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | Vanilla JS, HTML5, CSS3 |
-| **Backend** | Node.js, Express, Socket.IO |
-| **Search** | Invidious/Piped (community instances) |
-| **Player** | YouTube IFrame API |
-| **PWA** | Service Worker, Web App Manifest |
-| **Deploy** | Vercel (frontend), Render (backend) |
+2. Install backend dependencies
 
----
+```bash
+cd backend
+npm install
+```
 
-## 📋 API Endpoints
+3. Set environment variables (optional for local)
 
-### Public
+Create a .env file or export directly:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Health check |
-| `GET` | `/health` | Uptime |
-| `GET` | `/api/info` | Server info + URLs |
-| `GET` | `/api/search?q=...` | Karaoke search |
-| `GET` | `/api/yt-info/:videoId` | YouTube metadata |
-| `GET` | `/api/history` | Play history |
-| `GET` | `/api/leaderboard` | Top singers |
-| `GET` | `/api/favorites` | User favorites |
-| `GET` | `/api/trending` | Trending stats |
-| `GET` | `/api/recent-searches` | Recent searches |
+```bash
+export PORT=3000
+export ADMIN_PASSWORD=your-secret-password
+export FRONTEND_URL=http://localhost:5500
+```
 
-### Admin (require token)
+Note: If ADMIN_PASSWORD is not set, the server will refuse to start for security reasons.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/admin/login` | Get admin token |
-| `POST` | `/api/admin/stop` | Force stop playback |
-| `POST` | `/api/admin/kick-all` | Disconnect all guests |
-| `POST` | `/api/admin/clear-history` | Clear song history |
-| `POST` | `/api/admin/clear-recent` | Clear recent searches |
-| `POST` | `/api/admin/clear-trending` | Clear trending stats |
+4. Start the backend server
 
----
+```bash
+npm start
+# or
+node server.js
+```
 
-## ⚠️ Notes
+The backend will be available at http://localhost:3000.
 
-### Render Free Tier
-- **Nag-sleep pagkatapos ng 15 min walang activity**
-- Unang request pagkatapos ng sleep: **30-60 seconds**
-- **Solution:** Gamitin ang [UptimeRobot](https://uptimerobot.com) para i-ping ang `/health` every 5 min
+5. Serve the frontend
 
-### Data Persistence
-- Nasa `data/*.json` ang lahat ng state
-- **Ephemeral** ang filesystem ng Render free tier — nawawala sa restart
-- Para permanent: mag-upgrade sa paid plan na may **persistent disk**
-- O gamitin ang external database (MongoDB, PostgreSQL, etc.)
+Use any static server (e.g., live-server, http-server, or Python):
 
-### YouTube Embed
-- **Legal** — ang pag-embed ay allowed ng YouTube ToS
-- **Walang download** — metadata lang mula sa oEmbed
-- **Vevo/music videos** — hindi pwedeng i-embed, auto-skip
+```bash
+cd ../frontend
+npx http-server -p 5500
+```
+
+Open http://localhost:5500/host.html on your display and http://localhost:5500/remote.html on your phone.
 
 ---
 
-## 🐛 Troubleshooting
+🔑 Environment Variables
 
-| Problem | Solution |
-|---------|----------|
-| **Hindi maka-connect** (red dot) | Check `config.js` na may tamang `BACKEND_URL` |
-| **CORS errors** | I-update ang `FRONTEND_URL` sa Render env vars |
-| **Walang search results** | Invidious/Piped instances down — subukan ibang query |
-| **Hindi nag-play** | Browser autoplay policy — tap START muna |
-| **Vevo error** | Normal — auto-skip sa susunod na kanta |
-| **404 sa root URL** | Walang `index.html` — i-add o buksan `/remote.html` |
-| **Render cold start** | Hintayin 30-60s o gumamit ng UptimeRobot |
+Set these on Render → Your Backend Service → Environment:
 
----
+Variable Required Description Example
+ADMIN_PASSWORD ✅ Yes Password for admin panel login. Server won't start without it. MySecretPass2024
+FRONTEND_URL ⚠️ Recommended Comma-separated list of allowed origins (CORS). Use * for testing only. https://videoke-frontend.vercel.app
+PORT Optional Server port. Render sets this automatically. 3000
+DATA_DIR Optional Where JSON files are stored. Defaults to ./data. /tmp/videoke-data
 
-## 🎯 Smart TV Support
+⚠️ Important Notes
 
-Gumagana sa:
-
-| TV | Browser | Status |
-|----|---------|:---:|
-| Samsung Tizen | Built-in | ✅ |
-| LG webOS | Built-in | ✅ |
-| Android TV | TV Bro | ✅ |
-| Google TV | TV Bro | ✅ |
-| Fire TV | Silk | ✅ |
-
-**TV remote controls:**
-- ⬆️⬇️⬅️➡️ — Navigation
-- **OK / Enter** — Start / Confirm
-- **Space** — Pause
-- **N** — Skip
-- **S** — Stop
-- **L** — Toggle language
+· ADMIN_PASSWORD is required. The server will crash on startup if it's missing.
+· FRONTEND_URL must match your Vercel URL exactly (no trailing slash) or guests will get CORS errors.
+· On Render's free tier, the filesystem is ephemeral — data resets on redeploy. Set DATA_DIR=/tmp/videoke-data or upgrade to a paid disk for persistence.
 
 ---
 
-## 📜 License
+☁️ Deployment
 
-MIT License — libre gamitin, baguhin, at i-distribute.
+Backend → Render
+
+1. Push your code to GitHub.
+2. Go to Render Dashboard → New → Web Service.
+3. Connect your repo, set:
+   · Root Directory: backend
+   · Build Command: npm install
+   · Start Command: npm start
+4. Add environment variables (ADMIN_PASSWORD, FRONTEND_URL).
+5. Click Create Web Service.
+6. Copy the deployed URL (e.g., https://videoke-backend.onrender.com).
+
+Frontend → Vercel
+
+1. Go to Vercel Dashboard → New Project.
+2. Import your repo, set:
+   · Root Directory: frontend
+   · Framework Preset: Other
+3. Deploy.
+4. Update frontend/config.js to point to your Render backend:
+
+```javascript
+window.VIDEOKE_CONFIG = {
+  BACKEND_URL: 'https://videoke-backend.onrender.com'
+};
+```
+
+5. Push the change — Vercel auto-deploys.
+
+Post-Deploy Checklist
+
+☐ ADMIN_PASSWORD set on Render.
+☐ FRONTEND_URL matches your Vercel URL.
+☐ config.js points to the live Render backend.
+☐ Admin panel login works.
+☐ Guests can reserve and play songs.
 
 ---
 
-## 👨‍💻 Author
+🔌 API Endpoints
 
-**empuertos**
+All endpoints are prefixed with /api.
 
-- GitHub: [@empuertos](https://github.com/empuertos)
+Public
+
+Method Endpoint Description
+GET / Health check / service info
+GET /health Uptime check
+GET /api/info Frontend and backend URLs
+GET /api/yt-info/:videoId Fetch YouTube metadata (title, author, HD flag)
+GET /api/history?limit=50 Get play history
+GET /api/favorites Get saved favorites
+GET /api/trending Get trending stats (session/today/all-time)
+GET /api/failed-videos Get blacklisted videos
+
+Admin (require ?token= or x-admin-token header)
+
+Method Endpoint Description
+GET /api/admin/login?password=... Authenticate and receive token
+GET /api/admin/stop Force stop current song
+GET /api/admin/kick-all Disconnect all guests
+GET /api/admin/clear-history Clear play history
+GET /api/admin/clear-failed Clear blacklist
+GET /api/admin/clear-trending Clear trending data
+
+Note: Admin endpoints use GET (not POST) so that the frontend can call them without triggering CORS preflight. The token is valid for 4 hours.
 
 ---
 
-## 🙏 Credits
+📡 Socket.IO Events
 
-- **Invidious** / **Piped** — Free YouTube search API
-- **YouTube IFrame API** — Karaoke playback
-- **Socket.IO** — Real-time communication
-- **Vercel** & **Render** — Free hosting
+Client → Server
+
+Event Payload Description
+addSong { videoId, singer, title } Add a song to the queue
+removeSong id Remove a song by ID
+moveSong { id, direction } Reorder queue (up / down)
+toggleFavorite { videoId, title } Add/remove favorite
+skip — Skip to next song
+stop — Stop playback
+pause / resume — Pause/resume video
+volume 0–100 Set host volume
+startPlaying — Manually start the queue
+songEnded — Notify server that song finished
+videoFailed { videoId, title } Auto-blacklist a broken video
+
+Server → Client
+
+Event Payload Description
+state { queue, nowPlaying, stats, favorites } Full application state
+command { type, ... } Host playback commands
+trending Trending object Updated trending stats
+videoBlacklisted { videoId, title } Notify of blacklisted video
+historyCleared — History was cleared by admin
+kicked message Force logout guests
 
 ---
 
-## 🎉 Enjoy!
+🔐 Admin Panel
 
-Kung nagustuhan mo ang project na ito, i-star ⭐ ang repo at i-share sa mga kaibigan!
+Open the admin panel from the gear icon (⚙️) in the top-right corner of remote.html.
 
-**Maligayang pagkanta! 🎤🎶✨**
+Available actions:
+
+· ⏹ Force Stop — Halt the current song immediately.
+· 👢 Kick All — Disconnect all guest remotes.
+· 🗑️ Clear History — Wipe the play history.
+· ⛔ Clear Failed Videos — Remove videos from the blacklist.
+
+Login flow:
+
+1. Enter the ADMIN_PASSWORD (the one you set in Render).
+2. Server returns a 24-byte hex token (valid for 4 hours).
+3. Token is stored in localStorage and sent with every admin action.
+
+---
+
+🛠️ Troubleshooting
+
+❌ "Failed to fetch" on login
+
+· Cause: Backend is asleep (Render free tier) or CORS is blocking the request.
+· Fix: Visit your Render backend URL directly to wake it up. Check that FRONTEND_URL includes your Vercel domain exactly.
+
+❌ "Server error 404" on login
+
+· Cause: HTTP method mismatch — frontend sends GET, backend expects POST (or vice versa).
+· Fix: Ensure all admin routes use app.get() and read req.query for parameters.
+
+❌ "Unauthorized" on admin actions
+
+· Cause: Token expired (4-hour limit) or not being sent.
+· Fix: Log out and log in again. Check localStorage.getItem('videoke:adminToken').
+
+❌ Videos won't play on host
+
+· Cause: The YouTube video has embedding disabled by its uploader.
+· Fix: The system auto-blacklists failed videos. Try a different upload of the same song.
+
+❌ Data disappears after redeploy
+
+· Cause: Render's free tier uses ephemeral storage.
+· Fix: Set DATA_DIR=/tmp/videoke-data (still ephemeral but survives within a session) or upgrade to a paid Render disk.
+
+❌ Admin login says "Maling password" even with correct password
+
+· Cause: Typo or trailing whitespace in Render's ADMIN_PASSWORD env var.
+· Fix: Re-enter the password in Render, save, and Manual Deploy → Clear build cache & deploy.
+
+---
+
+🧪 Testing the Backend Directly
+
+Use curl to test without the frontend:
+
+```bash
+# Health check
+curl https://your-backend.onrender.com/health
+
+# Admin login
+curl "https://your-backend.onrender.com/api/admin/login?password=YOUR_PASSWORD"
+
+# Get trending
+curl https://your-backend.onrender.com/api/trending
+```
+
+---
+
+📜 License
+
+MIT License — free to use, modify, and distribute.
+
+---
+
+🙏 Credits
+
+· YouTube for the oEmbed API and embedded player.
+· Socket.IO for real-time bidirectional communication.
+· Render and Vercel for generous free tiers.
+
+---
+
+📞 Support
+
+If you encounter bugs or want to suggest features, please open an issue or submit a pull request.
+
+Enjoy your videoke session! 🎤🎶
+
+```
+
+### 📌 Mga dapat mong gawin pagkatapos i-paste:
+
+1. I-save ang `README.md`.
+2. Palitan ang `empuertos/videoke` ng tamang GitHub URL mo kung iba.
+3. I-update ang `YOUR_PASSWORD`, `your-backend.onrender.com`, at `videoke-frontend.vercel.app` ng actual values mo sa examples.
+4. I-commit at i-push sa GitHub.
+
+Kung gusto mong magdagdag ng screenshots o GIF demo sa README, sabihin mo lang — tutulungan kita kung paano i-embed sa Markdown. 🎤
