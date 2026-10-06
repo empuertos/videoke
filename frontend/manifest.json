@@ -1,0 +1,17 @@
+{
+  "name": "Videoke YouTube — Remote",
+  "short_name": "Videoke",
+  "description": "Professional karaoke remote control",
+  "start_url": "/remote",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0512",
+  "theme_color": "#0a0512",
+  "categories": ["entertainment", "music"],
+  "lang": "fil-PH",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
