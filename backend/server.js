@@ -34,6 +34,7 @@ const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
 const FAVORITES_FILE = path.join(DATA_DIR, 'favorites.json');
 const RECENT_FILE = path.join(DATA_DIR, 'recent-searches.json');
 const TRENDING_FILE = path.join(DATA_DIR, 'trending.json');
+const FAILED_FILE = path.join(DATA_DIR, 'failed-videos.json');
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -182,7 +183,6 @@ function durationScore(seconds) {
   return 0;
 }
 
-// ===== MAS MARAMING INSTANCES =====
 const INVIDIOUS_INSTANCES = [
   'https://inv.nadeko.net',
   'https://invidious.nerdvpn.de',
@@ -219,6 +219,7 @@ let history = loadJSON(HISTORY_FILE);
 let favorites = loadJSON(FAVORITES_FILE, []);
 let recentSearches = loadJSON(RECENT_FILE, []);
 let trending = loadJSON(TRENDING_FILE, {});
+let failedVideos = loadJSON(FAILED_FILE, {});
 let stats = { totalPlayed: history.length, startedAt: Date.now() };
 const adminTokens = new Map();
 
@@ -325,7 +326,6 @@ async function batchCheckHD(videos, maxConcurrent = 6) {
   return results;
 }
 
-// ===== STRICT KARAOKE SEARCH =====
 async function searchInvidiousKaraoke(query) {
   const kq = `${query} karaoke`;
   for (const instance of INVIDIOUS_INSTANCES) {
@@ -361,7 +361,6 @@ async function searchInvidiousKaraoke(query) {
   return null;
 }
 
-// ===== LOOSE SEARCH (fallback kung walang strict results) =====
 async function searchInvidiousLoose(query) {
   for (const instance of INVIDIOUS_INSTANCES) {
     try {
@@ -497,22 +496,23 @@ app.get('/api/yt-info/:videoId', async (req, res) => {
   } catch {}
 
   const isHD = await checkMaxRes(videoId);
+  const isFailed = !!failedVideos[videoId];
   res.json({
     videoId, title, author,
     isHD: isHD === true,
     titleHD: hasHDKeyword(title),
+    previouslyFailed: isFailed,
     thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`
   });
 });
 
-// ===== UPDATED SEARCH API with LOOSE fallback =====
 app.get('/api/search', async (req, res) => {
   const query = String(req.query.q || '').trim();
   const hdOnly = req.query.hd === '1' || req.query.hd === 'true';
   const minDuration = Math.max(0, parseInt(req.query.min) || DEFAULTS.minDuration);
   const maxDuration = Math.max(0, parseInt(req.query.max) || DEFAULTS.maxDuration);
   const filterChannels = req.query.channels !== '0';
-  const strictKaraoke = req.query.strict !== '0'; // default ON
+  const strictKaraoke = req.query.strict !== '0';
 
   if (!query || query.length < 2)
     return res.json({ results: [], cached: false });
@@ -523,20 +523,17 @@ app.get('/api/search', async (req, res) => {
     return res.json({ results: cached.results, cached: true, hdOnly, minDuration, maxDuration, filterChannels, strictKaraoke });
   }
 
-  // Try strict karaoke search muna
   let results = null;
   if (strictKaraoke) {
     results = await searchInvidiousKaraoke(query);
     if (!results) results = await searchPipedKaraoke(query);
   }
 
-  // Fallback: loose search (walang karaoke filter)
   if (!results || results.length === 0) {
     console.log('Trying loose search fallback...');
     results = await searchInvidiousLoose(query);
     if (!results) results = await searchPipedLoose(query);
     if (results) {
-      // I-tag as loose search results
       results = results.map(v => ({
         ...v,
         karaokeScore: karaokeScore(v.title)
@@ -553,7 +550,6 @@ app.get('/api/search', async (req, res) => {
     });
   }
 
-  // Channel filter
   if (filterChannels) {
     results = results.filter(v => !isBlockedChannel(v.author));
     results = results.map(v => ({ ...v, channelScore: channelScore(v.author) }));
@@ -561,7 +557,6 @@ app.get('/api/search', async (req, res) => {
     results = results.map(v => ({ ...v, channelScore: 0 }));
   }
 
-  // Duration filter
   const beforeDur = results.length;
   results = results.filter(v => durationInRange(v.duration, minDuration, maxDuration));
 
@@ -581,13 +576,11 @@ app.get('/api/search', async (req, res) => {
     hdScore: hdScore(v.title)
   }));
 
-  // HD filter
   if (hdOnly) {
     results = await batchCheckHD(results);
     results = results.map(v => ({ ...v, isHD: v.isHD === true || v.titleHD === true }));
     const hdFiltered = results.filter(v => v.isHD === true);
 
-    // Kung walang HD results, ibalik lahat pero i-flag
     if (hdFiltered.length > 0) {
       results = hdFiltered;
     } else {
@@ -600,10 +593,15 @@ app.get('/api/search', async (req, res) => {
 
   results = results.map(v => ({
     ...v,
-    trendingCount: trending[v.videoId]?.count || 0
+    trendingCount: trending[v.videoId]?.count || 0,
+    previouslyFailed: !!failedVideos[v.videoId]
   }));
 
   results.sort((a, b) => {
+    // Failed videos papunta sa dulo
+    if (a.previouslyFailed !== b.previouslyFailed) {
+      return a.previouslyFailed ? 1 : -1;
+    }
     const trend = (b.trendingCount || 0) - (a.trendingCount || 0);
     if (trend !== 0) return trend;
     const ch = (b.channelScore || 0) - (a.channelScore || 0);
@@ -632,6 +630,7 @@ app.get('/api/history', (req, res) => {
 app.get('/api/favorites', (req, res) => res.json(favorites));
 app.get('/api/trending', (req, res) => res.json(getTrendingStats()));
 app.get('/api/recent-searches', (req, res) => res.json(recentSearches));
+app.get('/api/failed-videos', (req, res) => res.json(Object.values(failedVideos)));
 
 function authAdmin(req, res, next) {
   const token = req.headers['x-admin-token'] || req.query.token;
@@ -654,6 +653,13 @@ app.post('/api/admin/clear-history', authAdmin, (req, res) => {
   stats.totalPlayed = 0;
   io.emit('historyCleared');
   broadcastState();
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/clear-failed', authAdmin, (req, res) => {
+  failedVideos = {};
+  saveJSON(FAILED_FILE, failedVideos);
+  console.log('Cleared failed videos list');
   res.json({ ok: true });
 });
 
@@ -755,6 +761,12 @@ io.on('connection', (socket) => {
     if (!vid || !/^[\w-]{11}$/.test(vid))
       return socket.emit('error', 'Hindi valid na YouTube link');
 
+    // ⬇️ Check blacklisted
+    if (failedVideos[vid]) {
+      return socket.emit('error',
+        '⚠️ Hindi ma-embed ang video na ito (blocked ng owner). Subukan ibang version.');
+    }
+
     const s = String(singer || 'Guest').substring(0, 30).trim() || 'Guest';
 
     if (queue.some(q => q.videoId === vid && q.singer === s))
@@ -798,6 +810,27 @@ io.on('connection', (socket) => {
       addedAt: Date.now()
     });
     saveJSON(FAVORITES_FILE, favorites);
+    broadcastState();
+  });
+
+  // ⬇️ NEW: Video failed (embed not allowed, etc)
+  socket.on('videoFailed', ({ videoId, title }) => {
+    if (!videoId) return;
+    failedVideos[videoId] = {
+      videoId,
+      title: String(title || '').substring(0, 120),
+      failedAt: Date.now()
+    };
+    saveJSON(FAILED_FILE, failedVideos);
+    console.log(`✗ Blacklisted: ${videoId} — ${title}`);
+
+    // I-remove sa queue
+    queue = queue.filter(q => q.videoId !== videoId);
+    if (nowPlaying && nowPlaying.videoId === videoId) {
+      nowPlaying = null;
+    }
+
+    io.emit('videoBlacklisted', { videoId, title });
     broadcastState();
   });
 
@@ -847,7 +880,6 @@ server.listen(PORT, () => {
   console.log('  🌐  Frontend URL: ' + FRONTEND_URL);
   console.log('  🔐  Admin pass:   ' + ADMIN_PASSWORD);
   console.log('  🎵  History:      ' + history.length);
-  console.log('  📡  Invidious:    ' + INVIDIOUS_INSTANCES.length + ' instances');
-  console.log('  📡  Piped:        ' + PIPED_INSTANCES.length + ' instances');
+  console.log('  ⛔  Failed:       ' + Object.keys(failedVideos).length);
   console.log('');
 });
