@@ -37,18 +37,45 @@ const FAILED_FILE = path.join(DATA_DIR, 'failed-videos.json');
 
 app.use(express.json({ limit: '10mb' }));
 
-app.get('/', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'videoke-backend',
-    timestamp: Date.now(),
-    frontend: FRONTEND_URL,
-    clients: io.engine.clientsCount
-  });
+// =====================================================
+// ⬇️ CORS MIDDLEWARE para sa Express HTTP routes
+// (fetch, /api/admin/login, /api/yt-info, etc.)
+// =====================================================
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  const allowedOrigins = FRONTEND_URL === '*'
+    ? ['*']
+    : FRONTEND_URL.split(',').map(s => s.trim());
+
+  // Check kung allowed ang origin
+  let allowOrigin = null;
+  if (FRONTEND_URL === '*') {
+    allowOrigin = origin || '*';
+  } else if (allowedOrigins.includes(origin)) {
+    allowOrigin = origin;
+  } else if (!origin) {
+    // Same-origin o direct request (walang origin header)
+    allowOrigin = allowedOrigins[0] || '*';
+  }
+
+  if (allowOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-token');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  // Preflight request
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
 });
 
-app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
-
+// =====================================================
+// HELPERS
+// =====================================================
 function loadJSON(f, def = []) {
   try { return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : def; }
   catch { return def; }
@@ -78,6 +105,9 @@ function hasHDKeyword(title) {
   return HD_KEYWORDS.some(re => re.test(title));
 }
 
+// =====================================================
+// STATE
+// =====================================================
 const hdCache = new Map();
 const HD_CACHE_TTL = 30 * 60 * 1000;
 const ytInfoCache = new Map();
@@ -169,6 +199,22 @@ async function checkMaxRes(videoId) {
   } catch { return null; }
 }
 
+// =====================================================
+// API ROUTES
+// =====================================================
+
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'videoke-backend',
+    timestamp: Date.now(),
+    frontend: FRONTEND_URL,
+    clients: io.engine.clientsCount
+  });
+});
+
+app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+
 app.get('/api/info', (req, res) => {
   const frontendBase = process.env.FRONTEND_URL?.split(',')[0]?.trim()
     || req.headers.origin
@@ -181,6 +227,7 @@ app.get('/api/info', (req, res) => {
   });
 });
 
+// ⬇️ YT-INFO with cache
 app.get('/api/yt-info/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
   if (!/^[\w-]{11}$/.test(videoId))
@@ -235,6 +282,9 @@ app.get('/api/favorites', (req, res) => res.json(favorites));
 app.get('/api/trending', (req, res) => res.json(getTrendingStats()));
 app.get('/api/failed-videos', (req, res) => res.json(Object.values(failedVideos)));
 
+// =====================================================
+// ADMIN
+// =====================================================
 function authAdmin(req, res, next) {
   const token = req.headers['x-admin-token'] || req.query.token;
   const exp = adminTokens.get(token);
@@ -286,6 +336,9 @@ app.post('/api/admin/clear-trending', authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// =====================================================
+// BROADCAST + PLAY LOGIC
+// =====================================================
 function broadcastState() {
   const queueWithWait = queue.map((q, i) => ({
     ...q,
@@ -330,6 +383,9 @@ function playNext() {
   }, 1000);
 }
 
+// =====================================================
+// SOCKET.IO
+// =====================================================
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
@@ -346,6 +402,7 @@ io.on('connection', (socket) => {
   socket.emit('trending', getTrendingStats());
   broadcastState();
 
+  // Sync command base sa state
   if (!nowPlaying) {
     socket.emit('command', { type: 'idle' });
   } else if (countdownTimer) {
@@ -476,15 +533,17 @@ io.on('connection', (socket) => {
   });
 });
 
+// =====================================================
+// START
+// =====================================================
 server.listen(PORT, () => {
   console.log('');
-  console.log('  🎤  VIDEoke BACKEND — Clean Version');
+  console.log('  🎤  VIDEoke BACKEND — CORS Fixed');
   console.log('  ═══════════════════════════════════════════════');
   console.log('  🚀  Port:         ' + PORT);
   console.log('  🌐  Frontend URL: ' + FRONTEND_URL);
   console.log('  🔐  Admin pass:   ' + ADMIN_PASSWORD);
   console.log('  🎵  History:      ' + history.length);
   console.log('  ⛔  Failed:       ' + Object.keys(failedVideos).length);
-  console.log('  ℹ️   Mode:         Manual link paste only');
   console.log('');
 });
