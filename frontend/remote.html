@@ -453,6 +453,15 @@
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
+    // =====================================================
+    // FORCE UNREGISTER SERVICE WORKER (para sa fresh load)
+    // =====================================================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(reg => reg.unregister());
+      }).catch(() => {});
+    }
+
     const BACKEND_URL = window.VIDEOKE_CONFIG?.BACKEND_URL || 'http://localhost:3000';
     const API = BACKEND_URL;
 
@@ -510,7 +519,7 @@
       return m ? m[1] : null;
     }
 
-    // ⬇️ CLIENT-SIDE OEMBED FETCH (hindi naka-block)
+    // CLIENT-SIDE OEMBED FETCH
     async function fetchTitleClientSide(videoId) {
       try {
         const r = await fetch(
@@ -530,7 +539,6 @@
       return null;
     }
 
-    // ⬇️ BACKUP: fetch via backend
     async function fetchTitleViaBackend(videoId) {
       try {
         const r = await fetch(API + `/api/yt-info/${videoId}`, {
@@ -555,7 +563,6 @@
       toast('▶ Bukas sa YouTube...');
     }
 
-    // ===== URL PREVIEW =====
     document.getElementById('ytUrl').addEventListener('input', (e) => {
       clearTimeout(previewTimer);
       const value = e.target.value.trim();
@@ -585,14 +592,10 @@
       document.getElementById('ytPreview').classList.add('show');
 
       previewTimer = setTimeout(async () => {
-        // ⬇️ CLIENT-SIDE FIRST (mabilis at hindi blocked)
         let result = await fetchTitleClientSide(videoId);
-
-        // Fallback: backend
         if (!result || !result.title) {
           result = await fetchTitleViaBackend(videoId);
         }
-
         if (previewVideoId !== videoId) return;
 
         if (result && result.title) {
@@ -624,7 +627,6 @@
       if (e.key === 'Enter') addYouTube();
     });
 
-    // ===== ADD YOUTUBE =====
     async function addYouTube() {
       const input = document.getElementById('ytUrl').value.trim();
       const singer = document.getElementById('singer').value.trim() || 'Guest';
@@ -637,12 +639,10 @@
       reserveBtn.disabled = true;
       reserveBtn.textContent = '⏳ Kinukuha title...';
 
-      // ⬇️ STEPS: currentTitle → client oEmbed → backend → fallback
       let title = currentTitle;
       let previouslyFailed = false;
 
       if (!title || title === 'Kinukuha ang title...') {
-        // Try client-side
         const clientResult = await fetchTitleClientSide(videoId);
         if (clientResult && clientResult.title) {
           title = clientResult.title;
@@ -650,7 +650,6 @@
       }
 
       if (!title) {
-        // Try backend
         const backendResult = await fetchTitleViaBackend(videoId);
         if (backendResult && backendResult.title) {
           title = backendResult.title;
@@ -658,10 +657,7 @@
         }
       }
 
-      // Final fallback
-      if (!title) {
-        title = `YouTube Video (${videoId})`;
-      }
+      if (!title) title = `YouTube Video (${videoId})`;
 
       reserveBtn.disabled = false;
       reserveBtn.textContent = '➕ I-reserve';
@@ -674,11 +670,8 @@
         if (!proceed) return;
       }
 
-      console.log('[RESERVE] Sending:', { videoId, title, singer });
-
       socket.emit('addSong', { videoId, title, singer });
 
-      // Reset
       document.getElementById('ytUrl').value = '';
       document.getElementById('ytPreview').classList.remove('show');
       previewVideoId = null;
@@ -825,7 +818,6 @@
 
       qEl.innerHTML = s.queue.map((q, i) => {
         const isMe = myName && q.singer.toLowerCase() === myName;
-        // ⬇️ GUARANTEED title display
         const displayTitle = q.title || q.videoId || 'Unknown';
         return `
           <div class="queue-item ${isMe ? 'is-me' : ''}">
@@ -873,7 +865,8 @@
       const pw = document.getElementById('adminPw').value;
       try {
         const r = await fetch(API + '/api/admin/login', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: pw })
         });
         if (!r.ok) throw new Error('Maling password');
@@ -881,8 +874,10 @@
         adminToken = token;
         localStorage.setItem('videoke:adminToken', token);
         showAdminPanel();
-        toast('Logged in');
-      } catch (e) { toast(e.message, 'error'); }
+        toast('✓ Logged in', 'success');
+      } catch (e) {
+        toast(e.message, 'error');
+      }
     }
     function showAdminPanel() {
       document.getElementById('adminLoginForm').style.display = 'none';
@@ -927,10 +922,6 @@
     }
 
     refreshFavorites();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js').catch(() => {});
-    }
 
     let lastTouch = 0;
     document.addEventListener('touchend', e => {
