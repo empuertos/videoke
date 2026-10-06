@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#0a0512">
+  <title>Videoke YouTube — Remote</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script src="/i18n.js"></script>
+  <script src="/config.js"></script>
+  <style>
+    :root { --gold:#ffd700; --red:#ff2e55; --bg:#0a0512; --card:#16101f;
+      --card2:#1e1630; --border:rgba(255,255,255,0.08); --dim:#8888a0;
+      --green:#4ade80; }
+    * { box-sizing:border-box; margin:0; padding:0;
+      -webkit-tap-highlight-color:transparent; }
+    body { background:var(--bg); color:#fff;
+      font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+      min-height:100vh; padding-bottom:40px; overscroll-behavior:none; }
+
+    .header { position:sticky;top:0;z-index:100;padding:14px 18px;
+      background:rgba(10,5,18,0.92);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center; }
+    .header h1 { font-size:20px;font-weight:800;
+      background:linear-gradient(135deg,#ffd700,#ff8a00);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent; }
+    .header .status { font-size:11px;color:var(--dim);
+      display:flex;align-items:center;gap:6px;margin-top:2px; }
+    .dot { width:8px;height:8px;border-radius:50%;
+      background:var(--green);box-shadow:0 0 10px var(--green); }
+    .dot.offline { background:var(--red);box-shadow:0 0 10px var(--red); }
+    .header-actions { display:flex; gap:8px; }
+    .icon-btn { background:var(--card);border:1px solid var(--border);
+      color:#fff;width:38px;height:38px;border-radius:10px;
+      font-size:16px;cursor:pointer; }
+
+    .container { padding:18px; max-width:560px; margin:0 auto; }
+
+    .input-group { margin-bottom:14px; }
+    .input-group label { display:block;font-size:11px;font-weight:600;
+      color:var(--dim);margin-bottom:6px;letter-spacing:1px;
+      text-transform:uppercase; }
+    input[type=text], input[type=search] { width:100%;padding:13px 16px;
+      font-size:16px;background:var(--card);color:#fff;
+      border:1.5px solid var(--border);border-radius:12px;
+      font-family:inherit; }
+    input:focus { outline:none;border-color:var(--red);
+      background:var(--card2); }
+
+    .yt-card { background:linear-gradient(135deg,#2a0a1a,#1a0010);
+      border:1px solid rgba(255,46,85,0.2);border-radius:16px;
+      padding:18px;margin-bottom:16px;position:relative;overflow:hidden; }
+    .yt-card::before { content:'';position:absolute;top:0;left:0;right:0;
+      height:3px;background:linear-gradient(90deg,#ff2e55,#ff0044); }
+    .yt-card .label { font-size:11px;font-weight:700;letter-spacing:3px;
+      color:#ff6b6b;margin-bottom:12px; }
+    .yt-card input { background:rgba(0,0,0,0.4);
+      border:1.5px solid rgba(255,46,85,0.2);margin-bottom:10px; }
+    .yt-card input:focus { border-color:#ff2e55; }
+    .yt-card .primary-btn { width:100%;padding:14px;
+      background:linear-gradient(135deg,#ff2e55,#ff0044);
+      color:#fff;border:none;border-radius:12px;
+      font-size:15px;font-weight:700;cursor:pointer;font-family:inherit; }
+
+    .yt-hint { display:flex;gap:10px;padding:12px;
+      background:rgba(96,165,250,0.08);
+      border:1px solid rgba(96,165,250,0.2);
+      border-radius:10px;font-size:11px;line-height:1.5;
+      color:#a0b0c0;margin-top:12px; }
+    .yt-hint .icon { font-size:18px;flex-shrink:0; }
+
+    .yt-preview { background:rgba(0,0,0,0.4);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;padding:10px;margin-top:10px;
+      display:none;gap:10px;align-items:center; }
+    .yt-preview.show { display:flex; }
+    .yt-preview img { width:80px;height:60px;border-radius:8px;
+      object-fit:cover;flex-shrink:0;background:#000; }
+    .yt-preview .info { flex:1;min-width:0; }
+    .yt-preview .title { font-size:13px;font-weight:600;line-height:1.3;
+      overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
+    .yt-preview .author { font-size:11px;color:var(--dim);margin-top:2px; }
+
+    .filters-toggle { width:100%;padding:10px 14px;
+      background:rgba(96,165,250,0.08);
+      border:1px solid rgba(96,165,250,0.2);
+      border-radius:10px;color:#60a5fa;font-size:12px;
+      font-weight:700;cursor:pointer;font-family:inherit;
+      text-align:left;margin-bottom:10px;
+      display:flex;justify-content:space-between;
+      align-items:center;letter-spacing:0.5px; }
+    #filtersArrow { transition:transform 0.2s;font-size:14px; }
+    #filtersArrow.open { transform:rotate(90deg); }
+
+    .filters-panel { display:none;margin-bottom:12px;
+      padding:12px;background:rgba(0,0,0,0.3);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px; }
+    .filters-panel.show { display:block; }
+
+    .filter-row { display:flex;align-items:flex-start;gap:10px;
+      padding:10px 12px;background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:10px;cursor:pointer;margin-bottom:8px; }
+    .filter-row input[type=checkbox] { display:none; }
+    .filter-check { width:22px;height:22px;border-radius:6px;
+      background:rgba(255,255,255,0.1);
+      border:2px solid rgba(255,255,255,0.15);
+      flex-shrink:0;position:relative;transition:all 0.15s;
+      margin-top:2px; }
+    .filter-row input:checked ~ .filter-check {
+      background:#4ade80;border-color:#4ade80; }
+    .filter-row input:checked ~ .filter-check::after {
+      content:'✓';position:absolute;color:#000;
+      font-weight:900;font-size:14px;top:50%;left:50%;
+      transform:translate(-50%,-50%); }
+    .filter-info { flex:1; }
+    .filter-info b { display:block;font-size:13px;color:#fff;
+      margin-bottom:2px; }
+    .filter-info small { font-size:10px;color:var(--dim);
+      display:block;line-height:1.3; }
+
+    .duration-filter { display:block !important;cursor:default; }
+    .duration-inputs { display:flex;align-items:center;gap:8px;
+      margin-top:10px; }
+    .dur-input { flex:1; }
+    .dur-input label { display:block;font-size:9px;color:var(--dim);
+      text-transform:uppercase;letter-spacing:1px;
+      margin-bottom:4px;font-weight:700; }
+    .dur-input input { width:100%;padding:10px;
+      background:rgba(0,0,0,0.4);
+      border:1.5px solid rgba(255,255,255,0.1);
+      border-radius:8px;color:#fff;font-size:15px;
+      text-align:center;font-family:monospace;font-weight:700; }
+    .dur-sep { color:var(--dim);padding:0 4px;
+      padding-top:20px;font-weight:700; }
+
+    .duration-presets { display:grid;
+      grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px; }
+    .duration-presets button { padding:8px 4px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px;color:#fff;font-size:10px;
+      font-weight:700;cursor:pointer;font-family:inherit; }
+
+    .filter-reset { width:100%;padding:10px;background:transparent;
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px;color:var(--dim);font-size:12px;
+      font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px; }
+
+    .active-filters { display:flex;flex-wrap:wrap;gap:5px;
+      margin-bottom:10px; }
+    .active-filters:empty { display:none; }
+    .filter-badge { padding:4px 10px;
+      background:rgba(96,165,250,0.15);
+      border:1px solid rgba(96,165,250,0.3);
+      color:#60a5fa;border-radius:12px;font-size:10px;
+      font-weight:700;letter-spacing:0.5px; }
+    .filter-badge.hd { background:rgba(74,222,128,0.15);
+      border-color:rgba(74,222,128,0.3);color:#4ade80; }
+    .filter-badge.duration { background:rgba(255,215,0,0.15);
+      border-color:rgba(255,215,0,0.3);color:#ffd700; }
+
+    .karaoke-only-badge { display:inline-block;padding:6px 12px;
+      background:rgba(74,222,128,0.1);
+      border:1px solid rgba(74,222,128,0.3);
+      color:var(--green);border-radius:20px;font-size:10px;
+      font-weight:700;letter-spacing:1px;margin-bottom:12px;
+      text-transform:uppercase; }
+
+    .search-results { display:none;flex-direction:column;gap:6px;
+      max-height:400px;overflow-y:auto;margin-bottom:10px;
+      padding-right:4px; }
+    .search-results.show { display:flex; }
+
+    .search-result { display:flex;gap:10px;padding:10px;
+      background:rgba(0,0,0,0.3);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:10px;cursor:pointer;
+      transition:all 0.15s;align-items:center; }
+    .search-result:active { background:rgba(255,46,85,0.1);
+      border-color:var(--red); }
+    .search-result img { width:80px;height:60px;border-radius:6px;
+      object-fit:cover;flex-shrink:0;background:#000; }
+    .search-result .sr-info { flex:1;min-width:0; }
+    .search-result .sr-title { font-size:13px;font-weight:600;
+      line-height:1.3;overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
+    .search-result .sr-meta { font-size:11px;color:var(--dim);
+      margin-top:3px;display:flex;gap:8px;align-items:center;
+      flex-wrap:wrap; }
+    .search-result .sr-duration { background:rgba(0,0,0,0.6);
+      padding:1px 6px;border-radius:4px;font-size:10px;
+      font-family:monospace; }
+    .search-result .sr-add { font-size:22px;color:var(--red);
+      font-weight:300;padding:0 6px;flex-shrink:0; }
+
+    .hd-badge { display:inline-block;font-size:9px;font-weight:800;
+      padding:2px 6px;border-radius:4px;margin-left:4px;
+      letter-spacing:0.5px;vertical-align:middle; }
+    .hd-badge.hd { background:linear-gradient(135deg,#4ade80,#22c55e);
+      color:#000; }
+    .hd-badge.uhd { background:linear-gradient(135deg,#ffd700,#ff8a00);
+      color:#000; }
+
+    .trend-badge { font-size:10px;background:rgba(255,215,0,0.15);
+      color:var(--gold);padding:1px 6px;border-radius:4px;
+      font-weight:700;margin-left:4px; }
+
+    .channel-badge { display:inline-block;font-size:9px;
+      font-weight:700;padding:2px 6px;border-radius:4px;
+      background:rgba(96,165,250,0.15);color:#60a5fa;
+      margin-left:4px;letter-spacing:0.3px; }
+    .channel-badge.trusted {
+      background:linear-gradient(135deg,#4ade80,#22c55e);
+      color:#000; }
+
+    .yt-divider { text-align:center;margin:14px 0;
+      position:relative;color:var(--dim);font-size:11px;
+      text-transform:uppercase;letter-spacing:2px; }
+    .yt-divider::before, .yt-divider::after { content:'';
+      position:absolute;top:50%;width:40%;height:1px;
+      background:rgba(255,255,255,0.08); }
+    .yt-divider::before { left:0; }
+    .yt-divider::after { right:0; }
+
+    .search-loading { display:flex;align-items:center;
+      justify-content:center;gap:8px;padding:20px;
+      color:var(--dim);font-size:12px; }
+    .spinner { width:16px;height:16px;
+      border:2px solid rgba(255,255,255,0.1);
+      border-top-color:var(--red);border-radius:50%;
+      animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .now-card { background:linear-gradient(135deg,#2a0a4a,#1a0033);
+      border:1px solid rgba(255,215,0,0.2);
+      border-radius:16px;padding:16px;margin-bottom:16px;
+      position:relative;overflow:hidden; }
+    .now-card::before { content:'';position:absolute;
+      top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--gold),var(--red)); }
+    .now-card .label { font-size:10px;font-weight:700;
+      letter-spacing:3px;color:var(--gold);margin-bottom:6px; }
+    .now-card .singer { font-size:20px;font-weight:800;
+      margin-bottom:3px; }
+    .now-card .song { font-size:13px;color:#c0c0d0; }
+    .now-card .empty { color:var(--dim);font-style:italic;font-size:13px; }
+
+    .controls { display:grid;grid-template-columns:repeat(4,1fr);
+      gap:8px;margin-bottom:14px; }
+    .ctrl-btn { padding:12px 6px;background:var(--card);
+      border:1px solid var(--border);border-radius:12px;
+      color:#fff;font-size:20px;cursor:pointer;
+      font-family:inherit;display:flex;flex-direction:column;
+      align-items:center;gap:3px; }
+    .ctrl-btn:active { transform:scale(0.95);
+      background:var(--card2);border-color:var(--red); }
+    .ctrl-btn .lbl { font-size:9px;letter-spacing:1px;
+      color:var(--dim);text-transform:uppercase;font-weight:600; }
+
+    .volume-row { display:flex;align-items:center;gap:10px;
+      padding:12px 14px;background:var(--card);
+      border:1px solid var(--border);border-radius:12px;
+      margin-bottom:16px; }
+    .volume-row input[type=range] { flex:1;
+      -webkit-appearance:none;height:4px;
+      background:rgba(255,255,255,0.1);border-radius:2px;
+      outline:none; }
+    .volume-row input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none;width:20px;height:20px;
+      background:var(--gold);border-radius:50%;cursor:pointer;
+      box-shadow:0 0 15px rgba(255,215,0,0.6); }
+
+    .singer-stats { display:none;gap:12px;padding:12px 16px;
+      background:linear-gradient(135deg,rgba(255,215,0,0.08),
+        rgba(255,46,85,0.05));
+      border:1px solid rgba(255,215,0,0.2);
+      border-radius:12px;margin-bottom:14px;
+      justify-content:space-around; }
+    .stat-item { display:flex;flex-direction:column;
+      align-items:center;gap:2px; }
+    .stat-icon { font-size:16px; }
+    .stat-value { font-size:18px;font-weight:900;
+      color:var(--gold);line-height:1; }
+    .stat-label { font-size:9px;color:var(--dim);
+      text-transform:uppercase;letter-spacing:1px; }
+
+    .tab-nav { display:flex;gap:3px;margin-bottom:14px;
+      background:var(--card);padding:4px;border-radius:12px;
+      position:sticky;top:72px;z-index:90;overflow-x:auto; }
+    .tab-btn { flex:1;min-width:60px;padding:9px 6px;
+      background:transparent;border:none;color:var(--dim);
+      font-size:11px;font-weight:700;border-radius:8px;
+      cursor:pointer;font-family:inherit;display:flex;
+      align-items:center;justify-content:center;gap:4px; }
+    .tab-btn.active { background:linear-gradient(135deg,#ff2e55,#ff0044);
+      color:#fff;box-shadow:0 4px 15px rgba(255,46,85,0.4); }
+    .tab-badge { background:rgba(255,255,255,0.2);
+      border-radius:10px;padding:1px 5px;font-size:9px; }
+
+    .section-header { display:flex;justify-content:space-between;
+      align-items:center;margin-bottom:10px;
+      padding-bottom:8px;border-bottom:1px solid var(--border); }
+    .section-header h2 { font-size:12px;font-weight:700;
+      letter-spacing:1px;text-transform:uppercase; }
+    .section-header .badge { background:var(--red);color:#fff;
+      font-size:10px;font-weight:700;padding:2px 9px;
+      border-radius:20px; }
+    .refresh-btn { background:transparent;border:1px solid var(--border);
+      color:#fff;padding:5px 10px;border-radius:8px;
+      cursor:pointer;font-size:12px; }
+
+    .queue-list { display:flex;flex-direction:column;gap:7px; }
+    .queue-item { display:flex;align-items:center;gap:10px;
+      padding:11px 12px;background:var(--card);
+      border:1px solid var(--border);
+      border-left:3px solid var(--gold);
+      border-radius:10px;position:relative; }
+    .queue-item.is-me {
+      background:linear-gradient(135deg,
+        rgba(74,222,128,0.15),rgba(74,222,128,0.05));
+      border-left-color:var(--green);
+      box-shadow:0 0 20px rgba(74,222,128,0.15);
+      animation:pulseMe 2s ease-in-out infinite; }
+    @keyframes pulseMe {
+      0%,100% { box-shadow:0 0 20px rgba(74,222,128,0.15); }
+      50% { box-shadow:0 0 30px rgba(74,222,128,0.3); }
+    }
+    .queue-item.is-me .pos { background:var(--green);color:#000; }
+    .queue-item .pos { background:var(--gold);color:#000;
+      font-size:12px;font-weight:800;width:26px;height:26px;
+      border-radius:50%;display:flex;align-items:center;
+      justify-content:center;flex-shrink:0; }
+    .queue-item .info { flex:1;min-width:0; }
+    .queue-item .singer { font-size:14px;font-weight:700;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      display:flex;align-items:center; }
+    .queue-item .song { font-size:11px;color:var(--dim);
+      margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap; }
+    .queue-item .wait-time { font-size:10px;color:var(--gold);
+      margin-top:3px;font-weight:600;letter-spacing:0.5px; }
+    .queue-item.is-me .wait-time { color:var(--green); }
+    .me-badge { display:inline-block;font-size:9px;
+      font-weight:800;background:var(--green);color:#000;
+      padding:2px 7px;border-radius:4px;margin-right:6px;
+      letter-spacing:1px; }
+    .queue-item .actions { display:flex;gap:3px; }
+    .queue-item .actions button { background:transparent;
+      border:none;color:var(--dim);font-size:16px;
+      padding:5px 7px;cursor:pointer;border-radius:6px; }
+    .queue-item .actions button.remove:active {
+      background:rgba(255,46,85,0.2);color:var(--red); }
+
+    .empty-state { text-align:center;padding:24px 12px;
+      color:var(--dim);font-size:12px;font-style:italic; }
+
+    .song-list { display:flex;flex-direction:column;gap:7px; }
+    .song-item { display:flex;align-items:center;gap:10px;
+      padding:10px;background:var(--card);
+      border:1px solid var(--border);border-left:3px solid transparent;
+      border-radius:10px;cursor:pointer;width:100%;
+      color:#fff;font-family:inherit;text-align:left; }
+    .song-item:active { background:var(--card2);
+      border-left-color:var(--red); }
+    .song-item img { width:60px;height:45px;border-radius:6px;
+      object-fit:cover;flex-shrink:0;background:#000; }
+    .song-item .info { flex:1;min-width:0; }
+    .song-item .song-title { font-size:13px;font-weight:600;
+      line-height:1.3;overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical; }
+    .song-item .song-author { font-size:11px;color:var(--dim);
+      margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap; }
+    .song-item .fav-btn { background:transparent;border:none;
+      color:var(--dim);font-size:18px;padding:4px 8px;cursor:pointer; }
+    .song-item .fav-btn.on { color:var(--gold); }
+    .song-item .plus { font-size:20px;color:var(--red);
+      font-weight:300;width:28px;text-align:center; }
+
+    .history-item { display:flex;align-items:center;gap:10px;
+      padding:10px 12px;background:var(--card);
+      border:1px solid var(--border);border-radius:10px; }
+    .history-item .score-badge { min-width:44px;height:44px;
+      border-radius:10px;display:flex;align-items:center;
+      justify-content:center;font-size:17px;font-weight:900;
+      background:linear-gradient(135deg,#ffd700,#ff8a00);color:#000; }
+    .history-item .score-badge.high {
+      background:linear-gradient(135deg,#4ade80,#22c55e); }
+    .history-item .score-badge.low {
+      background:linear-gradient(135deg,#ff2e55,#c41136);color:#fff; }
+    .history-item .info { flex:1;min-width:0; }
+    .history-item .singer { font-size:14px;font-weight:700;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .history-item .song { font-size:11px;color:var(--dim);
+      margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap; }
+    .history-item .time { font-size:10px;color:#555;margin-top:3px; }
+
+    .leader-item { display:flex;align-items:center;gap:12px;
+      padding:12px 14px;background:var(--card);
+      border:1px solid var(--border);border-radius:12px; }
+    .leader-item.rank-1 { background:linear-gradient(135deg,
+      rgba(255,215,0,0.15),rgba(255,138,0,0.08));
+      border-color:rgba(255,215,0,0.5); }
+    .leader-item.rank-2 { border-color:rgba(192,192,192,0.3); }
+    .leader-item.rank-3 { border-color:rgba(205,127,50,0.3); }
+    .leader-item .rank { font-size:26px;font-weight:900;
+      min-width:40px;text-align:center;font-family:monospace; }
+    .leader-item.rank-1 .rank { color:var(--gold); }
+    .leader-item.rank-2 .rank { color:#c0c0c0; }
+    .leader-item.rank-3 .rank { color:#cd7f32; }
+    .leader-item .info { flex:1;min-width:0; }
+    .leader-item .name { font-size:15px;font-weight:800;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .leader-item .stats { font-size:11px;color:var(--dim);
+      margin-top:2px; }
+    .leader-item .avg { font-size:22px;font-weight:900;
+      background:linear-gradient(135deg,#ffd700,#ff8a00);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent; }
+
+    .recent-section { margin-bottom:16px; }
+    .recent-list { display:flex;flex-wrap:wrap;gap:6px; }
+    .recent-chip { padding:8px 14px;background:var(--card);
+      border:1px solid var(--border);border-radius:20px;
+      color:#fff;font-size:12px;cursor:pointer;
+      font-family:inherit;display:inline-flex;
+      align-items:center;gap:6px;transition:all 0.15s;
+      max-width:100%; }
+    .recent-chip:active { background:var(--card2);
+      border-color:var(--red);transform:scale(0.96); }
+    .recent-chip .who { font-size:10px;color:var(--dim); }
+    .recent-chip .q { overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap;max-width:180px; }
+
+    .scoring-panel { position:fixed;inset:0;z-index:500;
+      background:rgba(10,5,18,0.98);backdrop-filter:blur(20px);
+      display:none;flex-direction:column;padding:30px 20px;
+      overflow-y:auto; }
+    .scoring-panel.active { display:flex; }
+    .scoring-header { text-align:center;margin-bottom:24px;
+      padding-bottom:16px;border-bottom:1px solid var(--border); }
+    .scoring-label { font-size:10px;letter-spacing:4px;
+      color:var(--gold);font-weight:700;margin-bottom:10px; }
+    .scoring-singer-name { font-size:26px;font-weight:900;
+      background:linear-gradient(135deg,#fff,#ffd700);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent; }
+    .scoring-countdown { margin-top:12px;font-size:13px;
+      color:var(--dim);font-weight:600; }
+    .scoring-countdown span { font-size:28px;font-weight:900;
+      color:var(--red); }
+    .score-buttons { display:grid;
+      grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:16px; }
+    .score-buttons button { aspect-ratio:1;background:var(--card);
+      border:2px solid var(--border);border-radius:14px;
+      color:#fff;font-size:22px;font-weight:800;cursor:pointer;
+      font-family:inherit;transition:all 0.15s; }
+    .score-buttons button:active { transform:scale(0.92);
+      background:linear-gradient(135deg,#ff2e55,#ff0044);
+      border-color:var(--red); }
+    .score-buttons button.voted {
+      background:linear-gradient(135deg,#4ade80,#22c55e);
+      border-color:#4ade80;color:#000; }
+
+    #toast { position:fixed;bottom:30px;left:50%;
+      transform:translateX(-50%) translateY(100px);
+      padding:13px 22px;background:rgba(0,0,0,0.9);
+      border:1px solid var(--gold);color:#fff;
+      border-radius:30px;font-size:13px;font-weight:600;
+      z-index:1000;opacity:0;transition:all 0.3s;
+      pointer-events:none;backdrop-filter:blur(20px); }
+    #toast.show { opacity:1;
+      transform:translateX(-50%) translateY(0); }
+    #toast.error { border-color:var(--red); }
+    #toast.success { border-color:var(--green); }
+
+    .modal-bg { position:fixed;inset:0;background:rgba(0,0,0,0.85);
+      z-index:1000;display:none;align-items:center;
+      justify-content:center;padding:20px; }
+    .modal-bg.show { display:flex; }
+    .modal { background:var(--card);border:1px solid var(--border);
+      border-radius:16px;padding:22px;max-width:440px;width:100%;
+      max-height:85vh;overflow-y:auto; }
+    .modal h3 { margin-bottom:14px;font-size:16px; }
+    .modal input { width:100%;padding:12px;
+      background:var(--card2);color:#fff;
+      border:1px solid var(--border);border-radius:10px;
+      font-size:15px;margin-bottom:12px;font-family:inherit; }
+    .modal .row { display:flex;gap:8px;margin-top:12px; }
+    .modal button { flex:1;padding:12px;border:none;
+      border-radius:10px;font-weight:700;cursor:pointer;
+      font-family:inherit;font-size:14px; }
+    .modal .primary { background:var(--red);color:#fff; }
+    .modal .secondary { background:var(--card2);color:#fff;
+      border:1px solid var(--border); }
+
+    .info-box { padding:14px;background:rgba(96,165,250,0.08);
+      border:1px solid rgba(96,165,250,0.2);
+      border-radius:12px;margin-bottom:16px;display:flex;
+      gap:10px;font-size:12px;line-height:1.5;color:#a0b0c0; }
+    .info-box .icon { font-size:20px;flex-shrink:0; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>🎤 VIDEoke <span style="font-size:10px;color:#ff6b6b">YT</span></h1>
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Connected</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="toggleLang()" id="langIcon">🌐</button>
+      <button class="icon-btn" onclick="openAdmin()" title="Admin">⚙️</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="input-group">
+      <label data-i18n="yourName">Your Name</label>
+      <input type="text" id="singer" placeholder="Juan Dela Cruz"
+        maxlength="30" autocomplete="off">
+    </div>
+
+    <div class="yt-card">
+      <div class="label">🎤 KARAOKE SEARCH</div>
+
+      <button class="filters-toggle" onclick="toggleFilters()" id="filtersToggle">
+        ⚙️ Advanced Filters <span id="filtersArrow">▸</span>
+      </button>
+
+      <div class="filters-panel" id="filtersPanel">
+        <label class="filter-row">
+          <input type="checkbox" id="hdOnly" onchange="applyFilters()">
+          <span class="filter-check"></span>
+          <div class="filter-info">
+            <b>HD Only</b>
+            <small>1080p / 4K karaoke versions lang</small>
+          </div>
+        </label>
+
+        <label class="filter-row">
+          <input type="checkbox" id="filterChannels" onchange="applyFilters()">
+          <span class="filter-check"></span>
+          <div class="filter-info">
+            <b>Trusted Channels</b>
+            <small>Tanggalin ang low-quality sources</small>
+          </div>
+        </label>
+
+        <div class="filter-row duration-filter">
+          <div class="filter-info" style="flex:1">
+            <b>Duration Range</b>
+            <small>Tanggalin ang clips at albums</small>
+            <div class="duration-inputs">
+              <div class="dur-input">
+                <label>Min</label>
+                <input type="text" id="minDuration" value="2:00"
+                  maxlength="5" onblur="validateDuration('min')"
+                  onchange="applyFilters()">
+              </div>
+              <div class="dur-sep">—</div>
+              <div class="dur-input">
+                <label>Max</label>
+                <input type="text" id="maxDuration" value="12:00"
+                  maxlength="5" onblur="validateDuration('max')"
+                  onchange="applyFilters()">
+              </div>
+            </div>
+            <div class="duration-presets">
+              <button onclick="setPreset('short')">Short</button>
+              <button onclick="setPreset('song')">Song</button>
+              <button onclick="setPreset('long')">Long</button>
+              <button onclick="setPreset('all')">All</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="filter-reset" onclick="resetFilters()">🔄 Reset Default</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input type="search" id="ytSearch" placeholder="Hanapin ang kanta..."
+          autocomplete="off" style="flex:1">
+        <button onclick="doSearch()" id="searchBtn"
+          style="padding:0 16px;background:linear-gradient(135deg,#ff2e55,#ff0044);
+          border:none;border-radius:12px;color:#fff;font-size:18px;cursor:pointer">
+          🔍
+        </button>
+      </div>
+
+      <div class="karaoke-only-badge">
+        🎤 KARAOKE ONLY · <span id="hdModeBadge">HD ON</span>
+      </div>
+
+      <div class="active-filters" id="activeFilters"></div>
+      <div id="searchResults" class="search-results"></div>
+
+      <div class="yt-divider"><span>o i-paste ang link</span></div>
+
+      <input type="text" id="ytUrl" placeholder="https://youtu.be/..."
+        inputmode="url" autocomplete="off">
+      <button class="primary-btn" onclick="addYouTube()">➕ I-reserve</button>
+
+      <div class="yt-preview" id="ytPreview">
+        <img id="ytThumb" src="" alt="">
+        <div class="info">
+          <div class="title" id="ytTitle">—</div>
+          <div class="author" id="ytAuthor"></div>
+        </div>
+      </div>
+
+      <div class="yt-hint">
+        <div class="icon">💡</div>
+        <div>
+          Buksan ang <b>YouTube app</b>, mag-search ng
+          <b>"[Kanta] karaoke"</b>, tapos i-tap ang
+          <b>Share → Copy link</b> at i-paste dito.
+        </div>
+      </div>
+    </div>
+
+    <div class="recent-section" id="recentSection" style="display:none">
+      <div class="section-header">
+        <h2>🕒 Recent Searches</h2>
+        <span class="badge" id="recentCount">0</span>
+      </div>
+      <div class="recent-list" id="recentList"></div>
+    </div>
+
+    <div class="singer-stats" id="singerStats"></div>
+
+    <div class="now-card">
+      <div class="label" data-i18n="nowSinging">🎤 NOW SINGING</div>
+      <div id="nowContent">
+        <div class="empty" data-i18n="noQueue">Walang tumutugtog</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="sendCmd('pause')">⏸
+        <span class="lbl" data-i18n="pause">Pause</span></button>
+      <button class="ctrl-btn" onclick="sendCmd('resume')">▶
+        <span class="lbl" data-i18n="play">Play</span></button>
+      <button class="ctrl-btn" onclick="sendCmd('skip')">⏭
+        <span class="lbl" data-i18n="skip">Skip</span></button>
+      <button class="ctrl-btn" onclick="sendCmd('stop')">⏹
+        <span class="lbl" data-i18n="stop">Stop</span></button>
+    </div>
+
+    <div class="volume-row">
+      <span>🔊</span>
+      <input type="range" id="volume" min="0" max="100" value="80">
+    </div>
+
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="queue" onclick="switchTab('queue')">
+        📋 <span data-i18n="reserved">Queue</span>
+        <span class="tab-badge" id="qTabBadge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="favorites" onclick="switchTab('favorites')">
+        ⭐ <span data-i18n="favorites">Favs</span>
+      </button>
+      <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
+        📜 <span data-i18n="history">History</span>
+      </button>
+      <button class="tab-btn" data-tab="top" onclick="switchTab('top')">
+        🏆 <span data-i18n="top">Top</span>
+      </button>
+    </div>
+
+    <div class="tab-content" id="tab-queue">
+      <div class="section-header">
+        <h2>📋 <span data-i18n="reserved">Reserved</span></h2>
+        <span class="badge" id="queueCount">0</span>
+      </div>
+      <div class="queue-list" id="queueList">
+        <div class="empty-state">Walang naka-reserve</div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-favorites" style="display:none">
+      <div class="section-header">
+        <h2>⭐ <span data-i18n="favorites">Favorites</span></h2>
+      </div>
+      <div class="song-list" id="favList"></div>
+    </div>
+
+    <div class="tab-content" id="tab-history" style="display:none">
+      <div class="section-header">
+        <h2>📜 <span data-i18n="history">History</span></h2>
+        <button class="refresh-btn" onclick="loadHistory()">🔄</button>
+      </div>
+      <div class="song-list" id="historyList"></div>
+    </div>
+
+    <div class="tab-content" id="tab-top" style="display:none">
+      <div class="section-header">
+        <h2>🏆 <span data-i18n="top">Top Singers</span></h2>
+        <button class="refresh-btn" onclick="loadLeaderboard()">🔄</button>
+      </div>
+      <div class="song-list" id="leaderboard"></div>
+    </div>
+  </div>
+
+  <div class="scoring-panel" id="scoringPanel">
+    <div class="scoring-header">
+      <div class="scoring-label" data-i18n="rateNow">I-RATE ANG PAGKANTA</div>
+      <div class="scoring-singer-name" id="scSinger">—</div>
+      <div class="scoring-countdown"><span id="scCountdown">15</span>s</div>
+    </div>
+    <div class="score-buttons" id="scoreButtons">
+      <button onclick="submitScore(1)">1</button>
+      <button onclick="submitScore(2)">2</button>
+      <button onclick="submitScore(3)">3</button>
+      <button onclick="submitScore(4)">4</button>
+      <button onclick="submitScore(5)">5</button>
+      <button onclick="submitScore(6)">6</button>
+      <button onclick="submitScore(7)">7</button>
+      <button onclick="submitScore(8)">8</button>
+      <button onclick="submitScore(9)">9</button>
+      <button onclick="submitScore(10)">10</button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="adminModal">
+    <div class="modal">
+      <h3>🔐 Admin Panel</h3>
+      <div id="adminLoginForm">
+        <input type="password" id="adminPw" placeholder="Password">
+        <button class="primary" onclick="doLogin()" style="width:100%">Login</button>
+      </div>
+      <div id="adminPanel" style="display:none">
+        <div class="info-box">
+          <div class="icon">🎬</div>
+          <div>
+            <b>YouTube Videoke</b><br>
+            Lahat ng kanta galing YouTube. Walang download.
+          </div>
+        </div>
+        <button class="primary" onclick="adminAction('stop')"
+          style="width:100%;margin-bottom:8px">⏹ Force Stop</button>
+        <button class="primary" onclick="adminAction('kick-all')"
+          style="width:100%;margin-bottom:8px">👢 Kick All</button>
+        <button class="primary" onclick="adminAction('clear-history')"
+          style="width:100%;margin-bottom:8px">🗑️ Clear History</button>
+        <button class="primary" onclick="adminAction('clear-recent')"
+          style="width:100%;margin-bottom:8px">🕒 Clear Recent</button>
+        <button class="primary" onclick="adminAction('clear-trending')"
+          style="width:100%;margin-bottom:8px">🔥 Clear Trending</button>
+      </div>
+      <div class="row">
+        <button class="secondary" onclick="closeModal('adminModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const BACKEND_URL = window.VIDEOKE_CONFIG?.BACKEND_URL || 'http://localhost:3000';
+    const API = BACKEND_URL;
+
+    const socket = io(BACKEND_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: window.VIDEOKE_CONFIG?.RECONNECT_ATTEMPTS || 5,
+      reconnectionDelay: window.VIDEOKE_CONFIG?.RECONNECT_DELAY || 2000
+    });
+
+    let favorites = [], addedSongs = new Set();
+    let currentScoring = null, hasVotedThisRound = false;
+    let adminToken = localStorage.getItem('videoke:adminToken') || null;
+    let previewVideoId = null;
+    let previewTimer = null;
+    let lastSearchQuery = '';
+    let searchDebounce = null;
+    let lastState = null;
+
+    const FILTER_DEFAULTS = {
+      hdOnly: true,
+      filterChannels: true,
+      minDuration: 120,
+      maxDuration: 720
+    };
+
+    function loadFilters() {
+      return {
+        hdOnly: localStorage.getItem('videoke:f:hd') !== '0',
+        filterChannels: localStorage.getItem('videoke:f:ch
