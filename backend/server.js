@@ -476,29 +476,73 @@ app.get('/api/info', (req, res) => {
   });
 });
 
+// ===== IMPROVED YT-INFO with fallbacks =====
 app.get('/api/yt-info/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
   if (!/^[\w-]{11}$/.test(videoId))
     return res.status(400).json({ error: 'Invalid ID' });
 
-  let title = 'YouTube Video';
+  let title = '';
   let author = '';
+
+  // Attempt 1: oEmbed with longer timeout
   try {
     const r = await fetch(
       `https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`,
-      { signal: AbortSignal.timeout(5000) }
+      {
+        signal: AbortSignal.timeout(10000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      }
     );
     if (r.ok) {
       const data = await r.json();
-      title = data.title || title;
-      author = data.author_name || '';
+      title = (data.title || '').trim();
+      author = (data.author_name || '').trim();
+      console.log(`✓ oEmbed OK: ${title.substring(0, 50)}`);
+    } else {
+      console.log(`oEmbed HTTP ${r.status}`);
     }
-  } catch {}
+  } catch (e) {
+    console.log('oEmbed failed:', e.message);
+  }
+
+  // Attempt 2: fetch YouTube page title (fallback)
+  if (!title) {
+    try {
+      const r = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+        }
+      });
+      if (r.ok) {
+        const html = await r.text();
+        const m = html.match(/<meta property="og:title" content="([^"]+)"/) ||
+                  html.match(/<meta name="title" content="([^"]+)"/) ||
+                  html.match(/<title>([^<]+)<\/title>/);
+        if (m && m[1]) {
+          title = m[1].replace(' - YouTube', '').trim();
+          console.log(`✓ Page title OK: ${title.substring(0, 50)}`);
+        }
+      }
+    } catch (e) {
+      console.log('Page title fetch failed:', e.message);
+    }
+  }
+
+  // Final fallback — guaranteed may title
+  if (!title) {
+    title = `YouTube Video (${videoId})`;
+    console.log(`Using fallback title for ${videoId}`);
+  }
 
   const isHD = await checkMaxRes(videoId);
   const isFailed = !!failedVideos[videoId];
+
   res.json({
-    videoId, title, author,
+    videoId,
+    title,
+    author,
     isHD: isHD === true,
     titleHD: hasHDKeyword(title),
     previouslyFailed: isFailed,
@@ -598,7 +642,6 @@ app.get('/api/search', async (req, res) => {
   }));
 
   results.sort((a, b) => {
-    // Failed videos papunta sa dulo
     if (a.previouslyFailed !== b.previouslyFailed) {
       return a.previouslyFailed ? 1 : -1;
     }
@@ -761,7 +804,6 @@ io.on('connection', (socket) => {
     if (!vid || !/^[\w-]{11}$/.test(vid))
       return socket.emit('error', 'Hindi valid na YouTube link');
 
-    // ⬇️ Check blacklisted
     if (failedVideos[vid]) {
       return socket.emit('error',
         '⚠️ Hindi ma-embed ang video na ito (blocked ng owner). Subukan ibang version.');
@@ -772,13 +814,20 @@ io.on('connection', (socket) => {
     if (queue.some(q => q.videoId === vid && q.singer === s))
       return socket.emit('error', 'Naka-reserve na ang kantang ito');
 
-    trackReservation(vid, title);
+    // ⬇️ GUARANTEED TITLE
+    let cleanTitle = String(title || '').trim();
+    if (!cleanTitle || cleanTitle === 'YouTube Video' || cleanTitle === '—' ||
+        cleanTitle === 'Loading...') {
+      cleanTitle = `YouTube Video (${vid})`;
+    }
+
+    trackReservation(vid, cleanTitle);
     if (searchQuery) pushRecentSearch(searchQuery, s);
 
     queue.push({
       id: Date.now() + Math.floor(Math.random() * 1000),
       videoId: vid,
-      title: String(title || 'YouTube Video').substring(0, 120),
+      title: cleanTitle.substring(0, 120),
       singer: s,
       reservedAt: Date.now()
     });
@@ -813,7 +862,6 @@ io.on('connection', (socket) => {
     broadcastState();
   });
 
-  // ⬇️ NEW: Video failed (embed not allowed, etc)
   socket.on('videoFailed', ({ videoId, title }) => {
     if (!videoId) return;
     failedVideos[videoId] = {
@@ -824,7 +872,6 @@ io.on('connection', (socket) => {
     saveJSON(FAILED_FILE, failedVideos);
     console.log(`✗ Blacklisted: ${videoId} — ${title}`);
 
-    // I-remove sa queue
     queue = queue.filter(q => q.videoId !== videoId);
     if (nowPlaying && nowPlaying.videoId === videoId) {
       nowPlaying = null;
