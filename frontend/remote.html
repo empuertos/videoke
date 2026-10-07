@@ -120,7 +120,7 @@
     .now-card .song { font-size:13px;color:#c0c0d0; }
     .now-card .empty { color:var(--dim);font-style:italic;font-size:13px; }
 
-    /* CONTROLS — may lock state */
+    /* CONTROLS */
     .controls { display:grid;grid-template-columns:repeat(4,1fr);
       gap:8px;margin-bottom:14px; }
     .ctrl-btn { padding:12px 6px;background:var(--card);
@@ -135,7 +135,6 @@
     .ctrl-btn .lbl { font-size:9px;letter-spacing:1px;
       color:var(--dim);text-transform:uppercase;font-weight:600; }
 
-    /* LOCKED state */
     .ctrl-btn.locked {
       opacity:0.5;
       cursor:not-allowed; }
@@ -177,7 +176,6 @@
     .volume-row.locked input[type=range]::-webkit-slider-thumb {
       cursor:not-allowed; background:#666; box-shadow:none; }
 
-    /* LOCK BANNER */
     #lockBanner { display:none; align-items:center; gap:10px;
       padding:10px 14px; margin-bottom:12px;
       background:rgba(255,215,0,0.1);
@@ -269,7 +267,6 @@
     .queue-item .actions button.remove:active {
       background:rgba(255,46,85,0.2);color:var(--red); }
 
-    /* LOCKED queue action buttons */
     .queue-item .actions button.q-act.locked {
       opacity:0.35;
       cursor:not-allowed; }
@@ -356,7 +353,7 @@
       gap:10px;font-size:12px;line-height:1.5;color:#a0b0c0; }
     .info-box .icon { font-size:20px;flex-shrink:0; }
 
-    /* ⭐ SHARE PARTY — QR code sa ibaba ng remote */
+    /* SHARE PARTY */
     #shareSection { display:none; margin-top:20px;
       padding:16px;
       background:linear-gradient(135deg,rgba(255,215,0,0.06),rgba(255,46,85,0.03));
@@ -512,14 +509,12 @@
       </div>
     </div>
 
-    <!-- LOCK BANNER -->
     <div id="lockBanner">
       <span class="icon">🔒</span>
       <span>Host controls locked. Admin only.</span>
       <button onclick="promptUnlock()">Unlock</button>
     </div>
 
-    <!-- CONTROLS — naka-lock by default -->
     <div class="controls" id="controlsGrid">
       <button class="ctrl-btn locked" onclick="sendCmd('pause')" data-ctrl>
         ⏸ <span class="lbl">Pause</span></button>
@@ -573,7 +568,6 @@
       <div class="song-list" id="historyList"></div>
     </div>
 
-    <!-- ⭐ SHARE PARTY — QR code sa ibaba -->
     <div id="shareSection">
       <div class="title">📤 SHARE THIS PARTY</div>
       <div class="qr-row">
@@ -591,7 +585,6 @@
     </div>
   </div>
 
-  <!-- Admin Panel Modal -->
   <div class="modal-bg" id="adminModal">
     <div class="modal">
       <h3>🔐 Admin Panel</h3>
@@ -652,7 +645,6 @@
     </div>
   </div>
 
-  <!-- UNLOCK Modal -->
   <div class="modal-bg" id="unlockModal">
     <div class="modal">
       <h3>🔒 Admin Access Required</h3>
@@ -670,7 +662,6 @@
     </div>
   </div>
 
-  <!-- Party Gate -->
   <div id="partyGate">
     <div class="icon">🎤</div>
     <h2>Videoke Party</h2>
@@ -722,8 +713,37 @@
     let partyCode = null;
     let partyVerified = false;
 
-    // CONTROLS LOCK
-    let controlsUnlocked = localStorage.getItem('videoke:controlsUnlocked') === '1';
+    // CONTROLS LOCK — default locked
+    let controlsUnlocked = false;
+
+    // ⭐ AUTO-LOCK TIMER (10 minutes)
+    const AUTO_LOCK_MS = 10 * 60 * 1000;
+    let autoLockTimer = null;
+
+    function resetAutoLockTimer() {
+      if (autoLockTimer) clearTimeout(autoLockTimer);
+      if (!controlsUnlocked) return;
+      autoLockTimer = setTimeout(() => {
+        console.log('⏰ Auto-lock triggered (10 min inactivity)');
+        controlsUnlocked = false;
+        localStorage.removeItem('videoke:controlsUnlocked');
+        updateControlsLock();
+        toast('⏰ Auto-locked after inactivity', 'error');
+      }, AUTO_LOCK_MS);
+    }
+
+    function stopAutoLockTimer() {
+      if (autoLockTimer) {
+        clearTimeout(autoLockTimer);
+        autoLockTimer = null;
+      }
+    }
+
+    ['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => {
+      document.addEventListener(evt, () => {
+        if (controlsUnlocked) resetAutoLockTimer();
+      }, { passive: true });
+    });
 
     // =====================================================
     // CONTROLS LOCK
@@ -738,6 +758,9 @@
       qActs.forEach(btn => btn.classList.toggle('locked', !controlsUnlocked));
 
       if (lastState) renderQueue(lastState);
+
+      if (controlsUnlocked) resetAutoLockTimer();
+      else stopAutoLockTimer();
     }
 
     function promptUnlock() {
@@ -765,6 +788,7 @@
         localStorage.setItem('videoke:controlsUnlocked', '1');
         closeModal('unlockModal');
         updateControlsLock();
+        resetAutoLockTimer();
         toast('✓ Controls unlocked', 'success');
       } catch (e) {
         document.getElementById('unlockErr').textContent = '❌ ' + e.message;
@@ -778,7 +802,35 @@
       toast('🔒 Controls locked', 'success');
     }
 
-    updateControlsLock();
+    // ⭐ Initial lock — auto-verify saved admin token
+    (async function initControlsLock() {
+      const savedToken = localStorage.getItem('videoke:adminToken');
+      const savedUnlock = localStorage.getItem('videoke:controlsUnlocked') === '1';
+      if (savedToken && savedUnlock) {
+        try {
+          const r = await fetch(
+            API + '/api/admin/clear-trending?token=' + encodeURIComponent(savedToken)
+          );
+          if (r.ok) {
+            controlsUnlocked = true;
+            adminToken = savedToken;
+            adminVerified = true;
+            console.log('✓ Admin token verified on load');
+          } else {
+            localStorage.removeItem('videoke:adminToken');
+            localStorage.removeItem('videoke:controlsUnlocked');
+            console.log('Token expired, controls locked');
+          }
+        } catch (e) {
+          localStorage.removeItem('videoke:controlsUnlocked');
+          console.log('Token verify failed, controls locked');
+        }
+      } else {
+        localStorage.removeItem('videoke:controlsUnlocked');
+      }
+      updateControlsLock();
+      if (controlsUnlocked) resetAutoLockTimer();
+    })();
 
     const volumeEl = document.getElementById('volume');
     volumeEl.addEventListener('pointerdown', (e) => {
@@ -789,7 +841,7 @@
     }, { passive: false });
 
     // =====================================================
-    // SHARE PARTY — QR sa ibaba
+    // SHARE PARTY
     // =====================================================
     function updateShareSection() {
       const sec = document.getElementById('shareSection');
@@ -1433,6 +1485,7 @@
         controlsUnlocked = true;
         localStorage.setItem('videoke:controlsUnlocked', '1');
         updateControlsLock();
+        resetAutoLockTimer();
         showAdminPanel();
         if (partyActive && partyCode) showAdminQR(partyCode);
         else hideAdminQR();
@@ -1446,9 +1499,16 @@
       adminToken = null;
       adminVerified = false;
       localStorage.removeItem('videoke:adminToken');
+
+      // AUTO-LOCK CONTROLS SA LOGOUT
+      controlsUnlocked = false;
+      localStorage.removeItem('videoke:controlsUnlocked');
+      stopAutoLockTimer();
+      updateControlsLock();
+
       showLoginForm();
       hideAdminQR();
-      toast('✓ Logged out', 'success');
+      toast('🔒 Logged out — controls locked', 'success');
     }
 
     // =====================================================
