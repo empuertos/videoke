@@ -1,33 +1,45 @@
 # 🎤 VIDEoke YT
 
-**A YouTube-powered videoke (karaoke) system** built for parties, gatherings, and events. Guests scan a QR code from their phone, paste a YouTube link, and the song plays automatically on the host screen — **no downloads, no local files, everything streams directly from YouTube.**
+**A YouTube-powered videoke (karaoke) system** built for parties, gatherings, and events. Guests scan a QR code from their phone, paste a YouTube link, and songs play automatically on the host screen — **no downloads, no local files, everything streams directly from YouTube.**
 
 ---
 
 ## ✨ Features
 
-### 🎵 Core
+### 🎵 Core Playback
 - **YouTube-based playback** — All songs come from YouTube. No downloads needed.
+- **Auto-fullscreen on play** — Video automatically enters fullscreen when a song starts.
+- **Custom fullscreen button** — Always visible, even in fullscreen mode.
 - **Real-time sync** — Socket.IO keeps host and remotes in sync instantly.
-- **Smart queue system** — Automatic wait time estimates, reorder, and skip.
 - **Auto-blacklist** — Videos with embedding disabled are automatically removed.
 
-### 📱 Remote & Party Management
-- **QR code party system** — Each party gets a unique 6-character code. Guests scan the QR code to join.
-- **Party gate** — Guests without a valid code cannot reserve songs. Auto-blocks anyone with an old link after the party ends.
-- **Host-side controls** — Start or end the party directly from the TV screen.
-- **Cross-sync** — Host and remote stay in sync every 5 seconds, even after brownouts or reconnections.
+### 📱 Party System
+- **QR code party system** — Each party gets a unique 6-character code (e.g. `K7X9M2`).
+- **Party gate** — Guests without a valid code cannot reserve songs. Old links auto-invalidate after the party ends.
+- **Share Party section** — Guests can share the QR/link from their own phone to invite others.
+- **Cross-sync** — Host and remotes stay in sync every 5 seconds.
+- **Party recovery** — Queue and party code are saved, so brownouts/restarts don't lose reservations.
 
-### 🔐 Admin Panel
-- **Password-protected** — Uses `ADMIN_PASSWORD` from environment variables.
-- **Session tokens** — 4-hour validity with auto-logout on expiry.
-- **Admin actions**: Force Stop, Kick All, Clear History, Clear Failed Videos, Clear Trending.
+### 🔐 Admin-Only Controls
+- **Admin-locked playback** — Pause / Play / Skip / Stop are locked by default. Guests need admin password to control.
+- **Admin-locked volume** — Volume slider is locked for guests.
+- **Admin-locked queue** — Guests cannot move or remove songs from the queue.
+- **Auto-lock on logout** — Logging out automatically locks all controls.
+- **Auto-lock after 10 min inactivity** — Admin controls auto-lock after 10 minutes of no activity.
+- **Session token verification** — Tokens verified on page load; expired tokens auto-lock.
+- **4-hour token expiry** — Admin tokens valid for 4 hours.
 
 ### 🎨 UI / UX
 - **Modern dark theme** — Gold/red accents, fully responsive.
 - **Bilingual** — English (default) and Filipino toggle.
 - **PWA-ready** — Installable on mobile home screens.
-- **Keyboard shortcuts** — Play/Pause (`P`), Skip (`S`), Fullscreen (`F`) on the host screen.
+- **Keyboard shortcuts** — Play/Pause (`P`), Skip (`S`), Fullscreen (`F`) on host.
+- **Vertical reserved panel** — Host shows Now Playing (left) + Reserved queue (right) in a compact top bar.
+
+### 📊 Data & Analytics
+- **History** — Track every song played with singer name and timestamp.
+- **Favorites** — Save frequently sung songs for quick access.
+- **Trending** — Session / Today / All-time trending songs.
 
 ---
 
@@ -69,7 +81,7 @@ videoke/
 │       ├── trending.json
 │       ├── failed-videos.json
 │       ├── party.json         # Active party code
-│       └── queue-state.json   # Queue persistence (optional)
+│       └── queue-state.json   # Queue persistence
 ├── frontend/
 │   ├── index.html             # Landing page
 │   ├── host.html              # TV / display screen
@@ -77,7 +89,8 @@ videoke/
 │   ├── config.js              # API base URL configuration
 │   ├── i18n.js                # Translations (EN / FIL)
 │   ├── manifest.json          # PWA manifest
-│   └── service-worker.js
+│   ├── service-worker.js
+│   └── icons/                 # PWA icons
 └── README.md
 
 ```
@@ -105,8 +118,6 @@ npm install
 
 3. Set environment variables
 
-Create a .env file or export directly:
-
 ```bash
 export PORT=3000
 export ADMIN_PASSWORD=your-secret-password
@@ -122,8 +133,6 @@ npm start
 # or
 node server.js
 ```
-
-Backend runs at http://localhost:3000.
 
 5. Serve the frontend
 
@@ -193,7 +202,8 @@ Post-Deploy Checklist
 ☐ FRONTEND_URL matches your Vercel URL.
 ☐ config.js points to the live Render backend.
 ☐ Admin login works from phone.
-☐ Host screen shows the QR code after starting a party.
+☐ Host screen shows QR code after starting a party.
+☐ PWA install prompt appears on mobile.
 
 ---
 
@@ -206,7 +216,7 @@ Option A: From the TV (host)
 1. Open host.html on the TV.
 2. Tap 🎉 Start Party.
 3. Enter admin password.
-4. QR code and 6-character code appear.
+4. QR code + 6-character code appear at the bottom.
 
 Option B: From the phone (admin)
 
@@ -217,9 +227,17 @@ Option B: From the phone (admin)
 Guest Flow
 
 1. Guests scan the QR code (or type the 6-character code).
-2. They enter their name.
-3. They paste a YouTube link (via the Open YouTube App button).
+2. Enter their name.
+3. Paste a YouTube link (via the Open YouTube App button).
 4. Tap Reserve → the song joins the queue.
+
+Sharing the Party (Guest-side)
+
+Each guest who joins has a 📤 SHARE THIS PARTY section at the bottom of their remote:
+
+· QR code — Let friends scan directly from your phone.
+· 📋 Copy Link — Copy the join link to clipboard.
+· 📤 Share — Open native share sheet (Messenger, Viber, WhatsApp).
 
 Ending a Party
 
@@ -227,10 +245,19 @@ Ending a Party
 2. All guests are immediately locked out; old links become invalid.
 3. Next party generates a new code and new QR.
 
+Admin Controls Lock
+
+The Pause/Play/Skip/Stop buttons and volume are locked by default for guests:
+
+· Guests tapping them see a password prompt.
+· Only admin (after login) can control them.
+· Auto-locks after logout OR after 10 minutes of inactivity.
+
 Brownout / Disconnect Recovery
 
 · Queue and party code are saved on the server.
-· When the connection comes back (Render wake up or power restore), the host and remotes reconnect automatically and the queue is restored.
+· When connection comes back, host and remotes reconnect automatically.
+· Queue is restored from queue-state.json.
 · Sync polling runs every 5 seconds, so recovery is fast.
 
 ---
@@ -318,13 +345,15 @@ Available Actions
 · 👢 Kick All — Disconnect all guests.
 · 🗑️ Clear History — Wipe play history.
 · ⛔ Clear Failed Videos — Empty the blacklist.
-· 🚪 Logout — Clear the admin token from the current device.
+· 🔒 Lock Controls — Manually lock controls (disable guest access).
+· 🚪 Logout — Clear admin token + auto-lock controls.
 
-Login Flow
+Session Token
 
-1. Enter ADMIN_PASSWORD.
-2. Server returns a 24-byte hex token (valid 4 hours).
-3. Token is stored in localStorage and sent with every admin action.
+· Validity: 4 hours
+· Storage: localStorage (videoke:adminToken)
+· Auto-verify: On page load, token is verified against backend.
+· Auto-lock: On logout OR after 10 min of inactivity.
 
 ---
 
@@ -349,43 +378,46 @@ Esc Cancel password prompt
 ❌ "Server error 404" on login or admin action
 
 · Cause: HTTP method mismatch (frontend sends GET, backend expects POST) or endpoint not deployed.
-· Fix: Ensure all admin routes use app.get() and read req.query for parameters. Redeploy the latest server.js on Render.
+· Fix: Ensure all admin routes use app.get() and read req.query. Redeploy latest server.js on Render.
 
-❌ "Session expired" on admin action
+❌ Admin controls still unlocked after logout
 
-· Cause: Token expired (4-hour limit).
-· Fix: Log out and log in again.
+· Cause: Old code was not clearing controlsUnlocked state.
+· Fix: Update to the latest remote.html. Logout now sets controlsUnlocked = false and clears localStorage.
 
-❌ Host doesn't show the QR code
+❌ Auto-lock not triggering
 
-· Cause: No active party or host is out of sync.
-· Fix: Start a new party from admin panel or from the host screen. The host polls /api/party every 5 seconds.
+· Cause: Timer not resetting on user activity.
+· Fix: Verify the resetAutoLockTimer() function is called on click, touchstart, keydown, scroll. Check that AUTO_LOCK_MS is set to 10 * 60 * 1000.
 
-❌ Guests can still reserve after the party ended
+❌ Host doesn't show QR code
+
+· Cause: No active party or out of sync.
+· Fix: Start a new party from admin panel or host screen. Host polls /api/party every 5 seconds.
+
+❌ Guests can still reserve after party ended
 
 · Cause: They have a saved code in localStorage.
-· Fix: Every socket connection is verified against the current party code. Invalid codes are rejected. Verify the server is running the latest server.js.
+· Fix: Every socket connection is verified against the current party code. Invalid codes are rejected.
 
 ❌ Videos won't play on host
 
-· Cause: The YouTube video has embedding disabled by its uploader.
-· Fix: System auto-blacklists failed videos. Try a different upload of the same song.
+· Cause: YouTube video has embedding disabled by uploader.
+· Fix: System auto-blacklists failed videos. Try a different upload.
 
 ❌ Data disappears after redeploy
 
 · Cause: Render free tier uses ephemeral storage.
-· Fix: Set DATA_DIR=/tmp/videoke-data (still ephemeral but survives within a session) or upgrade to a paid Render disk.
+· Fix: Set DATA_DIR=/tmp/videoke-data or upgrade to paid Render disk.
 
-❌ "Maling password" even with correct password
+❌ PWA install not working
 
-· Cause: Typo or trailing whitespace in Render's ADMIN_PASSWORD env var.
-· Fix: Re-enter in Render, save, and Manual Deploy → Clear build cache & deploy.
+· Cause: Service worker unregistered or manifest incomplete.
+· Fix: Register the SW in remote.html. Ensure manifest.json has 192×192 and 512×512 icons, display: standalone, and start_url.
 
 ---
 
 🧪 Testing the Backend Directly
-
-Use curl to test without the frontend:
 
 ```bash
 # Health check
@@ -428,19 +460,28 @@ In server.js:
 ```javascript
 function generatePartyCode() {
   let code = '';
-  for (let i = 0; i < 6; i++) {  // ← Change 6 to whatever length
+  for (let i = 0; i < 6; i++) {  // ← Change 6 to desired length
     code += PARTY_CHARS[Math.floor(Math.random() * PARTY_CHARS.length)];
   }
   return code;
 }
 ```
 
-Change party code characters
+Change auto-lock timeout
 
-Edit PARTY_CHARS — excludes 0/O and 1/I/L to avoid confusion:
+In remote.html:
+
+```javascript
+const AUTO_LOCK_MS = 10 * 60 * 1000; // 10 minutes
+// Change to: 5 * 60 * 1000  → 5 minutes
+//            30 * 60 * 1000 → 30 minutes
+```
+
+Change party code characters
 
 ```javascript
 const PARTY_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+// Excludes 0/O and 1/I/L to avoid confusion
 ```
 
 ---
@@ -470,11 +511,11 @@ Enjoy your videoke session! 🎤🎶
 
 ---
 
-### 📌 Mga dapat mong gawin pagkatapos i-paste:
+### 📌 Reminders pagkatapos i-paste:
 
-1. I-save ang `README.md`.
+1. I-save ang `README.md` sa root ng repo.
 2. Palitan ang `empuertos/videoke` ng tamang GitHub URL mo kung iba.
 3. Palitan ang `your-backend.onrender.com` at `videoke-frontend.vercel.app` ng actual URLs mo sa mga examples.
 4. I-commit at i-push sa GitHub.
 
-Kung gusto mong magdagdag ng **screenshots** o **GIF demo** sa README (para mas professional tingnan), sabihin mo lang — tutulungan kita kung paano i-embed sa Markdown. 🎤
+Kung gusto mong magdagdag ng **screenshots o GIF demo**, sabihin mo lang — tutulungan kita kung paano i-embed sa Markdown. 🎤
