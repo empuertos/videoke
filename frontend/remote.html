@@ -120,7 +120,7 @@
     .now-card .song { font-size:13px;color:#c0c0d0; }
     .now-card .empty { color:var(--dim);font-style:italic;font-size:13px; }
 
-    /* ⭐ CONTROLS — may lock state */
+    /* CONTROLS — may lock state */
     .controls { display:grid;grid-template-columns:repeat(4,1fr);
       gap:8px;margin-bottom:14px; }
     .ctrl-btn { padding:12px 6px;background:var(--card);
@@ -135,7 +135,7 @@
     .ctrl-btn .lbl { font-size:9px;letter-spacing:1px;
       color:var(--dim);text-transform:uppercase;font-weight:600; }
 
-    /* ⭐ LOCKED state */
+    /* LOCKED state */
     .ctrl-btn.locked {
       opacity:0.5;
       cursor:not-allowed; }
@@ -177,7 +177,7 @@
     .volume-row.locked input[type=range]::-webkit-slider-thumb {
       cursor:not-allowed; background:#666; box-shadow:none; }
 
-    /* ⭐ LOCK BANNER */
+    /* LOCK BANNER */
     #lockBanner { display:none; align-items:center; gap:10px;
       padding:10px 14px; margin-bottom:12px;
       background:rgba(255,215,0,0.1);
@@ -269,7 +269,7 @@
     .queue-item .actions button.remove:active {
       background:rgba(255,46,85,0.2);color:var(--red); }
 
-    /* ⭐ LOCKED queue action buttons */
+    /* LOCKED queue action buttons */
     .queue-item .actions button.q-act.locked {
       opacity:0.35;
       cursor:not-allowed; }
@@ -355,6 +355,44 @@
       border-radius:12px;margin-bottom:16px;display:flex;
       gap:10px;font-size:12px;line-height:1.5;color:#a0b0c0; }
     .info-box .icon { font-size:20px;flex-shrink:0; }
+
+    /* ⭐ SHARE PARTY — QR code sa ibaba ng remote */
+    #shareSection { display:none; margin-top:20px;
+      padding:16px;
+      background:linear-gradient(135deg,rgba(255,215,0,0.06),rgba(255,46,85,0.03));
+      border:1px solid rgba(255,215,0,0.25);
+      border-radius:14px;
+      text-align:center; }
+    #shareSection.show { display:block; }
+    #shareSection .title { font-size:12px; font-weight:800;
+      color:var(--gold); letter-spacing:1px;
+      margin-bottom:12px; }
+    #shareSection .qr-row { display:flex; gap:14px;
+      align-items:center; justify-content:center;
+      flex-wrap:wrap; }
+    #shareSection #shareQrImg {
+      width:130px; height:130px;
+      background:#fff; padding:8px;
+      border-radius:10px; }
+    #shareSection .info { text-align:left; }
+    #shareSection .code-label { font-size:10px;
+      color:var(--dim); text-transform:uppercase;
+      letter-spacing:1px; margin-bottom:4px; }
+    #shareSection .code-value { font-family:monospace;
+      font-size:24px; font-weight:800; color:var(--gold);
+      letter-spacing:4px; margin-bottom:8px; }
+    #shareSection .share-btns { display:flex; gap:6px;
+      margin-top:8px; }
+    #shareSection .share-btns button { padding:7px 12px;
+      border:none; border-radius:8px;
+      font-size:11px; font-weight:700;
+      cursor:pointer; font-family:inherit;
+      color:#fff; }
+    #shareSection .share-btns .copy { background:var(--card2);
+      border:1px solid var(--border); }
+    #shareSection .share-btns .share { background:linear-gradient(135deg,#ff2e55,#ff0044); }
+    #shareSection .hint { font-size:10px; color:var(--dim);
+      margin-top:8px; font-style:italic; }
 
     /* PARTY GATE */
     #partyGate { display:none; position:fixed; inset:0; z-index:9000;
@@ -474,14 +512,14 @@
       </div>
     </div>
 
-    <!-- ⭐ LOCK BANNER -->
+    <!-- LOCK BANNER -->
     <div id="lockBanner">
       <span class="icon">🔒</span>
       <span>Host controls locked. Admin only.</span>
       <button onclick="promptUnlock()">Unlock</button>
     </div>
 
-    <!-- ⭐ CONTROLS — naka-lock by default -->
+    <!-- CONTROLS — naka-lock by default -->
     <div class="controls" id="controlsGrid">
       <button class="ctrl-btn locked" onclick="sendCmd('pause')" data-ctrl>
         ⏸ <span class="lbl">Pause</span></button>
@@ -533,6 +571,23 @@
         <button class="refresh-btn" onclick="loadHistory()">🔄</button>
       </div>
       <div class="song-list" id="historyList"></div>
+    </div>
+
+    <!-- ⭐ SHARE PARTY — QR code sa ibaba -->
+    <div id="shareSection">
+      <div class="title">📤 SHARE THIS PARTY</div>
+      <div class="qr-row">
+        <img id="shareQrImg" src="" alt="QR Code">
+        <div class="info">
+          <div class="code-label">Party Code</div>
+          <div class="code-value" id="shareCode">------</div>
+          <div class="share-btns">
+            <button class="copy" onclick="copyPartyLink()">📋 Copy Link</button>
+            <button class="share" onclick="sharePartyLink()">📤 Share</button>
+          </div>
+          <div class="hint">Let friends scan this to join</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -597,7 +652,7 @@
     </div>
   </div>
 
-  <!-- ⭐ UNLOCK Modal -->
+  <!-- UNLOCK Modal -->
   <div class="modal-bg" id="unlockModal">
     <div class="modal">
       <h3>🔒 Admin Access Required</h3>
@@ -636,7 +691,7 @@
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
-    // ⭐ PWA — Service Worker registration
+    // PWA — Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
@@ -667,7 +722,7 @@
     let partyCode = null;
     let partyVerified = false;
 
-    // ⭐ CONTROLS LOCK
+    // CONTROLS LOCK
     let controlsUnlocked = localStorage.getItem('videoke:controlsUnlocked') === '1';
 
     // =====================================================
@@ -679,11 +734,9 @@
       document.getElementById('volumeRow').classList.toggle('locked', !controlsUnlocked);
       document.getElementById('lockBanner').classList.toggle('show', !controlsUnlocked);
 
-      // ⭐ I-update din ang queue action buttons
       const qActs = document.querySelectorAll('.q-act');
       qActs.forEach(btn => btn.classList.toggle('locked', !controlsUnlocked));
 
-      // ⭐ I-refresh ang queue para lumabas ang lock icons
       if (lastState) renderQueue(lastState);
     }
 
@@ -725,10 +778,8 @@
       toast('🔒 Controls locked', 'success');
     }
 
-    // Initial state
     updateControlsLock();
 
-    // Volume lock
     const volumeEl = document.getElementById('volume');
     volumeEl.addEventListener('pointerdown', (e) => {
       if (!controlsUnlocked) { e.preventDefault(); promptUnlock(); }
@@ -736,6 +787,52 @@
     volumeEl.addEventListener('touchstart', (e) => {
       if (!controlsUnlocked) { e.preventDefault(); promptUnlock(); }
     }, { passive: false });
+
+    // =====================================================
+    // SHARE PARTY — QR sa ibaba
+    // =====================================================
+    function updateShareSection() {
+      const sec = document.getElementById('shareSection');
+      if (!partyVerified || !partyCode) {
+        sec.classList.remove('show');
+        return;
+      }
+      const url = window.location.origin + '/remote.html?party=' + partyCode;
+      document.getElementById('shareQrImg').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' +
+        encodeURIComponent(url);
+      document.getElementById('shareCode').textContent = partyCode;
+      sec.classList.add('show');
+    }
+
+    function copyPartyLink() {
+      if (!partyCode) return;
+      const url = window.location.origin + '/remote.html?party=' + partyCode;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          toast('✓ Link copied!', 'success');
+        }).catch(() => {
+          prompt('Copy this link:', url);
+        });
+      } else {
+        prompt('Copy this link:', url);
+      }
+    }
+
+    async function sharePartyLink() {
+      if (!partyCode) return;
+      const url = window.location.origin + '/remote.html?party=' + partyCode;
+      const shareData = {
+        title: 'Join Videoke Party!',
+        text: 'Sing with us! Party code: ' + partyCode,
+        url: url
+      };
+      if (navigator.share) {
+        try { await navigator.share(shareData); } catch (e) {}
+      } else {
+        copyPartyLink();
+      }
+    }
 
     // =====================================================
     // PARTY GATE
@@ -781,6 +878,7 @@
       hidePartyGate();
       document.getElementById('partyEndedBanner').classList.remove('show');
       document.body.classList.remove('party-ended');
+      updateShareSection();
       toast('✓ Joined the party!', 'success');
     }
 
@@ -799,6 +897,7 @@
         if (urlCode) window.history.replaceState({}, '', window.location.pathname);
         if (socket.connected) socket.emit('joinParty', { code: partyCode });
         hidePartyGate();
+        updateShareSection();
       } else {
         localStorage.removeItem('videoke:partyCode');
         showPartyGate('❌ Expired or invalid party code. Please get a new one from the host.');
@@ -837,6 +936,7 @@
         showPartyGate(reason === 'no_party'
           ? 'No active party right now. Please wait for the host.'
           : '❌ Invalid party code. Please get a new one.');
+        document.getElementById('shareSection').classList.remove('show');
       }
     });
 
@@ -847,6 +947,7 @@
         document.getElementById('partyEndedBanner').classList.add('show');
         document.body.classList.add('party-ended');
         showPartyGate('🎉 Party ended. Thanks for joining!');
+        document.getElementById('shareSection').classList.remove('show');
       }
     });
 
@@ -1112,7 +1213,6 @@
     // =====================================================
     function sendCmd(type) {
       if (!partyVerified) return toast('🚫 Join the party first.', 'error');
-      // ⭐ LOCK CHECK
       if (!controlsUnlocked) {
         promptUnlock();
         return;
@@ -1138,6 +1238,7 @@
         document.getElementById('partyEndedBanner').classList.add('show');
         document.body.classList.add('party-ended');
         showPartyGate('🎉 Party ended. Thanks for joining!');
+        document.getElementById('shareSection').classList.remove('show');
       }
 
       const nowEl = document.getElementById('nowContent');
@@ -1192,7 +1293,6 @@
       qEl.innerHTML = s.queue.map((q, i) => {
         const isMe = myName && q.singer.toLowerCase() === myName;
         const displayTitle = q.title || q.videoId || 'Unknown';
-        // ⭐ Lock state para sa actions
         const lockClass = controlsUnlocked ? '' : ' locked';
         const lockTitle = controlsUnlocked ? '' : 'Admin only';
         return `
@@ -1215,7 +1315,6 @@
       }).join('');
     }
 
-    // ⭐ Queue actions — ADMIN ONLY
     function removeSong(id) {
       if (!controlsUnlocked) {
         toast('🔒 Admin only. Enter password to manage the queue.', 'error');
@@ -1331,7 +1430,6 @@
         adminToken = token;
         adminVerified = true;
         localStorage.setItem('videoke:adminToken', token);
-        // ⭐ Auto-unlock controls kapag admin
         controlsUnlocked = true;
         localStorage.setItem('videoke:controlsUnlocked', '1');
         updateControlsLock();
@@ -1454,7 +1552,6 @@
       if (e.key === 'Enter') tryUnlock();
     });
 
-    // Default language: English
     if (!localStorage.getItem('videoke:lang')) {
       localStorage.setItem('videoke:lang', 'en');
     }
