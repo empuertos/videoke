@@ -14,7 +14,7 @@
       font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
       height:100vh; width:100vw; }
 
-    /* ⭐ PLAYER WRAPPER */
+    /* PLAYER WRAPPER */
     #playerWrap { position:fixed; inset:0;
       background:#000; overflow:hidden; }
     #player { position:absolute; inset:0; }
@@ -87,61 +87,90 @@
     #hostPwErr { color:#ff6b6b; font-size:12px;
       margin-top:10px; min-height:14px; }
 
-    /* ⭐ TOP BAR — Now Playing + Reserved side by side (nasa ITAAS) */
+    /* ⭐ TOP BAR — very compact */
     #topBar { position:absolute; top:0; left:0; right:0;
-      z-index:50; padding:14px 16px;
-      display:none; gap:12px;
+      z-index:50;
+      padding:4px 6px;
+      display:none; align-items:center; gap:4px;
       pointer-events:none; }
     #topBar.show { display:flex; }
 
-    /* Now Playing HUD */
-    #nowHud { flex:1; padding:12px 20px;
-      background:linear-gradient(135deg,rgba(0,0,0,0.88),rgba(42,10,74,0.88));
-      border:2px solid rgba(255,215,0,0.4);
-      border-radius:14px; backdrop-filter:blur(20px);
-      display:flex; align-items:center; gap:14px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.5); }
-    #nowHud .icon { font-size:28px; flex-shrink:0; }
-    #nowHud .info { flex:1; min-width:0; }
-    #nowHud .label { font-size:10px; font-weight:800;
-      color:var(--gold); letter-spacing:3px; margin-bottom:2px; }
-    #nowHud .singer { font-size:20px; font-weight:800;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    #nowHud .song { font-size:13px; color:#c0c0d0;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-      margin-top:2px; }
-
-    /* Reserved HUD — queue list (nasa ITAAS din, katabi ng Now Playing) */
-    #queueHud { flex:1; max-width:45%; padding:12px 18px;
-      background:linear-gradient(135deg,rgba(0,0,0,0.88),rgba(42,10,10,0.88));
-      border:2px solid rgba(255,46,85,0.4);
-      border-radius:14px; backdrop-filter:blur(20px);
-      display:flex; flex-direction:column;
-      box-shadow:0 4px 20px rgba(0,0,0,0.5); }
-    #queueHud .label { font-size:10px; font-weight:800;
-      color:#ff6b6b; letter-spacing:3px; margin-bottom:6px;
-      display:flex; justify-content:space-between; align-items:center; }
-    #queueHud .label .count {
-      background:#ff2e55; color:#fff; font-size:10px;
-      padding:1px 8px; border-radius:10px; letter-spacing:0;
-      font-weight:700; }
-    #queueHud .items { display:flex; flex-direction:column; gap:4px; }
-    #queueHud .q-item { display:flex; align-items:flex-start; gap:8px;
-      font-size:12px; line-height:1.2; }
-    #queueHud .q-pos { background:var(--gold); color:#000;
-      font-size:10px; font-weight:800; min-width:18px; height:18px;
-      border-radius:50%; display:flex; align-items:center;
-      justify-content:center; flex-shrink:0; margin-top:1px; }
-    #queueHud .q-info { flex:1; min-width:0; }
-    #queueHud .q-singer { font-weight:800; font-size:12px;
-      color:#fff; overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; }
-    #queueHud .q-song { font-size:10px; color:#a0a0b0;
+    /* ⭐ NOW SINGING — maliit na compact pill */
+    #nowHud { flex:0 0 auto; max-width:32%;
+      padding:4px 10px;
+      background:rgba(0,0,0,0.75);
+      border:1px solid rgba(255,215,0,0.4);
+      border-radius:20px; backdrop-filter:blur(12px);
+      display:flex; align-items:center; gap:6px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.5);
+      height:28px; }
+    #nowHud .icon { font-size:13px; flex-shrink:0; }
+    #nowHud .info { min-width:0; display:flex;
+      align-items:baseline; gap:5px;
+      overflow:hidden; }
+    #nowHud .label { font-size:7px; font-weight:800;
+      color:var(--gold); letter-spacing:1px;
+      flex-shrink:0; }
+    #nowHud .singer { font-size:11px; font-weight:800;
+      color:#fff; line-height:1;
       overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; margin-top:0px; }
-    #queueHud .q-empty { font-size:11px; color:#666; font-style:italic; }
-    #queueHud .q-more { font-size:10px; color:#888; font-style:italic;
-      margin-top:2px; text-align:right; }
+      white-space:nowrap; flex-shrink:0; max-width:90px; }
+    #nowHud .song { font-size:10px; color:#a0a0b0;
+      line-height:1;
+      overflow:hidden; text-overflow:ellipsis;
+      white-space:nowrap; min-width:0; flex:1; }
+
+    /* ⭐ RESERVED — horizontal thin strip */
+    #queueHud { flex:1; min-width:0;
+      padding:4px 10px;
+      background:rgba(0,0,0,0.75);
+      border:1px solid rgba(255,46,85,0.4);
+      border-radius:20px; backdrop-filter:blur(12px);
+      display:flex; align-items:center; gap:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.5);
+      height:28px; overflow:hidden; }
+    #queueHud .label { font-size:7px; font-weight:800;
+      color:#ff6b6b; letter-spacing:1px;
+      flex-shrink:0;
+      display:flex; align-items:center; gap:4px; }
+    #queueHud .count {
+      background:#ff2e55; color:#fff; font-size:8px;
+      padding:0px 5px; border-radius:6px;
+      font-weight:700; line-height:1.4; }
+    #queueHud .items { display:flex; flex-direction:row;
+      gap:5px; overflow-x:auto; flex:1; min-width:0;
+      scrollbar-width:none;
+      align-items:center; }
+    #queueHud .items::-webkit-scrollbar { display:none; }
+    #queueHud .q-item { display:flex; align-items:center; gap:4px;
+      padding:2px 8px 2px 3px;
+      background:rgba(255,255,255,0.06);
+      border-radius:10px;
+      flex-shrink:0;
+      max-width:160px; }
+    #queueHud .q-item:first-child {
+      background:rgba(255,46,85,0.2);
+      border:1px solid rgba(255,46,85,0.5); }
+    #queueHud .q-pos { background:var(--gold); color:#000;
+      font-size:7px; font-weight:800; min-width:13px; height:13px;
+      border-radius:50%; display:flex; align-items:center;
+      justify-content:center; flex-shrink:0;
+      line-height:1; }
+    #queueHud .q-item:first-child .q-pos {
+      background:#ff2e55; color:#fff; }
+    #queueHud .q-info { min-width:0; display:flex;
+      align-items:baseline; gap:4px;
+      overflow:hidden; }
+    #queueHud .q-singer { font-weight:800; font-size:10px;
+      color:#fff; overflow:hidden; text-overflow:ellipsis;
+      white-space:nowrap; line-height:1;
+      flex-shrink:0; max-width:70px; }
+    #queueHud .q-song { font-size:9px; color:#a0a0b0;
+      overflow:hidden; text-overflow:ellipsis;
+      white-space:nowrap; line-height:1;
+      min-width:0; flex:1; }
+    #queueHud .q-empty { font-size:9px; color:#666;
+      font-style:italic; line-height:1; }
 
     /* Countdown overlay */
     #countdown { position:absolute; inset:0; z-index:200;
@@ -159,30 +188,30 @@
     }
 
     /* Fullscreen button */
-    #fsBtn { position:absolute; bottom:20px; right:20px;
+    #fsBtn { position:absolute; bottom:12px; right:12px;
       z-index:300;
-      width:48px; height:48px; border-radius:12px;
+      width:38px; height:38px; border-radius:10px;
       background:rgba(0,0,0,0.6);
       border:1px solid rgba(255,255,255,0.2);
-      color:#fff; font-size:20px; cursor:pointer;
+      color:#fff; font-size:16px; cursor:pointer;
       display:flex; align-items:center; justify-content:center;
       backdrop-filter:blur(20px);
       transition:opacity 0.3s, transform 0.2s; }
     #fsBtn:hover { background:rgba(0,0,0,0.8); transform:scale(1.05); }
     #fsBtn:active { transform:scale(0.95); }
-    body.is-fullscreen #fsBtn { opacity:0.4; }
+    body.is-fullscreen #fsBtn { opacity:0.3; }
     body.is-fullscreen #fsBtn:hover { opacity:1; }
 
     /* Connection status */
-    #connStatus { position:absolute; bottom:20px; left:20px;
-      z-index:60; padding:8px 16px;
+    #connStatus { position:absolute; bottom:12px; left:12px;
+      z-index:60; padding:5px 12px;
       background:rgba(0,0,0,0.7);
-      border-radius:20px; font-size:12px;
-      display:flex; align-items:center; gap:6px;
+      border-radius:14px; font-size:10px;
+      display:flex; align-items:center; gap:5px;
       pointer-events:none; }
-    #connDot { width:8px; height:8px; border-radius:50%;
-      background:var(--green); box-shadow:0 0 10px var(--green); }
-    #connDot.offline { background:var(--red); box-shadow:0 0 10px var(--red); }
+    #connDot { width:6px; height:6px; border-radius:50%;
+      background:var(--green); box-shadow:0 0 8px var(--green); }
+    #connDot.offline { background:var(--red); box-shadow:0 0 8px var(--red); }
 
     body.is-fullscreen #idleScreen { display:none; }
   </style>
@@ -191,21 +220,18 @@
   <div id="playerWrap">
     <div id="player"></div>
 
-    <!-- ⭐ TOP BAR: Now Playing (left) + Reserved Queue (right) -->
+    <!-- ⭐ TOP BAR -->
     <div id="topBar">
       <div id="nowHud">
         <div class="icon">🎤</div>
         <div class="info">
-          <div class="label">NOW SINGING</div>
-          <div class="singer" id="nowSinger">—</div>
-          <div class="song" id="nowSong">—</div>
+          <span class="label">NOW</span>
+          <span class="singer" id="nowSinger">—</span>
+          <span class="song" id="nowSong">—</span>
         </div>
       </div>
       <div id="queueHud">
-        <div class="label">
-          <span>📋 RESERVED</span>
-          <span class="count" id="queueCount">0</span>
-        </div>
+        <span class="label">📋 RESERVED <span class="count" id="queueCount">0</span></span>
         <div class="items" id="queueItems">
           <div class="q-empty">No reservations</div>
         </div>
@@ -295,9 +321,7 @@
         const req = wrap.requestFullscreen ||
                     wrap.webkitRequestFullscreen ||
                     wrap.msRequestFullscreen;
-        if (req) req.call(wrap).catch(err => {
-          console.error('Fullscreen error:', err);
-        });
+        if (req) req.call(wrap).catch(err => console.error('FS err:', err));
       } else {
         const exit = document.exitFullscreen ||
                      document.webkitExitFullscreen ||
@@ -306,10 +330,8 @@
       }
     }
 
-    // ⭐ AUTO-FULLSCREEN kapag nag-play
     async function tryAutoFullscreen() {
       if (isFullscreen()) return;
-      // Browser policy: kailangan may user gesture. Kaya try lang natin.
       try {
         const wrap = document.getElementById('playerWrap');
         const req = wrap.requestFullscreen ||
@@ -321,8 +343,6 @@
           autoFullscreenAttempted = true;
         }
       } catch (err) {
-        // Hindi pwede — kailangan may user gesture. Hintayin na lang.
-        console.log('Auto-fullscreen blocked (needs user gesture). Showing hint.');
         if (!autoFullscreenAttempted) {
           showFullscreenHint();
           autoFullscreenAttempted = true;
@@ -331,22 +351,18 @@
     }
 
     function showFullscreenHint() {
-      // Ipakita ang maliit na hint sa bottom-left
       const hint = document.createElement('div');
-      hint.id = 'fsHint';
-      hint.textContent = '🔲 Tap anywhere or press F to go fullscreen';
+      hint.textContent = '🔲 Tap anywhere or press F for fullscreen';
       hint.style.cssText = `
-        position:absolute; bottom:20px; left:50%;
+        position:absolute; bottom:70px; left:50%;
         transform:translateX(-50%);
-        padding:10px 20px; background:rgba(255,215,0,0.9);
-        color:#000; font-weight:700; font-size:13px;
+        padding:8px 18px; background:rgba(255,215,0,0.9);
+        color:#000; font-weight:700; font-size:12px;
         border-radius:20px; z-index:400;
         box-shadow:0 4px 20px rgba(255,215,0,0.4);
-        animation:pulse 1.5s infinite;
         pointer-events:none;
       `;
       document.getElementById('playerWrap').appendChild(hint);
-      // Remove after 6 seconds
       setTimeout(() => { if (hint.parentNode) hint.remove(); }, 6000);
     }
 
@@ -355,23 +371,10 @@
       document.body.classList.toggle('is-fullscreen', fs);
       document.getElementById('fsIcon').textContent = fs ? '✕' : '⛶';
       document.getElementById('fsBtn').title = fs ? 'Exit Fullscreen' : 'Fullscreen';
-      console.log('Fullscreen:', fs ? 'ON' : 'OFF');
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('msfullscreenchange', handleFullscreenChange);
-
-    // Unang user interaction — try fullscreen
-    let firstInteractionDone = false;
-    function handleFirstInteraction() {
-      if (firstInteractionDone) return;
-      firstInteractionDone = true;
-      // Kapag may nag-play na, subukan mag-fullscreen
-      if (currentVideoId) tryAutoFullscreen();
-    }
-    document.addEventListener('click', handleFirstInteraction, { once: false });
-    document.addEventListener('touchstart', handleFirstInteraction, { once: false });
-    document.addEventListener('keydown', handleFirstInteraction, { once: false });
 
     // =====================================================
     // SOCKET
@@ -394,7 +397,7 @@
     });
 
     // =====================================================
-    // YOUTUBE IFRAME API
+    // YOUTUBE
     // =====================================================
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('player', {
@@ -402,19 +405,11 @@
         width: '100%',
         videoId: '',
         playerVars: {
-          autoplay: 0,
-          controls: 1,
-          modestbranding: 1,
-          rel: 0,
-          fs: 0,
-          playsinline: 1,
-          iv_load_policy: 3
+          autoplay: 0, controls: 1, modestbranding: 1,
+          rel: 0, fs: 0, playsinline: 1, iv_load_policy: 3
         },
         events: {
-          onReady: () => {
-            ytReady = true;
-            console.log('✓ YouTube player ready');
-          },
+          onReady: () => { ytReady = true; console.log('✓ YT ready'); },
           onStateChange: onPlayerStateChange,
           onError: onPlayerError
         }
@@ -423,23 +418,14 @@
 
     function onPlayerStateChange(event) {
       const state = event.data;
-      if (state === 0 && currentVideoId) {
-        console.log('♪ Song ended');
-        socket.emit('songEnded');
-      }
-      // ⭐ Pag nag-umpisa nang mag-play (state 1 = playing), auto-fullscreen
-      if (state === 1 && currentVideoId && !autoFullscreenAttempted) {
-        tryAutoFullscreen();
-      }
+      if (state === 0 && currentVideoId) socket.emit('songEnded');
+      if (state === 1 && currentVideoId && !autoFullscreenAttempted) tryAutoFullscreen();
     }
 
     function onPlayerError(event) {
       const code = event.data;
-      console.error('✗ Player error:', code);
       if (!currentVideoId) return;
-
       if ([2, 5, 100, 101, 150].includes(code)) {
-        console.log('🚫 Blacklisting:', currentVideoId);
         socket.emit('videoFailed', {
           videoId: currentVideoId,
           title: document.getElementById('nowSong').textContent || ''
@@ -448,10 +434,9 @@
     }
 
     // =====================================================
-    // SOCKET COMMANDS
+    // COMMANDS
     // =====================================================
     socket.on('command', cmd => {
-      console.log('📡 Command:', cmd);
       switch (cmd.type) {
         case 'play': playVideo(cmd.song); break;
         case 'countdown': showCountdown(cmd.seconds || 3, cmd.song); break;
@@ -467,11 +452,8 @@
 
     socket.on('state', s => {
       updateQueueHud(s);
-      if (s.nowPlaying) {
-        updateNowHud(s.nowPlaying);
-      } else if (!currentVideoId) {
-        showIdle();
-      }
+      if (s.nowPlaying) updateNowHud(s.nowPlaying);
+      else if (!currentVideoId) showIdle();
       if (typeof s.partyActive === 'boolean') {
         updatePartyVisibility(s.partyActive);
         toggleHostButtons(s.partyActive);
@@ -497,7 +479,7 @@
     socket.on('kicked', () => {});
 
     // =====================================================
-    // VIDEO PLAYBACK
+    // PLAYBACK
     // =====================================================
     function playVideo(song) {
       if (!song || !song.videoId) return;
@@ -510,13 +492,11 @@
       updateNowHud(song);
       hideIdle();
 
-      console.log('▶ Playing:', song.videoId, '-', song.title);
       ytPlayer.loadVideoById(song.videoId);
       ytPlayer.setVolume(80);
       ytPlayer.playVideo();
 
-      // ⭐ Subukang mag-auto-fullscreen agad (pagkatapos ng 500ms)
-      setTimeout(() => { tryAutoFullscreen(); }, 500);
+      setTimeout(() => tryAutoFullscreen(), 500);
 
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
@@ -537,12 +517,11 @@
       if (ytPlayer && ytReady) ytPlayer.stopVideo();
       document.getElementById('topBar').classList.remove('show');
       showIdle();
-      // I-reset para makapag-auto-fullscreen ulit sa susunod
       autoFullscreenAttempted = false;
     }
 
     // =====================================================
-    // HUD UPDATES
+    // HUDs
     // =====================================================
     function updateNowHud(song) {
       if (!song) return;
@@ -553,10 +532,8 @@
 
     function updateQueueHud(state) {
       const list = state.queue || [];
-      const countEl = document.getElementById('queueCount');
+      document.getElementById('queueCount').textContent = list.length;
       const itemsEl = document.getElementById('queueItems');
-
-      countEl.textContent = list.length;
 
       if (!list.length) {
         itemsEl.innerHTML = '<div class="q-empty">No reservations</div>';
@@ -564,20 +541,15 @@
         return;
       }
 
-      const top = list.slice(0, 4);
-      itemsEl.innerHTML = top.map((q, i) => `
+      itemsEl.innerHTML = list.map((q, i) => `
         <div class="q-item">
           <div class="q-pos">${i + 1}</div>
           <div class="q-info">
-            <div class="q-singer">${escapeHtml(q.singer || 'Guest')}</div>
-            <div class="q-song">${escapeHtml(q.title || q.videoId || 'Unknown')}</div>
+            <span class="q-singer">${escapeHtml(q.singer || 'Guest')}</span>
+            <span class="q-song">${escapeHtml(q.title || q.videoId || 'Unknown')}</span>
           </div>
         </div>
       `).join('');
-
-      if (list.length > 4) {
-        itemsEl.innerHTML += `<div class="q-more">+${list.length - 4} more</div>`;
-      }
 
       document.getElementById('topBar').classList.add('show');
     }
@@ -591,22 +563,15 @@
       document.getElementById('countdown').classList.add('show');
     }
     function updateCountdown(seconds) {
-      if (seconds <= 0) {
-        document.getElementById('countdown').classList.remove('show');
-      } else {
-        document.getElementById('countdownNum').textContent = seconds;
-      }
+      if (seconds <= 0) document.getElementById('countdown').classList.remove('show');
+      else document.getElementById('countdownNum').textContent = seconds;
     }
 
     // =====================================================
     // IDLE / QR
     // =====================================================
-    function showIdle() {
-      document.getElementById('idleScreen').classList.remove('hidden');
-    }
-    function hideIdle() {
-      document.getElementById('idleScreen').classList.add('hidden');
-    }
+    function showIdle() { document.getElementById('idleScreen').classList.remove('hidden'); }
+    function hideIdle() { document.getElementById('idleScreen').classList.add('hidden'); }
 
     function updateQR(active, code) {
       const overlay = document.getElementById('qrOverlay');
@@ -630,11 +595,7 @@
       overlay.classList.remove('hidden');
       noPartyMsg.style.display = 'none';
       subText.textContent = "Let's sing! Scan the QR code to join.";
-
-      if (code !== lastPartyCode) {
-        console.log('✓ Synced to party code:', code);
-        lastPartyCode = code;
-      }
+      if (code !== lastPartyCode) lastPartyCode = code;
     }
 
     function updatePartyVisibility(active) {
@@ -649,7 +610,7 @@
     }
 
     // =====================================================
-    // HOST START / STOP
+    // HOST START/STOP
     // =====================================================
     function hostStartParty() {
       document.getElementById('hostPwBox').classList.add('show');
@@ -668,7 +629,7 @@
         pendingAdminAction = 'end-party';
         return;
       }
-      if (!confirm('End the party? Guests will no longer be able to reserve.')) return;
+      if (!confirm('End the party?')) return;
       doHostAdminAction('end-party');
     }
 
@@ -690,8 +651,7 @@
         document.getElementById('hostPwErr').textContent = '';
 
         if (pendingAdminAction) {
-          if (pendingAdminAction === 'end-party' &&
-              !confirm('End the party? Guests will no longer be able to reserve.')) {
+          if (pendingAdminAction === 'end-party' && !confirm('End the party?')) {
             pendingAdminAction = null; return;
           }
           doHostAdminAction(pendingAdminAction);
@@ -717,15 +677,11 @@
         if (r.status === 401) {
           hostAdminToken = null;
           localStorage.removeItem('videoke:hostAdminToken');
-          document.getElementById('hostPwErr').textContent =
-            '❌ Session expired. Enter password again.';
+          document.getElementById('hostPwErr').textContent = '❌ Session expired.';
           return;
         }
         if (!r.ok) throw new Error('Server error ' + r.status);
-        const data = await r.json();
-        if (action === 'start-party' && data.code) {
-          console.log('🎉 Started party from host:', data.code);
-        }
+        await r.json();
       } catch (e) {
         alert('❌ Host action error\n\n' + e.message);
       }
@@ -750,7 +706,7 @@
     if (savedHostToken) hostAdminToken = savedHostToken;
 
     // =====================================================
-    // KEYBOARD SHORTCUTS
+    // KEYBOARD
     // =====================================================
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') {
