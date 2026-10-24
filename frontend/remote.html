@@ -651,6 +651,9 @@
             </ol>
           </div>
         </div>
+
+        <!-- OPEN YOUTUBE APP BUTTON IS NOW INSIDE THE LINK PANEL -->
+        <button class="yt-open-btn" onclick="openYouTubeApp()">▶ Open YouTube App</button>
       </div>
 
       <div class="mode-panel" id="panel-search">
@@ -696,8 +699,6 @@
           <div class="recommend-chips" id="resultsChips"></div>
         </div>
       </div>
-
-      <button class="yt-open-btn" onclick="openYouTubeApp()">▶ Open YouTube App</button>
     </div>
 
     <div class="singer-stats" id="singerStats"></div>
@@ -2242,7 +2243,6 @@
     document.getElementById('langIcon').textContent =
       (localStorage.getItem('videoke:lang') === 'en') ? '🇵🇭' : '🇺🇸';
 
-    // Auto-update copyright year
     document.getElementById('remoteYear').textContent = new Date().getFullYear();
   </script>
 </body>
