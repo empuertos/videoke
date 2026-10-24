@@ -21,6 +21,7 @@
     #player { position:absolute; inset:0; }
     #player iframe { width:100%; height:100%; display:block; border:0; }
 
+    /* IDLE SCREEN */
     #idleScreen { position:fixed; inset:0;
       display:flex; flex-direction:column;
       align-items:center; justify-content:center;
@@ -65,6 +66,7 @@
     #stopPartyBtn { background:linear-gradient(135deg,#6b7280,#4b5563); }
     #hostControls button:active { transform:scale(0.97); }
 
+    /* TOP BAR HUD */
     #topBar { position:absolute; top:0; left:0; right:0;
       z-index:50; padding:6px 8px;
       padding-top:max(6px,env(safe-area-inset-top));
@@ -146,6 +148,30 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
+    /* MINI QR CODE (While playing) */
+    #miniQr {
+      position: absolute;
+      bottom: 70px; /* Nakataas ng konti para hindi matabunan ng YT controls */
+      left: 14px;
+      z-index: 400;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,0.75);
+      border: 1.5px solid rgba(255,215,0,0.4);
+      border-radius: 12px;
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      pointer-events: none; /* Hindi sagabal sa click */
+      transition: opacity 0.3s;
+    }
+    #miniQr.show { display: flex; }
+    #miniQr img { width: 75px; height: 75px; border-radius: 6px; background: #fff; padding: 3px; }
+    #miniQrInfo { display: flex; flex-direction: column; gap: 2px; }
+    #miniQrCodeText { font-family: ui-monospace; font-size: 16px; font-weight: 800; color: var(--gold); letter-spacing: 2px; }
+    #miniQrHint { font-size: 9px; color: #a0a0b0; line-height: 1.2; }
+
+    /* FS BUTTON & CONTROLS */
     #fsBtn { position:absolute; bottom:14px; right:14px;
       bottom:max(14px,env(safe-area-inset-bottom));
       right:max(14px,env(safe-area-inset-right));
@@ -161,9 +187,7 @@
     #fsBtn:hover { background:rgba(255,215,0,0.9);
       color:#000; border-color:var(--gold); }
     #fsBtn:active { transform:scale(0.95); }
-    body.is-fullscreen #fsBtn {
-      background:rgba(0,0,0,0.75);
-      border-color:rgba(255,215,0,0.6); }
+    body.is-fullscreen #fsBtn { background:rgba(0,0,0,0.75); border-color:rgba(255,215,0,0.6); }
 
     #ttsBtn {
       position:absolute;
@@ -198,6 +222,7 @@
 
     body.is-fullscreen #idleScreen { display:none; }
 
+    /* HOST GATE */
     #hostGate { display:none; position:fixed; inset:0; z-index:9999;
       background:radial-gradient(ellipse at top,#2a0a1a,#0a0512);
       flex-direction:column; align-items:center; justify-content:center;
@@ -232,38 +257,15 @@
       -webkit-appearance:none; }
 
     #ttsControl {
-      margin-top:16px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap;
+      margin-top:16px; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap;
     }
     #ttsControl button {
-      padding:9px 16px;
-      border-radius:10px;
-      font-size:12px;
-      font-weight:700;
-      cursor:pointer;
-      font-family:inherit;
-      -webkit-appearance:none;
-      transition:all 0.15s;
+      padding:9px 16px; border-radius:10px; font-size:12px; font-weight:700;
+      cursor:pointer; font-family:inherit; -webkit-appearance:none; transition:all 0.15s;
     }
-    #ttsStatusBtn {
-      background:rgba(74,222,128,0.15);
-      border:1.5px solid rgba(74,222,128,0.5);
-      color:#4ade80;
-    }
-    #ttsStatusBtn.off {
-      background:rgba(136,136,160,0.15);
-      border:1.5px solid rgba(136,136,160,0.5);
-      color:#8888a0;
-    }
-    #ttsTestBtn {
-      background:rgba(255,215,0,0.12);
-      border:1.5px solid rgba(255,215,0,0.4);
-      color:var(--gold);
-    }
+    #ttsStatusBtn { background:rgba(74,222,128,0.15); border:1.5px solid rgba(74,222,128,0.5); color:#4ade80; }
+    #ttsStatusBtn.off { background:rgba(136,136,160,0.15); border:1.5px solid rgba(136,136,160,0.5); color:#8888a0; }
+    #ttsTestBtn { background:rgba(255,215,0,0.12); border:1.5px solid rgba(255,215,0,0.4); color:var(--gold); }
     #ttsControl button:active { transform:scale(0.96); }
 
     #autoplayOverlay {
@@ -272,27 +274,17 @@
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       text-align:center; padding:30px; cursor:pointer;
     }
-    #autoplayOverlay .icon {
-      font-size:80px; margin-bottom:20px;
-      animation:tapPulse 1.5s infinite;
-    }
-    @keyframes tapPulse {
-      0%, 100% { transform:scale(1); }
-      50% { transform:scale(1.15); }
-    }
-    #autoplayOverlay h2 {
-      font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px;
-      text-shadow:0 0 20px rgba(255,215,0,0.5);
-    }
-    #autoplayOverlay p {
-      font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6;
-    }
+    #autoplayOverlay .icon { font-size:80px; margin-bottom:20px; animation:tapPulse 1.5s infinite; }
+    @keyframes tapPulse { 0%, 100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+    #autoplayOverlay h2 { font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
+    #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
   </style>
 </head>
 <body>
   <div id="playerWrap">
     <div id="player"></div>
 
+    <!-- Top HUD -->
     <div id="topBar">
       <div id="nowHud">
         <div class="icon">🎤</div>
@@ -309,6 +301,15 @@
         <div class="items" id="queueItems">
           <div class="q-empty">No reservations</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Mini QR Code (Nasa baba-kaliwa) -->
+    <div id="miniQr">
+      <img id="miniQrImg" src="" alt="QR">
+      <div id="miniQrInfo">
+        <div id="miniQrCodeText">---</div>
+        <div id="miniQrHint">Scan to request</div>
       </div>
     </div>
 
@@ -746,9 +747,8 @@
       
       if (s.nowPlaying) {
         updateNowHud(s.nowPlaying);
-        // KAPAG NAG-REFRESH ANG HOST, IPAGPATULOY ANG KANTA
         if (!currentVideoId) {
-          playVideo(s.nowPlaying, true); // true = skip announcement
+          playVideo(s.nowPlaying, true);
         }
       } else {
         if (!currentVideoId) showIdle();
@@ -782,6 +782,9 @@
       currentVideoId = song.videoId;
       updateNowHud(song);
       hideIdle();
+
+      // SHOW MINI QR CODE DITO
+      document.getElementById('miniQr').classList.add('show');
 
       if (!isIOS) tryAutoFullscreen();
 
@@ -822,6 +825,10 @@
       currentVideoId = null;
       if (ytPlayer && ytReady) { try { ytPlayer.stopVideo(); } catch {} }
       document.getElementById('topBar').classList.remove('show');
+      
+      // HIDE MINI QR CODE DITO
+      document.getElementById('miniQr').classList.remove('show');
+      
       showIdle();
       autoFullscreenAttempted = false;
     }
@@ -858,17 +865,27 @@
     function updateQR(code) {
       const overlay = document.getElementById('qrOverlay');
       const noParty = document.getElementById('noPartyMsg');
+      
       if (!code) {
         overlay.classList.add('hidden');
         noParty.style.display = 'block';
         noParty.textContent = '⏳ Waiting for a party...';
         return;
       }
+      
       const url = location.origin + '/remote?party=' + code;
+      
+      // Update big QR
       document.getElementById('qrImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' + encodeURIComponent(url);
       document.getElementById('qrCode').textContent = code;
       document.getElementById('qrUrl').textContent = url;
+      
+      // Update mini QR
+      document.getElementById('miniQrImg').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(url);
+      document.getElementById('miniQrCodeText').textContent = code;
+
       overlay.classList.remove('hidden');
       noParty.style.display = 'none';
     }
