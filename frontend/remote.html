@@ -1062,6 +1062,7 @@
     function updateShareSection() {
       const sec = document.getElementById('shareSection');
       if (!partyVerified || !partyCode) { sec.classList.remove('show'); return; }
+      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + partyCode;
       document.getElementById('shareQrImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' +
@@ -1072,6 +1073,7 @@
 
     function copyPartyLink() {
       if (!partyCode) return;
+      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + partyCode;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(() => {
@@ -1084,6 +1086,7 @@
 
     async function sharePartyLink() {
       if (!partyCode) return;
+      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + partyCode;
       const shareData = {
         title: 'Join Videoke Party!',
@@ -2188,6 +2191,7 @@
     }
 
     function showAdminQR(code) {
+      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + code;
       document.getElementById('adminQRImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' +
