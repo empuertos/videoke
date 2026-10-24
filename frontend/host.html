@@ -21,7 +21,7 @@
     #player { position:absolute; inset:0; }
     #player iframe { width:100%; height:100%; display:block; border:0; }
 
-    /* INVISIBLE BLOCKER - para hindi ma-click ang YouTube at hindi lumabas ang Fullscreen prompt */
+    /* INVISIBLE BLOCKER */
     #playerBlocker {
       position: absolute;
       inset: 0;
@@ -291,19 +291,21 @@
     #autoplayOverlay h2 { font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
     #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
 
-    /* RESERVED NOTIFICATION TOAST (Nasa Baba) */
+    /* =====================================================
+       RESERVED NOTIFICATION TOAST (Pinakailalim)
+       ===================================================== */
     #resNotif {
       position: absolute;
-      bottom: max(80px, calc(env(safe-area-inset-bottom) + 70px));
+      bottom: max(15px, env(safe-area-inset-bottom)); /* Dito natin inilagay sa pinakailalim */
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       background: rgba(0,0,0,0.85);
       border: 2px solid var(--gold);
-      border-radius: 12px;
-      padding: 10px 20px;
+      border-radius: 10px;
+      padding: 8px 16px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       opacity: 0;
       pointer-events: none;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -315,21 +317,21 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-    #resNotif .res-icon { font-size: 24px; }
-    #resNotif .res-content { display: flex; flex-direction: column; gap: 2px; }
-    #resNotif .res-header { font-size: 9px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
-    #resNotif .res-title { font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2; }
-    #resNotif .res-singer { font-size: 11px; color: var(--red); font-weight: 700; }
+    #resNotif .res-icon { font-size: 20px; }
+    #resNotif .res-content { display: flex; flex-direction: column; gap: 1px; }
+    #resNotif .res-header { font-size: 8px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+    #resNotif .res-title { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
+    #resNotif .res-singer { font-size: 10px; color: var(--red); font-weight: 700; }
   </style>
 </head>
 <body>
   <div id="playerWrap">
     <div id="player"></div>
     
-    <!-- BLOCKER: Hinaharangan ang clicks para hindi lumabas ang YouTube UI -->
+    <!-- BLOCKER -->
     <div id="playerBlocker"></div>
 
-    <!-- Reserved Notification (Bottom) -->
+    <!-- Reserved Notification (Pinakailalim) -->
     <div id="resNotif">
       <div class="res-icon">🔔</div>
       <div class="res-content">
