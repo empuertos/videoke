@@ -18,7 +18,6 @@ const MAX_SESSIONS  = 300;
 const MAX_QUEUE     = 50;
 const MAX_HISTORY   = 200;
 const PARTY_CHARS   = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const COUNTDOWN_SECONDS = parseInt(process.env.COUNTDOWN_SECONDS) || 5;
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -539,22 +538,22 @@ function addHistory(s, item) {
   persistSoon();
 }
 
+// DITO ANG FIX: Mas maayos na transition
 function startNext(s) {
-  if (s.nowPlaying || !s.queue.length) return;
+  if (s.nowPlaying) return;
+  
+  if (!s.queue.length) {
+    // Kung wala nang kanta, saka lang natin sabihan ang host na mag-stop at magpakita ng QR
+    io.to('host:' + s.id).emit('command', { type: 'stop' });
+    broadcast(s);
+    return;
+  }
+  
   const next = s.queue.shift();
   s.nowPlaying = next;
-  let n = COUNTDOWN_SECONDS;
-  const room = 'host:' + s.id;
-  io.to(room).emit('command', { type: 'countdown', seconds: n, song: next });
-  const iv = setInterval(() => {
-    n--;
-    if (n > 0) io.to(room).emit('command', { type: 'countdownTick', seconds: n });
-    else {
-      clearInterval(iv);
-      io.to(room).emit('command', { type: 'countdownTick', seconds: 0 });
-      io.to(room).emit('command', { type: 'play', song: next });
-    }
-  }, 1000);
+  
+  // I-play agad ang susunod
+  io.to('host:' + s.id).emit('command', { type: 'play', song: next });
   broadcast(s);
 }
 
@@ -619,6 +618,8 @@ io.on('connection', (socket) => {
     });
     persistSoon();
     broadcast(s);
+    
+    // AUTO PLAY KAPAG WALANG TUMUTUGTOG
     if (!s.nowPlaying) startNext(s);
   }));
 
@@ -648,8 +649,7 @@ io.on('connection', (socket) => {
   socket.on('skip', withSession((s, d) => {
     if (!requireAdmin(s, d)) return socket.emit('error', 'Admin only');
     if (s.nowPlaying) { addHistory(s, s.nowPlaying); s.nowPlaying = null; }
-    io.to('host:' + s.id).emit('command', { type: 'stop' });
-    broadcast(s);
+    // Imbes na i-stop agad, tawagin ang startNext para smooth
     startNext(s);
   }));
 
@@ -674,7 +674,7 @@ io.on('connection', (socket) => {
 
   socket.on('songEnded', withSession((s) => {
     if (s.nowPlaying) { addHistory(s, s.nowPlaying); s.nowPlaying = null; }
-    broadcast(s);
+    // Walang broadcast dito. Ang startNext ang mag-aasikaso kung may susunod o wala.
     startNext(s);
   }));
 
@@ -684,10 +684,8 @@ io.on('connection', (socket) => {
     s.failedVideos = s.failedVideos.slice(-100);
     if (s.nowPlaying?.videoId === d.videoId) {
       s.nowPlaying = null;
-      io.to('host:' + s.id).emit('command', { type: 'stop' });
     }
     persistSoon();
-    broadcast(s);
     startNext(s);
   }));
 
