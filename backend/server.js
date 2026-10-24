@@ -264,11 +264,13 @@ async function searchYT(query, maxResults = 25) {
       if (items.length) return items;
     } catch (e) {}
   }
+
   const key = process.env.YOUTUBE_API_KEY;
   if (key) {
     try {
+      // Idinagdag ang videoEmbeddable=true para puro playable lang ang lumabas
       const r = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${maxResults}&q=${encodeURIComponent(query)}&key=${key}`,
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=${maxResults}&q=${encodeURIComponent(query)}&key=${key}`,
         { signal: AbortSignal.timeout(8000) }
       );
       if (r.ok) {
@@ -538,21 +540,15 @@ function addHistory(s, item) {
   persistSoon();
 }
 
-// DITO ANG FIX: Mas maayos na transition
 function startNext(s) {
   if (s.nowPlaying) return;
-  
   if (!s.queue.length) {
-    // Kung wala nang kanta, saka lang natin sabihan ang host na mag-stop at magpakita ng QR
     io.to('host:' + s.id).emit('command', { type: 'stop' });
     broadcast(s);
     return;
   }
-  
   const next = s.queue.shift();
   s.nowPlaying = next;
-  
-  // I-play agad ang susunod
   io.to('host:' + s.id).emit('command', { type: 'play', song: next });
   broadcast(s);
 }
@@ -618,8 +614,6 @@ io.on('connection', (socket) => {
     });
     persistSoon();
     broadcast(s);
-    
-    // AUTO PLAY KAPAG WALANG TUMUTUGTOG
     if (!s.nowPlaying) startNext(s);
   }));
 
@@ -649,7 +643,6 @@ io.on('connection', (socket) => {
   socket.on('skip', withSession((s, d) => {
     if (!requireAdmin(s, d)) return socket.emit('error', 'Admin only');
     if (s.nowPlaying) { addHistory(s, s.nowPlaying); s.nowPlaying = null; }
-    // Imbes na i-stop agad, tawagin ang startNext para smooth
     startNext(s);
   }));
 
@@ -674,7 +667,6 @@ io.on('connection', (socket) => {
 
   socket.on('songEnded', withSession((s) => {
     if (s.nowPlaying) { addHistory(s, s.nowPlaying); s.nowPlaying = null; }
-    // Walang broadcast dito. Ang startNext ang mag-aasikaso kung may susunod o wala.
     startNext(s);
   }));
 
