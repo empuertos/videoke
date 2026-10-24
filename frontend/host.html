@@ -284,20 +284,20 @@
     #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
 
     /* =====================================================
-       RESERVED NOTIFICATION TOAST
+       RESERVED NOTIFICATION TOAST (Nasa Baba)
        ===================================================== */
     #resNotif {
       position: absolute;
-      top: 60px; /* Below top bar */
+      bottom: max(80px, calc(env(safe-area-inset-bottom) + 70px)); /* Nasa ilalim, katamtamang taas */
       left: 50%;
-      transform: translateX(-50%) translateY(-20px);
+      transform: translateX(-50%) translateY(20px); /* Pababa ang simula para pataas ang dating */
       background: rgba(0,0,0,0.85);
       border: 2px solid var(--gold);
       border-radius: 12px;
-      padding: 12px 24px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       opacity: 0;
       pointer-events: none;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -309,18 +309,18 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-    #resNotif .res-icon { font-size: 28px; }
+    #resNotif .res-icon { font-size: 24px; }
     #resNotif .res-content { display: flex; flex-direction: column; gap: 2px; }
-    #resNotif .res-header { font-size: 10px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
-    #resNotif .res-title { font-size: 14px; font-weight: 800; color: #fff; line-height: 1.2; }
-    #resNotif .res-singer { font-size: 12px; color: var(--red); font-weight: 700; }
+    #resNotif .res-header { font-size: 9px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
+    #resNotif .res-title { font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2; }
+    #resNotif .res-singer { font-size: 11px; color: var(--red); font-weight: 700; }
   </style>
 </head>
 <body>
   <div id="playerWrap">
     <div id="player"></div>
 
-    <!-- Reserved Notification -->
+    <!-- Reserved Notification (Bottom) -->
     <div id="resNotif">
       <div class="res-icon">🔔</div>
       <div class="res-content">
@@ -460,7 +460,7 @@
       }
     }
 
-    // SHOW RESERVATION NOTIFICATION
+    // SHOW RESERVATION NOTIFICATION (Bottom)
     function showResNotif(singer, title) {
       const notif = document.getElementById('resNotif');
       document.getElementById('resNotifSinger').textContent = `🎤 ${singer}`;
@@ -827,16 +827,13 @@
     socket.on('state', (s) => {
       const len = (s.queue || []).length;
       
-      // KAPAG MAY BAGONG RESERVE, IPAKITA ANG NOTIFICATION
       if (lastQueueLen >= 0 && len > lastQueueLen) {
-        // Flash effect sa Reserved Box
         const qh = document.getElementById('queueHud');
         qh.classList.remove('flash');
         void qh.offsetWidth;
         qh.classList.add('flash');
         setTimeout(() => qh.classList.remove('flash'), 1200);
         
-        // Kunin ang pinakabagong naka-reserve at ipakita sa pop-up
         const newestSong = s.queue[s.queue.length - 1];
         if (newestSong) {
           showResNotif(newestSong.singer, newestSong.title);
