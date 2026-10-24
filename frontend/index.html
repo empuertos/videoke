@@ -98,7 +98,9 @@
     <div class="code" id="rCode">------</div>
     <div class="lbl">Admin Password</div>
     <div class="pw" id="rPw">--------</div>
-    <div class="warn">⚠️ Save this! Co-hosts on other phones need it to unlock controls.</div>
+    <div class="warn" style="background:rgba(255,215,0,0.1);color:#ffd700;border:1px solid rgba(255,215,0,0.3)">
+      👆 <b>REMINDER:</b> When you open the Host Screen, tap the screen once to enable Auto-Play!
+    </div>
     <button class="open-host" onclick="openHost()">📺 Open Host Screen on This Device</button>
     <button class="copy" onclick="copyVal(current.adminPassword)">📋 Copy Admin Password</button>
     <button class="copy" onclick="copyVal(current.guestUrl)">🔗 Copy Guest Link</button>
@@ -206,7 +208,6 @@
       } catch {}
     })();
 
-    // Auto-update copyright year
     document.getElementById('copyrightYear').textContent = new Date().getFullYear();
   </script>
 </body>
