@@ -361,6 +361,7 @@
     <button class="go" onclick="submitHostCode()">Open Karaoke</button>
     <div class="err" id="hostGateErr"></div>
     <div class="divider">or</div>
+    <!-- DITO ANG FIX: Tinanggal ang .html -->
     <button class="new-btn" onclick="location.href='/'">🎉 Start a New Karaoke</button>
   </div>
 
@@ -841,6 +842,7 @@
         noParty.textContent = '⏳ Waiting for a party...';
         return;
       }
+      // DITO ANG FIX: Tinanggal ang .html
       const url = location.origin + '/remote?party=' + code;
       document.getElementById('qrImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' + encodeURIComponent(url);
@@ -860,6 +862,7 @@
         });
         if (!r.ok) throw new Error('Server error ' + r.status);
         localStorage.removeItem('videoke:hostCode');
+        // DITO ANG FIX: Tinanggal ang .html
         location.href = '/';
       } catch (e) { alert('❌ ' + e.message); }
     }
