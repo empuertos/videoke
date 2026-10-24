@@ -266,7 +266,6 @@
     }
     #ttsControl button:active { transform:scale(0.96); }
 
-    /* AUTO-PLAY UNLOCK OVERLAY */
     #autoplayOverlay {
       position:fixed; inset:0; z-index:10000;
       background:rgba(10,5,18,0.95); backdrop-filter:blur(10px);
@@ -428,18 +427,14 @@
         if (req) await req.call(w);
         autoFullscreenAttempted = true;
       } catch (e) { 
-        console.log('Fullscreen blocked:', e);
         autoFullscreenAttempted = true; 
       }
     }
 
-    // PAGKA-TAP SA OVERLAY, DERETSO FULLSCREEN AGAD
     function markFirstInteraction() {
       if (firstInteractionDone) return;
       firstInteractionDone = true;
       primeTTS();
-      
-      // Try to go fullscreen immediately on this user gesture
       tryAutoFullscreen();
 
       if (currentVideoId) {
@@ -748,8 +743,16 @@
       }
       lastQueueLen = len;
       updateQueueHud(s);
-      if (s.nowPlaying) updateNowHud(s.nowPlaying);
-      else if (!currentVideoId) showIdle();
+      
+      if (s.nowPlaying) {
+        updateNowHud(s.nowPlaying);
+        // KAPAG NAG-REFRESH ANG HOST, IPAGPATULOY ANG KANTA
+        if (!currentVideoId) {
+          playVideo(s.nowPlaying, true); // true = skip announcement
+        }
+      } else {
+        if (!currentVideoId) showIdle();
+      }
     });
     
     socket.on('partyChanged', ({ active }) => {
@@ -770,17 +773,16 @@
       showHostGate();
     });
 
-    function playVideo(song) {
+    function playVideo(song, isSync = false) {
       if (!song?.videoId) return;
       
-      announceNextSong(song);
+      if (!isSync) announceNextSong(song);
 
-      if (!ytPlayer || !ytReady) return setTimeout(() => playVideo(song), 500);
+      if (!ytPlayer || !ytReady) return setTimeout(() => playVideo(song, isSync), 500);
       currentVideoId = song.videoId;
       updateNowHud(song);
       hideIdle();
 
-      // Ensure we are fullscreen if user already tapped
       if (!isIOS) tryAutoFullscreen();
 
       try {
