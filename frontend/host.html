@@ -21,6 +21,14 @@
     #player { position:absolute; inset:0; }
     #player iframe { width:100%; height:100%; display:block; border:0; }
 
+    /* INVISIBLE BLOCKER - para hindi ma-click ang YouTube at hindi lumabas ang Fullscreen prompt */
+    #playerBlocker {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: transparent;
+    }
+
     /* IDLE SCREEN */
     #idleScreen { position:fixed; inset:0;
       display:flex; flex-direction:column;
@@ -74,7 +82,7 @@
       pointer-events:none;
       transition: opacity 0.5s ease; }
     #topBar.show { display:flex; }
-    #topBar.faded { opacity: 0.55; } /* KITA PA RIN PERO HINDI SAGABAL SA LYRICS */
+    #topBar.faded { opacity: 0.55; }
 
     #nowHud { flex:0 1 auto; max-width:45%;
       padding:6px 12px;
@@ -283,14 +291,12 @@
     #autoplayOverlay h2 { font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
     #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
 
-    /* =====================================================
-       RESERVED NOTIFICATION TOAST (Nasa Baba)
-       ===================================================== */
+    /* RESERVED NOTIFICATION TOAST (Nasa Baba) */
     #resNotif {
       position: absolute;
-      bottom: max(80px, calc(env(safe-area-inset-bottom) + 70px)); /* Nasa ilalim, katamtamang taas */
+      bottom: max(80px, calc(env(safe-area-inset-bottom) + 70px));
       left: 50%;
-      transform: translateX(-50%) translateY(20px); /* Pababa ang simula para pataas ang dating */
+      transform: translateX(-50%) translateY(20px);
       background: rgba(0,0,0,0.85);
       border: 2px solid var(--gold);
       border-radius: 12px;
@@ -319,6 +325,9 @@
 <body>
   <div id="playerWrap">
     <div id="player"></div>
+    
+    <!-- BLOCKER: Hinaharangan ang clicks para hindi lumabas ang YouTube UI -->
+    <div id="playerBlocker"></div>
 
     <!-- Reserved Notification (Bottom) -->
     <div id="resNotif">
@@ -446,7 +455,6 @@
       reconnectionDelay: 2000,
     });
 
-    // SMART FADE LOGIC (Top Bar lang ang nag-fa-fade, QR Code laging solid)
     function resetHudVisibility() {
       const topBar = document.getElementById('topBar');
       
@@ -456,11 +464,10 @@
       if (currentVideoId) {
         hudFadeTimer = setTimeout(() => {
           topBar.classList.add('faded');
-        }, 5000); // 5 segundo bago mag-fade ang Top Bar
+        }, 5000);
       }
     }
 
-    // SHOW RESERVATION NOTIFICATION (Bottom)
     function showResNotif(singer, title) {
       const notif = document.getElementById('resNotif');
       document.getElementById('resNotifSinger').textContent = `🎤 ${singer}`;
@@ -470,7 +477,7 @@
       clearTimeout(resNotifTimer);
       resNotifTimer = setTimeout(() => {
         notif.classList.remove('show');
-      }, 5000); // 5 segundo nakalabas
+      }, 5000); 
     }
 
     function getFsElement() {
