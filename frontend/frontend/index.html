@@ -180,6 +180,7 @@
     function submitJoin() {
       const c = document.getElementById('joinCode').value.trim().toUpperCase();
       if (c.length !== 6) return alert('Must be 6 characters');
+      // DITO ANG FIX: Tinanggal ang .html
       location.href = '/remote?party=' + encodeURIComponent(c);
     }
     document.getElementById('joinCode').addEventListener('keydown', e => {
