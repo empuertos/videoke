@@ -116,11 +116,11 @@
       Created with <span style="color:#ff2e55">❤️</span> by
       <a href="#" onclick="return false;"
         style="color:#ffd700;text-decoration:none;font-weight:800;
-        letter-spacing:0.5px">Your Name</a>
+        letter-spacing:0.5px">Steve</a>
     </div>
     <div style="margin-top:8px;font-size:10px;opacity:0.55;
       letter-spacing:1px;text-transform:uppercase">
-      © <span id="copyrightYear">2025</span> · All rights reserved
+      © <span id="copyrightYear"></span> · All rights reserved
     </div>
   </div>
 
@@ -180,7 +180,6 @@
     function submitJoin() {
       const c = document.getElementById('joinCode').value.trim().toUpperCase();
       if (c.length !== 6) return alert('Must be 6 characters');
-      // DITO ANG FIX: Tinanggal ang .html
       location.href = '/remote?party=' + encodeURIComponent(c);
     }
     document.getElementById('joinCode').addEventListener('keydown', e => {
@@ -207,6 +206,7 @@
       } catch {}
     })();
 
+    // Auto-update copyright year
     document.getElementById('copyrightYear').textContent = new Date().getFullYear();
   </script>
 </body>
