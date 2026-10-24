@@ -12,7 +12,10 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
-const SESSION_TTL_MS = 6 * 60 * 60 * 1000;
+
+// BINAGO DITO: Ginawang 24 hours (1 day) ang validity ng party
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; 
+
 const TOKEN_TTL_MS  = 4 * 60 * 60 * 1000;
 const MAX_SESSIONS  = 300;
 const MAX_QUEUE     = 50;
@@ -268,7 +271,6 @@ async function searchYT(query, maxResults = 25) {
   const key = process.env.YOUTUBE_API_KEY;
   if (key) {
     try {
-      // Idinagdag ang videoEmbeddable=true para puro playable lang ang lumabas
       const r = await fetch(
         `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=${maxResults}&q=${encodeURIComponent(query)}&key=${key}`,
         { signal: AbortSignal.timeout(8000) }
