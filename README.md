@@ -11,36 +11,30 @@ Created with ❤️ by **Steve**.
 
 ### 🏢 Multi-Tenant Architecture
 - **Multiple Simultaneous Parties** — Up to 300 separate karaoke sessions running at the same time without overlapping.
-- **Auto-Generated Security** — Every new party generates a unique **Host Code** (for the TV), **Party Code** (for guests), and **Admin Password** (for co-hosts) automatically. No server setup needed.
-- **Session Recovery** — Queues and parties are saved in JSON. If the server restarts, the party continues.
+- **Auto-Generated Security** — Every new party generates a unique **Host Code** (for the TV), **Party Code** (for guests), and **Admin Password** (for co-hosts) automatically.
+- **24-Hour Validity** — Parties, queues, and QR codes stay valid for 24 hours. Perfect for long events.
+- **Session Recovery** — Queues and current playing song are saved in JSON. If the server restarts or brownouts occur, the party resumes automatically.
 
-### 🎵 Core Playback
-- **YouTube-Based** — Streams directly from YouTube. No media storage needed.
-- **Auto-Play on Host** — As soon as a song is reserved, it plays on the Host screen.
-- **Auto-Quality** — YouTube automatically adapts the video quality based on the host's internet speed.
-- **Auto-Blacklist** — Videos with disabled embedding are automatically skipped and blacklisted.
+### 🎵 Host Screen (TV/PC)
+- **Auto-Play & Auto-Skip** — Songs play automatically. If a video has embedding disabled or is deleted, it skips instantly.
+- **AI Voice Announcer** — Uses Text-to-Speech (TTS) to announce the next singer and song ("Next up, Juan, singing Tadhana").
+- **Smart UI Fade** — "Now Singing" and "Reserved" boxes auto-fade to 55% opacity after 5 seconds, so they don't block the lyrics, but remain visible.
+- **Always-Visible Mini QR** — A small QR code with "Scan to Request" text is permanently displayed at the bottom-left.
+- **Reserved Notification** — A sleek pop-up slides in from the top-right when someone reserves a song, showing the singer's name and song title.
+- **Hidden YouTube Controls** — An invisible click-blocker prevents the YouTube UI from appearing, keeping the screen clean. Custom Fullscreen button provided.
 
-### 🔍 Smart Search & Reservations
-- **Karaoke-Only Search** — The search engine automatically filters out non-karaoke videos (e.g., official music videos).
-- **Voice Search** — Tap the 🎤 icon on the remote and speak the song title for hands-free searching.
-- **Paste Link Mode** — Guests can paste any YouTube link directly.
-- **Load More** — Infinite scrolling-like pagination for search results.
-- **Recommendations** — "Popular Karaoke" and category chips (OPM, Love Songs, Duets, etc.) appear instantly so guests don't even need to type.
-- **Duet Support** — Automatically detects duet songs and asks the singer if they want to sing the 👦 Boy Part or 👧 Girl Part.
-
-### 🔊 AI & Audio
-- **AI Voice Announcer** — The Host screen uses Text-to-Speech (TTS) to announce the next singer and song ("Next up, Juan, singing Tadhana by Moira").
-- **Voice Cleanup** — Automatically strips out "(Karaoke)", "[Official Video]", etc., so the voice sounds natural.
+### 📱 Remote Controller (Mobile)
+- **Karaoke-Only Search** — Uses Piped API and YouTube Data API to strictly filter out non-karaoke videos.
+- **Voice Search** — Tap the 🎤 icon and speak the song title for hands-free searching.
+- **Duet Support** — Automatically detects duets and asks the singer if they want to sing the 👦 Boy Part or 👧 Girl Part.
+- **Recommendations** — "Popular Karaoke" and category chips (OPM, Love Songs, Duets) appear instantly so guests don't even need to type.
+- **Paste Link Mode** — Includes an "Open YouTube App" shortcut for copying links manually.
+- **Load More** — Pagination for endless karaoke browsing.
 
 ### 🔒 Admin & Security
-- **Admin-Locked Controls** — Pause/Play/Skip/Volume are locked by default. Only the admin can control them.
+- **Admin-Locked Controls** — Pause/Play/Skip/Volume are locked by default. Guests need the Admin Password to control them.
 - **Auto-Lock** — Controls automatically lock after 10 minutes of inactivity.
-- **Smart Name System** — Guests can type their name once (auto-saves), or leave it blank to be assigned as "Guest 1", "Guest 2", etc.
-
-### 📱 UI / UX
-- **PWA-Ready** — Can be installed on mobile phones as an app.
-- **Responsive** — Works on Smart TVs, Tablets, and Mobile Phones.
-- **Bilingual** — Toggle between English and Filipino.
+- **Smart Name System** — Guests type their name once (auto-saves via `localStorage`), or leave it blank to be assigned as "Guest 1", "Guest 2", etc.
 
 ---
 
