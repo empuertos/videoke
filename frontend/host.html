@@ -19,9 +19,17 @@
 
     #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; }
     #player { position:absolute; inset:0; }
+    
+    /* DITO ANG FIX: CSS Zoom para maitago ang YouTube buttons sa gilid */
     #player iframe { 
-      width:100%; height:100%; display:block; border:0; 
-      pointer-events: none; /* BLOCKER PARA HINDI MA-CLICK ANG YOUTUBE */
+      width:100%; 
+      height:100%; 
+      display:block; 
+      border:0; 
+      pointer-events: none; 
+      /* Pinalaki natin ng 15% at ginawang center para maitulak palabas ang mga gilid */
+      transform: scale(1.15); 
+      transform-origin: center center;
     }
 
     #playerBlocker { position: absolute; inset: 0; z-index: 10; background: transparent; }
@@ -288,35 +296,33 @@
     #autoplayOverlay h2 { font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
     #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
 
-    /* =====================================================
-       RESERVED NOTIFICATION TOAST (Pinaliit at Compact)
-       ===================================================== */
+    /* RESERVED NOTIFICATION TOAST (Pinaliit at Compact) */
     #resNotif {
       position: absolute;
-      top: 50px; /* Bahagyang inangat para hindi mag-abot sa lyrics */
+      top: 50px;
       right: max(12px, env(safe-area-inset-right));
       left: auto;
       transform: translateX(120%);
       background: rgba(10,5,18,0.95);
       border-left: 3px solid var(--gold);
       border-radius: 6px;
-      padding: 6px 12px; /* Binawasan ang padding */
+      padding: 6px 12px; 
       display: flex;
       align-items: center;
-      gap: 8px; /* Binawasan ang gap */
+      gap: 8px; 
       opacity: 0;
       pointer-events: none;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       z-index: 1000;
       box-shadow: 0 4px 10px rgba(0,0,0,0.8);
       backdrop-filter: blur(5px);
-      max-width: 250px; /* Pinaliit ang max-width para hindi humaba */
+      max-width: 250px;
     }
     #resNotif.show {
       opacity: 1;
       transform: translateX(0);
     }
-    #resNotif .res-icon { font-size: 14px; } /* Pinaliit ang icon */
+    #resNotif .res-icon { font-size: 14px; }
     #resNotif .res-content { display: flex; flex-direction: column; gap: 0px; }
     #resNotif .res-header { font-size: 7px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
     #resNotif .res-title { font-size: 11px; font-weight: 800; color: #fff; line-height: 1.1; }
@@ -772,6 +778,16 @@
         events: {
           onReady: (e) => {
             ytReady = true;
+            
+            // FIX: Alisin ang focus sa iframe para hindi lumabas ang FULLSCREEN prompt ng TV
+            setTimeout(() => {
+              const iframe = document.querySelector('#player iframe');
+              if (iframe) {
+                iframe.setAttribute('tabindex', '-1');
+                iframe.blur();
+              }
+            }, 1000);
+
             try { e.target.setPlaybackQuality('default'); } catch {}
             try {
               if (typeof e.target.setPlaybackQualityRange === 'function')
