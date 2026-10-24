@@ -155,7 +155,8 @@
         document.getElementById('rPw').textContent   = current.adminPassword;
         document.getElementById('result').classList.add('show');
         btn.textContent = '✓ Session Active';
-        btn.disabled = true;
+        btn.disabled = false; // <--- GINAWANG CLICKABLE
+        btn.onclick = openHost; // <--- DEREKTA NA SA HOST PAG PININDOT
         document.getElementById('result').scrollIntoView({ behavior:'smooth', block:'center' });
       } catch (e) {
         alert('❌ ' + e.message);
@@ -203,7 +204,9 @@
           document.getElementById('rPw').textContent   = last.adminPassword;
           document.getElementById('result').classList.add('show');
           const b = document.getElementById('startBtn');
-          b.textContent = '✓ Session Active'; b.disabled = true;
+          b.textContent = '✓ Session Active';
+          b.disabled = false; // <--- GINAWANG CLICKABLE
+          b.onclick = openHost; // <--- DEREKTA NA SA HOST PAG PININDOT
         }
       } catch {}
     })();
