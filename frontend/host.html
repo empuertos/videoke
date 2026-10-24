@@ -157,10 +157,10 @@
       display: none;
       flex-direction: row;
       align-items: center;
-      gap: 6px;
-      padding: 3px 8px 3px 3px;
-      background: rgba(0,0,0,0.6);
-      border: 1px solid rgba(255,215,0,0.3);
+      gap: 8px;
+      padding: 4px 10px 4px 4px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,215,0,0.4);
       border-radius: 8px;
       -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
       pointer-events: none;
@@ -168,16 +168,30 @@
     }
     #miniQr.show { display: flex; }
     #miniQr img { 
-      width: 38px; height: 38px; 
+      width: 42px; height: 42px; 
       border-radius: 4px; background: #fff; padding: 2px; 
+    }
+    #miniQrInfo {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      justify-content: center;
     }
     #miniQrCodeText { 
       font-family: ui-monospace,SFMono-Regular,Menlo,monospace; 
-      font-size: 12px; font-weight: 800; color: var(--gold); 
-      letter-spacing: 1px; line-height: 1; 
+      font-size: 13px; font-weight: 800; color: var(--gold); 
+      letter-spacing: 1px; line-height: 1.1; 
+    }
+    #miniQrHint {
+      font-size: 9px;
+      color: #d0d0d0;
+      line-height: 1.1;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
-    /* FS BUTTON & CONTROLS (Pinaliit at ginawang translucent) */
+    /* FS BUTTON & CONTROLS */
     #fsBtn { position:absolute; 
       bottom:max(12px,env(safe-area-inset-bottom));
       right:max(12px,env(safe-area-inset-right));
@@ -311,10 +325,13 @@
       </div>
     </div>
 
-    <!-- Mini QR Code (Saktong-sakto sa pinakababa) -->
+    <!-- Mini QR Code with Text -->
     <div id="miniQr">
       <img id="miniQrImg" src="" alt="QR">
-      <div id="miniQrCodeText">---</div>
+      <div id="miniQrInfo">
+        <div id="miniQrCodeText">---</div>
+        <div id="miniQrHint">Scan to request</div>
+      </div>
     </div>
 
     <div id="connStatus">
@@ -676,7 +693,7 @@
         height: '100%', width: '100%', videoId: '',
         playerVars: {
           autoplay: 0, controls: 1, modestbranding: 1,
-          rel: 0, fs: 0, playsinline: 1, iv_load_policy: 3, // Binago natin ang fs: 1 para mawala ang native fullscreen button ng YT
+          rel: 0, fs: 0, playsinline: 1, iv_load_policy: 3,
           enablejsapi: 1, origin: window.location.origin,
           hl: 'en', cc_load_policy: 0, disablekb: 0, loop: 0,
         },
@@ -698,7 +715,6 @@
           },
           onError: (e) => {
             if (!currentVideoId) return;
-            // Auto-skip kapag embedding disabled (101 o 150) o iba pang error
             if ([2, 5, 100, 101, 150].includes(e.data)) {
               console.warn('YouTube Error:', e.data, 'Skipping and blacklisting...');
               socket.emit('videoFailed', {
