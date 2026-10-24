@@ -74,7 +74,7 @@
       pointer-events:none;
       transition: opacity 0.5s ease; }
     #topBar.show { display:flex; }
-    #topBar.faded { opacity: 0.1; } /* Halos hindi na makikita kapag naka-fade */
+    #topBar.faded { opacity: 0.1; }
 
     #nowHud { flex:0 1 auto; max-width:45%;
       padding:6px 12px;
@@ -149,7 +149,7 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    /* MINI QR CODE */
+    /* MINI QR CODE - Laging Visible (Walang fade) */
     #miniQr {
       position: absolute;
       bottom: max(8px, env(safe-area-inset-bottom));
@@ -160,15 +160,13 @@
       align-items: center;
       gap: 8px;
       padding: 4px 10px 4px 4px;
-      background: rgba(0,0,0,0.7);
-      border: 1px solid rgba(255,215,0,0.4);
+      background: rgba(0,0,0,0.85); /* Mas solid ang background para laging kitang-kita */
+      border: 1px solid rgba(255,215,0,0.6);
       border-radius: 8px;
       -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
       pointer-events: none;
-      transition: opacity 0.5s ease;
     }
     #miniQr.show { display: flex; }
-    #miniQr.faded { opacity: 0.1; }
     #miniQr img { 
       width: 42px; height: 42px; 
       border-radius: 4px; background: #fff; padding: 2px; 
@@ -327,7 +325,7 @@
       </div>
     </div>
 
-    <!-- Mini QR Code with Text -->
+    <!-- Mini QR Code (Laging visible) -->
     <div id="miniQr">
       <img id="miniQrImg" src="" alt="QR">
       <div id="miniQrInfo">
@@ -422,21 +420,17 @@
       reconnectionDelay: 2000,
     });
 
-    // SMART FADE LOGIC
+    // SMART FADE LOGIC (Top Bar lang ang nag-fa-fade, QR Code laging visible)
     function resetHudVisibility() {
       const topBar = document.getElementById('topBar');
-      const miniQr = document.getElementById('miniQr');
       
       topBar.classList.remove('faded');
-      miniQr.classList.remove('faded');
-      
       clearTimeout(hudFadeTimer);
       
       if (currentVideoId) {
         hudFadeTimer = setTimeout(() => {
           topBar.classList.add('faded');
-          miniQr.classList.add('faded');
-        }, 5000); // 5 segundo bago mag-fade
+        }, 5000); // 5 segundo bago mag-fade ang Top Bar
       }
     }
 
@@ -714,10 +708,19 @@
       ytPlayer = new YT.Player('player', {
         height: '100%', width: '100%', videoId: '',
         playerVars: {
-          autoplay: 0, controls: 1, modestbranding: 1,
-          rel: 0, fs: 0, playsinline: 1, iv_load_policy: 3,
-          enablejsapi: 1, origin: window.location.origin,
-          hl: 'en', cc_load_policy: 0, disablekb: 0, loop: 0,
+          autoplay: 0, 
+          controls: 0, // FIX 1: Tinanggal ang native controls (kasama ang fullscreen button ng YouTube)
+          modestbranding: 1,
+          rel: 0, 
+          fs: 0, 
+          playsinline: 1, 
+          iv_load_policy: 3,
+          enablejsapi: 1, 
+          origin: window.location.origin,
+          hl: 'en', 
+          cc_load_policy: 0, 
+          disablekb: 1, // Hindi pwedeng i-keyboard control sa TV
+          loop: 0,
         },
         events: {
           onReady: (e) => {
@@ -785,7 +788,6 @@
     socket.on('state', (s) => {
       const len = (s.queue || []).length;
       
-      // KAPAG MAY BAGONG RESERVE
       if (lastQueueLen >= 0 && len > lastQueueLen) {
         const qh = document.getElementById('queueHud');
         qh.classList.remove('flash');
@@ -793,7 +795,6 @@
         qh.classList.add('flash');
         setTimeout(() => qh.classList.remove('flash'), 1200);
         
-        // IPAKITA ULIT ANG UI (Solid) AT I-SET ANG TIMER PABALIK SA FADE
         resetHudVisibility(); 
       }
       
@@ -841,7 +842,6 @@
       document.getElementById('miniQr').classList.add('show');
       document.getElementById('connStatus').style.display = 'none';
 
-      // Ipakita muna nang 5 segundo tapos fade
       resetHudVisibility(); 
 
       if (!isIOS) tryAutoFullscreen();
