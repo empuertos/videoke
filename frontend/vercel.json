@@ -1,19 +1,5 @@
 {
   "version": 2,
   "outputDirectory": ".",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
-      ]
-    }
-  ],
-  "routes": [
-    { "src": "/host", "dest": "/host.html" },
-    { "src": "/remote", "dest": "/remote.html" }
-  ]
+  "cleanUrls": true
 }
