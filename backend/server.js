@@ -307,8 +307,8 @@ app.post('/api/session/create', (req, res) => {
       hostCode: s.hostCode,
       partyCode: s.partyCode,
       adminPassword: s.adminPasswordPlain,
-      hostUrl:  `${base}/host.html?session=${encodeURIComponent(s.hostCode)}`,
-      guestUrl: `${base}/remote.html?party=${encodeURIComponent(s.partyCode)}`,
+      hostUrl:  `${base}/host?session=${encodeURIComponent(s.hostCode)}`,
+      guestUrl: `${base}/remote?party=${encodeURIComponent(s.partyCode)}`,
     });
   } catch (e) { res.status(503).json({ error: e.message }); }
 });
