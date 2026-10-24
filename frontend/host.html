@@ -74,7 +74,8 @@
       pointer-events:none;
       transition: opacity 0.5s ease; }
     #topBar.show { display:flex; }
-    #topBar.faded { opacity: 0.1; }
+    /* Dito ang binago natin: 0.55 opacity (kita pa rin kahit papano) */
+    #topBar.faded { opacity: 0.55; } 
 
     #nowHud { flex:0 1 auto; max-width:45%;
       padding:6px 12px;
@@ -149,7 +150,7 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    /* MINI QR CODE - Laging Visible (Walang fade) */
+    /* MINI QR CODE - Laging Solid at Visible */
     #miniQr {
       position: absolute;
       bottom: max(8px, env(safe-area-inset-bottom));
@@ -160,7 +161,7 @@
       align-items: center;
       gap: 8px;
       padding: 4px 10px 4px 4px;
-      background: rgba(0,0,0,0.85); /* Mas solid ang background para laging kitang-kita */
+      background: rgba(0,0,0,0.85);
       border: 1px solid rgba(255,215,0,0.6);
       border-radius: 8px;
       -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
@@ -420,7 +421,7 @@
       reconnectionDelay: 2000,
     });
 
-    // SMART FADE LOGIC (Top Bar lang ang nag-fa-fade, QR Code laging visible)
+    // SMART FADE LOGIC (Top Bar lang ang nag-fa-fade, QR Code laging solid)
     function resetHudVisibility() {
       const topBar = document.getElementById('topBar');
       
@@ -709,7 +710,7 @@
         height: '100%', width: '100%', videoId: '',
         playerVars: {
           autoplay: 0, 
-          controls: 0, // FIX 1: Tinanggal ang native controls (kasama ang fullscreen button ng YouTube)
+          controls: 0, // Tinanggal ang native controls at fullscreen button ng YouTube
           modestbranding: 1,
           rel: 0, 
           fs: 0, 
@@ -719,7 +720,7 @@
           origin: window.location.origin,
           hl: 'en', 
           cc_load_policy: 0, 
-          disablekb: 1, // Hindi pwedeng i-keyboard control sa TV
+          disablekb: 1, 
           loop: 0,
         },
         events: {
