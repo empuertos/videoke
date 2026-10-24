@@ -20,15 +20,25 @@
     #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; }
     #player { position:absolute; inset:0; }
     
-    /* CSS ZOOM HACK: Pinalaki ng 15% para maitago ang YouTube buttons sa gilid */
+    /* CSS CROP: Pinalaki at inusog para maitago ang YouTube buttons sa gilid */
     #player iframe { 
-      width:100%; 
-      height:100%; 
+      position: absolute;
+      top: -5%; 
+      left: -5%;
+      width: 110%; 
+      height: 110%; 
       display:block; 
       border:0; 
-      pointer-events: none; 
-      transform: scale(1.15); 
-      transform-origin: center center;
+      pointer-events: none; /* BLOCKER */
+      transform: scale(1.05); /* Konting zoom */
+    }
+
+    /* FOCUS TRAP: Ito ang sasalo sa focus ng TV remote */
+    #focusTrap {
+      position: absolute;
+      inset: 0;
+      z-index: 9999;
+      outline: none;
     }
 
     #playerBlocker { position: absolute; inset: 0; z-index: 10; background: transparent; }
@@ -161,9 +171,7 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    /* =====================================================
-       MINI QR CODE (Semi-Transparent Background)
-       ===================================================== */
+    /* MINI QR CODE */
     #miniQr {
       position: absolute;
       bottom: max(8px, env(safe-area-inset-bottom));
@@ -174,7 +182,6 @@
       align-items: center;
       gap: 8px;
       padding: 4px 10px 4px 4px;
-      /* MAS TRANSPARENT: 0.3 lang para kita ang lyrics sa likod */
       background: rgba(0, 0, 0, 0.3); 
       border: 1.5px solid rgba(255, 215, 0, 0.8);
       border-radius: 8px;
@@ -182,14 +189,12 @@
       pointer-events: none;
     }
     #miniQr.show { display: flex; }
-    /* Solid white background para malinaw pa rin i-scan */
     #miniQr img { 
       width: 42px; height: 42px; 
       border-radius: 4px; background: #fff; padding: 2px; 
       box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
     #miniQrInfo { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
-    /* Lakasan ang text-shadow para mabasa kahit may lyrics sa likod */
     #miniQrCodeText { 
       font-family: ui-monospace,SFMono-Regular,Menlo,monospace; 
       font-size: 13px; font-weight: 800; color: var(--gold); 
@@ -310,16 +315,14 @@
     #autoplayOverlay h2 { font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
     #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
 
-    /* =====================================================
-       RESERVED NOTIFICATION TOAST (Semi-Transparent)
-       ===================================================== */
+    /* RESERVED NOTIFICATION TOAST */
     #resNotif {
       position: absolute;
       top: 50px;
       right: max(12px, env(safe-area-inset-right));
       left: auto;
       transform: translateX(120%);
-      background: rgba(10,5,18,0.3); /* Transparent din */
+      background: rgba(10,5,18,0.3); 
       border-left: 3px solid var(--gold);
       border-radius: 6px;
       padding: 6px 12px; 
@@ -349,10 +352,10 @@
   <div id="playerWrap">
     <div id="player"></div>
     
-    <!-- BLOCKER -->
+    <!-- FOCUS TRAP: Ito ang sasalo sa focus ng TV remote para hindi pumasok sa YouTube -->
+    <div id="focusTrap" tabindex="0"></div>
     <div id="playerBlocker"></div>
 
-    <!-- Reserved Notification -->
     <div id="resNotif">
       <div class="res-icon">🔔</div>
       <div class="res-content">
@@ -362,7 +365,6 @@
       </div>
     </div>
 
-    <!-- Top HUD -->
     <div id="topBar">
       <div id="nowHud">
         <div class="icon">🎤</div>
@@ -382,7 +384,6 @@
       </div>
     </div>
 
-    <!-- Mini QR Code -->
     <div id="miniQr">
       <img id="miniQrImg" src="" alt="QR">
       <div id="miniQrInfo">
@@ -478,6 +479,27 @@
       reconnectionDelay: 2000,
     });
 
+    // AGGRESSIVE FOCUS KILLER: Patuloy na tinatanggal ang focus sa YouTube iframe para hindi lumabas ang overlay
+    setInterval(() => {
+      const iframe = document.querySelector('#player iframe');
+      const focusTrap = document.getElementById('focusTrap');
+      
+      // Kung ang iframe ang naka-focus, ilipat sa focusTrap
+      if (iframe && document.activeElement === iframe) {
+        iframe.blur();
+        if (focusTrap) focusTrap.focus();
+      }
+    }, 500);
+
+    // I-intercept ang TV remote keys para hindi pumasok sa YouTube
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' '].includes(e.key)) {
+        const focusTrap = document.getElementById('focusTrap');
+        if (focusTrap) focusTrap.focus();
+        e.preventDefault();
+      }
+    }, true);
+
     function resetHudVisibility() {
       const topBar = document.getElementById('topBar');
       
@@ -543,6 +565,9 @@
       primeTTS();
       tryAutoFullscreen();
       resetHudVisibility();
+
+      const focusTrap = document.getElementById('focusTrap');
+      if (focusTrap) focusTrap.focus();
 
       if (currentVideoId) {
         try { ytPlayer.playVideo(); } catch {}
@@ -794,15 +819,9 @@
         events: {
           onReady: (e) => {
             ytReady = true;
+            const focusTrap = document.getElementById('focusTrap');
+            if (focusTrap) focusTrap.focus();
             
-            setTimeout(() => {
-              const iframe = document.querySelector('#player iframe');
-              if (iframe) {
-                iframe.setAttribute('tabindex', '-1');
-                iframe.blur();
-              }
-            }, 1000);
-
             try { e.target.setPlaybackQuality('default'); } catch {}
             try {
               if (typeof e.target.setPlaybackQualityRange === 'function')
