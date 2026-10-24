@@ -148,28 +148,34 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    /* MINI QR CODE (While playing) */
+    /* MINI QR CODE (Pinakababa, maliit na badge) */
     #miniQr {
       position: absolute;
-      bottom: 70px; /* Nakataas ng konti para hindi matabunan ng YT controls */
-      left: 14px;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      left: max(12px, env(safe-area-inset-left));
       z-index: 400;
       display: none;
+      flex-direction: row;
       align-items: center;
-      gap: 8px;
-      padding: 8px;
+      gap: 6px;
+      padding: 3px 8px 3px 3px;
       background: rgba(0,0,0,0.75);
-      border: 1.5px solid rgba(255,215,0,0.4);
-      border-radius: 12px;
-      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-      pointer-events: none; /* Hindi sagabal sa click */
+      border: 1px solid rgba(255,215,0,0.4);
+      border-radius: 8px;
+      -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+      pointer-events: none;
       transition: opacity 0.3s;
     }
     #miniQr.show { display: flex; }
-    #miniQr img { width: 75px; height: 75px; border-radius: 6px; background: #fff; padding: 3px; }
-    #miniQrInfo { display: flex; flex-direction: column; gap: 2px; }
-    #miniQrCodeText { font-family: ui-monospace; font-size: 16px; font-weight: 800; color: var(--gold); letter-spacing: 2px; }
-    #miniQrHint { font-size: 9px; color: #a0a0b0; line-height: 1.2; }
+    #miniQr img { 
+      width: 42px; height: 42px; 
+      border-radius: 4px; background: #fff; padding: 2px; 
+    }
+    #miniQrCodeText { 
+      font-family: ui-monospace,SFMono-Regular,Menlo,monospace; 
+      font-size: 13px; font-weight: 800; color: var(--gold); 
+      letter-spacing: 1px; line-height: 1; 
+    }
 
     /* FS BUTTON & CONTROLS */
     #fsBtn { position:absolute; bottom:14px; right:14px;
@@ -209,13 +215,14 @@
     #ttsBtn:active { transform:scale(0.95); }
     #ttsBtn.off { opacity:0.45; }
 
+    /* Connection Status (Ilalagay natin sa ilalim ng Mini QR) */
     #connStatus { position:absolute; bottom:14px; left:14px;
       bottom:max(14px,env(safe-area-inset-bottom));
       left:max(14px,env(safe-area-inset-left));
       z-index:60; padding:6px 14px;
       background:rgba(0,0,0,0.7); border-radius:14px; font-size:11px;
       display:flex; align-items:center; gap:5px;
-      pointer-events:none; }
+      pointer-events:none; transition: opacity 0.3s; }
     #connDot { width:7px; height:7px; border-radius:50%;
       background:var(--green); box-shadow:0 0 8px var(--green); }
     #connDot.offline { background:var(--red); box-shadow:0 0 8px var(--red); }
@@ -304,13 +311,10 @@
       </div>
     </div>
 
-    <!-- Mini QR Code (Nasa baba-kaliwa) -->
+    <!-- Mini QR Code (Saktong-sakto sa pinakababa) -->
     <div id="miniQr">
       <img id="miniQrImg" src="" alt="QR">
-      <div id="miniQrInfo">
-        <div id="miniQrCodeText">---</div>
-        <div id="miniQrHint">Scan to request</div>
-      </div>
+      <div id="miniQrCodeText">---</div>
     </div>
 
     <div id="connStatus">
@@ -785,6 +789,7 @@
 
       // SHOW MINI QR CODE DITO
       document.getElementById('miniQr').classList.add('show');
+      document.getElementById('connStatus').style.display = 'none'; // Itago muna ang Connected status
 
       if (!isIOS) tryAutoFullscreen();
 
@@ -826,8 +831,9 @@
       if (ytPlayer && ytReady) { try { ytPlayer.stopVideo(); } catch {} }
       document.getElementById('topBar').classList.remove('show');
       
-      // HIDE MINI QR CODE DITO
+      // HIDE MINI QR CODE, SHOW CONN STATUS DITO
       document.getElementById('miniQr').classList.remove('show');
+      document.getElementById('connStatus').style.display = 'flex';
       
       showIdle();
       autoFullscreenAttempted = false;
@@ -883,7 +889,7 @@
       
       // Update mini QR
       document.getElementById('miniQrImg').src =
-        'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(url);
+        'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(url);
       document.getElementById('miniQrCodeText').textContent = code;
 
       overlay.classList.remove('hidden');
