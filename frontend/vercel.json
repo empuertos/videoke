@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "videoke-frontend",
+  "outputDirectory": ".",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
@@ -14,7 +14,6 @@
   ],
   "routes": [
     { "src": "/host", "dest": "/host.html" },
-    { "src": "/remote", "dest": "/remote.html" },
-    { "src": "/", "dest": "/remote.html" }
+    { "src": "/remote", "dest": "/remote.html" }
   ]
 }
