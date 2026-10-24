@@ -280,6 +280,29 @@
       color:var(--gold);
     }
     #ttsControl button:active { transform:scale(0.96); }
+
+    /* AUTO-PLAY UNLOCK OVERLAY */
+    #autoplayOverlay {
+      position:fixed; inset:0; z-index:10000;
+      background:rgba(10,5,18,0.95); backdrop-filter:blur(10px);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:30px; cursor:pointer;
+    }
+    #autoplayOverlay .icon {
+      font-size:80px; margin-bottom:20px;
+      animation:tapPulse 1.5s infinite;
+    }
+    @keyframes tapPulse {
+      0%, 100% { transform:scale(1); }
+      50% { transform:scale(1.15); }
+    }
+    #autoplayOverlay h2 {
+      font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px;
+      text-shadow:0 0 20px rgba(255,215,0,0.5);
+    }
+    #autoplayOverlay p {
+      font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6;
+    }
   </style>
 </head>
 <body>
@@ -323,6 +346,13 @@
     </button>
   </div>
 
+  <!-- TAP TO ENABLE AUTO-PLAY OVERLAY -->
+  <div id="autoplayOverlay">
+    <div class="icon">👆</div>
+    <h2>Tap Anywhere to Start</h2>
+    <p>To enable auto-play and sound, browsers require you to tap the screen once. After this, reserved songs will play automatically.</p>
+  </div>
+
   <div id="idleScreen">
     <div class="logo">🎤 VIDEoke</div>
     <div class="sub" id="subText">Let's sing! Scan the QR code to join.</div>
@@ -361,7 +391,6 @@
     <button class="go" onclick="submitHostCode()">Open Karaoke</button>
     <div class="err" id="hostGateErr"></div>
     <div class="divider">or</div>
-    <!-- DITO ANG FIX: Tinanggal ang .html -->
     <button class="new-btn" onclick="location.href='/'">🎉 Start a New Karaoke</button>
   </div>
 
@@ -426,7 +455,12 @@
       firstInteractionDone = true;
       primeTTS();
       if (currentVideoId) tryAutoFullscreen();
+      
+      // Hide the Tap to Enable Auto-Play overlay
+      const overlay = document.getElementById('autoplayOverlay');
+      if (overlay) overlay.style.display = 'none';
     }
+    
     ['click','touchstart','keydown'].forEach(e =>
       document.addEventListener(e, markFirstInteraction, { passive: true }));
 
@@ -842,7 +876,6 @@
         noParty.textContent = '⏳ Waiting for a party...';
         return;
       }
-      // DITO ANG FIX: Tinanggal ang .html
       const url = location.origin + '/remote?party=' + code;
       document.getElementById('qrImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' + encodeURIComponent(url);
@@ -862,7 +895,6 @@
         });
         if (!r.ok) throw new Error('Server error ' + r.status);
         localStorage.removeItem('videoke:hostCode');
-        // DITO ANG FIX: Tinanggal ang .html
         location.href = '/';
       } catch (e) { alert('❌ ' + e.message); }
     }
