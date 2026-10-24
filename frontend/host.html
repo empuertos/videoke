@@ -21,6 +21,7 @@
     #player { position:absolute; inset:0; }
     #player iframe { width:100%; height:100%; display:block; border:0; }
 
+    /* IDLE SCREEN */
     #idleScreen { position:fixed; inset:0;
       display:flex; flex-direction:column;
       align-items:center; justify-content:center;
@@ -65,6 +66,7 @@
     #stopPartyBtn { background:linear-gradient(135deg,#6b7280,#4b5563); }
     #hostControls button:active { transform:scale(0.97); }
 
+    /* TOP BAR HUD */
     #topBar { position:absolute; top:0; left:0; right:0;
       z-index:50; padding:6px 8px;
       padding-top:max(6px,env(safe-area-inset-top));
@@ -146,7 +148,7 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    /* MINI QR CODE */
+    /* MINI QR CODE (Pinakababa, maliit na badge) */
     #miniQr {
       position: absolute;
       bottom: max(8px, env(safe-area-inset-bottom));
@@ -175,7 +177,7 @@
       letter-spacing: 1px; line-height: 1; 
     }
 
-    /* FS BUTTON & CONTROLS */
+    /* FS BUTTON & CONTROLS (Pinaliit at ginawang translucent) */
     #fsBtn { position:absolute; 
       bottom:max(12px,env(safe-area-inset-bottom));
       right:max(12px,env(safe-area-inset-right));
@@ -213,6 +215,7 @@
     #ttsBtn:active { transform:scale(0.95); }
     #ttsBtn.off { opacity: 0.2; }
 
+    /* Connection Status */
     #connStatus { position:absolute; bottom:14px; left:14px;
       bottom:max(14px,env(safe-area-inset-bottom));
       left:max(14px,env(safe-area-inset-left));
@@ -226,6 +229,7 @@
 
     body.is-fullscreen #idleScreen { display:none; }
 
+    /* HOST GATE */
     #hostGate { display:none; position:fixed; inset:0; z-index:9999;
       background:radial-gradient(ellipse at top,#2a0a1a,#0a0512);
       flex-direction:column; align-items:center; justify-content:center;
@@ -287,6 +291,7 @@
   <div id="playerWrap">
     <div id="player"></div>
 
+    <!-- Top HUD -->
     <div id="topBar">
       <div id="nowHud">
         <div class="icon">🎤</div>
@@ -306,6 +311,7 @@
       </div>
     </div>
 
+    <!-- Mini QR Code (Saktong-sakto sa pinakababa) -->
     <div id="miniQr">
       <img id="miniQrImg" src="" alt="QR">
       <div id="miniQrCodeText">---</div>
@@ -670,7 +676,7 @@
         height: '100%', width: '100%', videoId: '',
         playerVars: {
           autoplay: 0, controls: 1, modestbranding: 1,
-          rel: 0, fs: 1, playsinline: 1, iv_load_policy: 3,
+          rel: 0, fs: 0, playsinline: 1, iv_load_policy: 3, // Binago natin ang fs: 1 para mawala ang native fullscreen button ng YT
           enablejsapi: 1, origin: window.location.origin,
           hl: 'en', cc_load_policy: 0, disablekb: 0, loop: 0,
         },
@@ -692,16 +698,14 @@
           },
           onError: (e) => {
             if (!currentVideoId) return;
-            // FIX: Auto-skip kapag embedding disabled (101 o 150) o iba pang error
+            // Auto-skip kapag embedding disabled (101 o 150) o iba pang error
             if ([2, 5, 100, 101, 150].includes(e.data)) {
               console.warn('YouTube Error:', e.data, 'Skipping and blacklisting...');
               socket.emit('videoFailed', {
                 videoId: currentVideoId,
                 title: document.getElementById('nowSong').textContent || '',
               });
-              // I-clear agad ang currentVideoId para hindi mag-hang
               currentVideoId = null;
-              // Agad na i-skip sa susunod na kanta pagkatapos ng 1 segundo
               setTimeout(() => {
                 stopVideo();
               }, 1000);
