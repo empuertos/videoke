@@ -74,8 +74,7 @@
       pointer-events:none;
       transition: opacity 0.5s ease; }
     #topBar.show { display:flex; }
-    /* Dito ang binago natin: 0.55 opacity (kita pa rin kahit papano) */
-    #topBar.faded { opacity: 0.55; } 
+    #topBar.faded { opacity: 0.55; } /* KITA PA RIN PERO HINDI SAGABAL SA LYRICS */
 
     #nowHud { flex:0 1 auto; max-width:45%;
       padding:6px 12px;
@@ -150,7 +149,7 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    /* MINI QR CODE - Laging Solid at Visible */
+    /* MINI QR CODE */
     #miniQr {
       position: absolute;
       bottom: max(8px, env(safe-area-inset-bottom));
@@ -172,25 +171,9 @@
       width: 42px; height: 42px; 
       border-radius: 4px; background: #fff; padding: 2px; 
     }
-    #miniQrInfo {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      justify-content: center;
-    }
-    #miniQrCodeText { 
-      font-family: ui-monospace,SFMono-Regular,Menlo,monospace; 
-      font-size: 13px; font-weight: 800; color: var(--gold); 
-      letter-spacing: 1px; line-height: 1.1; 
-    }
-    #miniQrHint {
-      font-size: 9px;
-      color: #d0d0d0;
-      line-height: 1.1;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
+    #miniQrInfo { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+    #miniQrCodeText { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: 13px; font-weight: 800; color: var(--gold); letter-spacing: 1px; line-height: 1.1; }
+    #miniQrHint { font-size: 9px; color: #d0d0d0; line-height: 1.1; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
 
     /* FS BUTTON & CONTROLS */
     #fsBtn { position:absolute; 
@@ -206,8 +189,7 @@
       transition:all 0.2s;
       -webkit-appearance:none;
       opacity: 0.6; }
-    #fsBtn:hover { opacity: 1; background:rgba(255,215,0,0.9);
-      color:#000; border-color:var(--gold); }
+    #fsBtn:hover { opacity: 1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
     #fsBtn:active { transform:scale(0.95); }
     
     #ttsBtn {
@@ -300,11 +282,53 @@
     @keyframes tapPulse { 0%, 100% { transform:scale(1); } 50% { transform:scale(1.15); } }
     #autoplayOverlay h2 { font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
     #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
+
+    /* =====================================================
+       RESERVED NOTIFICATION TOAST
+       ===================================================== */
+    #resNotif {
+      position: absolute;
+      top: 60px; /* Below top bar */
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(0,0,0,0.85);
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 1000;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.8), 0 0 15px rgba(255,215,0,0.3);
+      backdrop-filter: blur(10px);
+    }
+    #resNotif.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #resNotif .res-icon { font-size: 28px; }
+    #resNotif .res-content { display: flex; flex-direction: column; gap: 2px; }
+    #resNotif .res-header { font-size: 10px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
+    #resNotif .res-title { font-size: 14px; font-weight: 800; color: #fff; line-height: 1.2; }
+    #resNotif .res-singer { font-size: 12px; color: var(--red); font-weight: 700; }
   </style>
 </head>
 <body>
   <div id="playerWrap">
     <div id="player"></div>
+
+    <!-- Reserved Notification -->
+    <div id="resNotif">
+      <div class="res-icon">🔔</div>
+      <div class="res-content">
+        <div class="res-header">Reserved Added</div>
+        <div class="res-title" id="resNotifTitle">Song Title</div>
+        <div class="res-singer" id="resNotifSinger">Singer</div>
+      </div>
+    </div>
 
     <!-- Top HUD -->
     <div id="topBar">
@@ -326,7 +350,7 @@
       </div>
     </div>
 
-    <!-- Mini QR Code (Laging visible) -->
+    <!-- Mini QR Code -->
     <div id="miniQr">
       <img id="miniQrImg" src="" alt="QR">
       <div id="miniQrInfo">
@@ -413,6 +437,7 @@
     let autoFullscreenAttempted = false, firstInteractionDone = false;
     let lastQueueLen = -1;
     let hudFadeTimer = null;
+    let resNotifTimer = null;
 
     const socket = io(BACKEND_URL, {
       transports: ['websocket', 'polling'],
@@ -433,6 +458,19 @@
           topBar.classList.add('faded');
         }, 5000); // 5 segundo bago mag-fade ang Top Bar
       }
+    }
+
+    // SHOW RESERVATION NOTIFICATION
+    function showResNotif(singer, title) {
+      const notif = document.getElementById('resNotif');
+      document.getElementById('resNotifSinger').textContent = `🎤 ${singer}`;
+      document.getElementById('resNotifTitle').textContent = title || 'Unknown Song';
+
+      notif.classList.add('show');
+      clearTimeout(resNotifTimer);
+      resNotifTimer = setTimeout(() => {
+        notif.classList.remove('show');
+      }, 5000); // 5 segundo nakalabas
     }
 
     function getFsElement() {
@@ -710,7 +748,7 @@
         height: '100%', width: '100%', videoId: '',
         playerVars: {
           autoplay: 0, 
-          controls: 0, // Tinanggal ang native controls at fullscreen button ng YouTube
+          controls: 0, 
           modestbranding: 1,
           rel: 0, 
           fs: 0, 
@@ -789,13 +827,21 @@
     socket.on('state', (s) => {
       const len = (s.queue || []).length;
       
+      // KAPAG MAY BAGONG RESERVE, IPAKITA ANG NOTIFICATION
       if (lastQueueLen >= 0 && len > lastQueueLen) {
+        // Flash effect sa Reserved Box
         const qh = document.getElementById('queueHud');
         qh.classList.remove('flash');
         void qh.offsetWidth;
         qh.classList.add('flash');
         setTimeout(() => qh.classList.remove('flash'), 1200);
         
+        // Kunin ang pinakabagong naka-reserve at ipakita sa pop-up
+        const newestSong = s.queue[s.queue.length - 1];
+        if (newestSong) {
+          showResNotif(newestSong.singer, newestSong.title);
+        }
+
         resetHudVisibility(); 
       }
       
