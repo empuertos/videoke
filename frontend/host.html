@@ -20,28 +20,30 @@
     #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; }
     #player { position:absolute; inset:0; }
     
-    /* CSS CROP: Pinalaki at inusog para maitago ang YouTube buttons sa gilid */
+    /* =====================================================
+       DITO ANG PERMANENTENG FIX: AGRESSIVE CROP
+       Pinalaki natin ng 30% at ginawang center para maitulak
+       palabas ng screen ang lahat ng YouTube buttons (Fullscreen, Share, etc.)
+       ===================================================== */
     #player iframe { 
       position: absolute;
-      top: -5%; 
-      left: -5%;
-      width: 110%; 
-      height: 110%; 
+      top: -15%; 
+      left: -15%;
+      width: 130%; 
+      height: 130%; 
       display:block; 
       border:0; 
-      pointer-events: none; /* BLOCKER */
-      transform: scale(1.05); /* Konting zoom */
+      pointer-events: none; /* Blocker para hindi ma-click */
     }
 
-    /* FOCUS TRAP: Ito ang sasalo sa focus ng TV remote */
+    /* INVISIBLE BLOCKER & FOCUS TRAP */
+    #playerBlocker { position: absolute; inset: 0; z-index: 10; background: transparent; }
     #focusTrap {
       position: absolute;
       inset: 0;
       z-index: 9999;
       outline: none;
     }
-
-    #playerBlocker { position: absolute; inset: 0; z-index: 10; background: transparent; }
 
     /* IDLE SCREEN */
     #idleScreen { position:fixed; inset:0;
@@ -352,7 +354,7 @@
   <div id="playerWrap">
     <div id="player"></div>
     
-    <!-- FOCUS TRAP: Ito ang sasalo sa focus ng TV remote para hindi pumasok sa YouTube -->
+    <!-- FOCUS TRAP & BLOCKER -->
     <div id="focusTrap" tabindex="0"></div>
     <div id="playerBlocker"></div>
 
@@ -479,12 +481,10 @@
       reconnectionDelay: 2000,
     });
 
-    // AGGRESSIVE FOCUS KILLER: Patuloy na tinatanggal ang focus sa YouTube iframe para hindi lumabas ang overlay
+    // AGGRESSIVE FOCUS KILLER: Patuloy na tinatanggal ang focus sa YouTube iframe
     setInterval(() => {
       const iframe = document.querySelector('#player iframe');
       const focusTrap = document.getElementById('focusTrap');
-      
-      // Kung ang iframe ang naka-focus, ilipat sa focusTrap
       if (iframe && document.activeElement === iframe) {
         iframe.blur();
         if (focusTrap) focusTrap.focus();
