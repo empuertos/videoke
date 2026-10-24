@@ -146,21 +146,6 @@
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    #countdown { position:absolute; inset:0; z-index:200;
-      display:none; align-items:center; justify-content:center;
-      background:rgba(0,0,0,0.7);
-      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
-      pointer-events:none; }
-    #countdown.show { display:flex; }
-    #countdown .num { font-size:clamp(100px,25vw,200px); font-weight:900;
-      color:var(--gold);
-      text-shadow:0 0 60px rgba(255,215,0,0.8);
-      animation:pulse 1s ease-in-out infinite; }
-    @keyframes pulse {
-      0%,100% { transform:scale(1); opacity:1; }
-      50% { transform:scale(1.1); opacity:0.7; }
-    }
-
     #fsBtn { position:absolute; bottom:14px; right:14px;
       bottom:max(14px,env(safe-area-inset-bottom));
       right:max(14px,env(safe-area-inset-right));
@@ -281,7 +266,6 @@
     }
     #ttsControl button:active { transform:scale(0.96); }
 
-    /* AUTO-PLAY UNLOCK OVERLAY */
     #autoplayOverlay {
       position:fixed; inset:0; z-index:10000;
       background:rgba(10,5,18,0.95); backdrop-filter:blur(10px);
@@ -328,10 +312,6 @@
       </div>
     </div>
 
-    <div id="countdown">
-      <div class="num" id="countdownNum">3</div>
-    </div>
-
     <div id="connStatus">
       <span id="connDot"></span>
       <span id="connText">Connected</span>
@@ -346,7 +326,6 @@
     </button>
   </div>
 
-  <!-- TAP TO ENABLE AUTO-PLAY OVERLAY -->
   <div id="autoplayOverlay">
     <div class="icon">👆</div>
     <h2>Tap Anywhere to Start</h2>
@@ -454,9 +433,12 @@
       if (firstInteractionDone) return;
       firstInteractionDone = true;
       primeTTS();
-      if (currentVideoId) tryAutoFullscreen();
       
-      // Hide the Tap to Enable Auto-Play overlay
+      if (currentVideoId) {
+        try { ytPlayer.playVideo(); } catch {}
+        tryAutoFullscreen();
+      }
+      
       const overlay = document.getElementById('autoplayOverlay');
       if (overlay) overlay.style.display = 'none';
     }
@@ -734,14 +716,12 @@
       hostCode = null;
       showHostGate();
     });
+    
     socket.on('command', (cmd) => {
       switch (cmd.type) {
-        case 'play': playVideo(cmd.song); break;
-        case 'countdown':
-          showCountdown(cmd.seconds || 5, cmd.song);
-          announceNextSong(cmd.song);
+        case 'play': 
+          playVideo(cmd.song); 
           break;
-        case 'countdownTick': updateCountdown(cmd.seconds); break;
         case 'pause': if (ytReady && ytPlayer) ytPlayer.pauseVideo(); break;
         case 'resume': if (ytReady && ytPlayer) ytPlayer.playVideo(); break;
         case 'stop': stopVideo(); break;
@@ -749,6 +729,7 @@
         case 'idle': showIdle(); break;
       }
     });
+    
     socket.on('state', (s) => {
       const len = (s.queue || []).length;
       if (lastQueueLen >= 0 && len > lastQueueLen) {
@@ -763,6 +744,7 @@
       if (s.nowPlaying) updateNowHud(s.nowPlaying);
       else if (!currentVideoId) showIdle();
     });
+    
     socket.on('partyChanged', ({ active }) => {
       if (!active) {
         document.getElementById('topBar').classList.remove('show');
@@ -783,6 +765,9 @@
 
     function playVideo(song) {
       if (!song?.videoId) return;
+      
+      announceNextSong(song);
+
       if (!ytPlayer || !ytReady) return setTimeout(() => playVideo(song), 500);
       currentVideoId = song.videoId;
       updateNowHud(song);
@@ -852,16 +837,6 @@
           </div>
         </div>`).join('');
       document.getElementById('topBar').classList.add('show');
-    }
-
-    function showCountdown(sec, song) {
-      updateNowHud(song);
-      document.getElementById('countdownNum').textContent = sec;
-      document.getElementById('countdown').classList.add('show');
-    }
-    function updateCountdown(sec) {
-      if (sec <= 0) document.getElementById('countdown').classList.remove('show');
-      else document.getElementById('countdownNum').textContent = sec;
     }
 
     function showIdle() { document.getElementById('idleScreen').classList.remove('hidden'); }
