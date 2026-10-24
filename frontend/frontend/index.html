@@ -180,7 +180,7 @@
     function submitJoin() {
       const c = document.getElementById('joinCode').value.trim().toUpperCase();
       if (c.length !== 6) return alert('Must be 6 characters');
-      location.href = '/remote.html?party=' + encodeURIComponent(c);
+      location.href = '/remote?party=' + encodeURIComponent(c);
     }
     document.getElementById('joinCode').addEventListener('keydown', e => {
       if (e.key === 'Enter') submitJoin();
