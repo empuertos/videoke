@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0a0512">
   <title>Videoke YouTube — Host</title>
   <script src="/config.js"></script>
@@ -10,104 +10,80 @@
     :root { --gold:#ffd700; --red:#ff2e55; --bg:#0a0512;
       --card:#16101f; --dim:#8888a0; --green:#4ade80; }
     * { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; }
     body { background:var(--bg); color:#fff; overflow:hidden;
-      font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
-      height:100vh; width:100vw; }
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+      height:100vh; height:100dvh; height:-webkit-fill-available;
+      width:100vw; -webkit-text-size-adjust:100%;
+      -webkit-tap-highlight-color:transparent; }
 
-    /* PLAYER WRAPPER */
-    #playerWrap { position:fixed; inset:0;
-      background:#000; overflow:hidden; }
+    #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; }
     #player { position:absolute; inset:0; }
-    #player iframe { width:100%; height:100%; display:block;
-      border:0; }
+    #player iframe { width:100%; height:100%; display:block; border:0; }
 
-    /* Idle screen */
     #idleScreen { position:fixed; inset:0;
       display:flex; flex-direction:column;
       align-items:center; justify-content:center;
       background:radial-gradient(ellipse at center,#1a0033,#0a0512);
-      z-index:100; text-align:center; padding:40px; }
+      z-index:100; text-align:center; padding:40px 20px;
+      overflow-y:auto; }
     #idleScreen.hidden { display:none; }
-    #idleScreen .logo { font-size:72px; font-weight:900;
+    #idleScreen .logo { font-size:clamp(48px,8vw,72px); font-weight:900;
       background:linear-gradient(135deg,#ffd700,#ff2e55);
       -webkit-background-clip:text;background-clip:text;
       -webkit-text-fill-color:transparent;
       margin-bottom:20px; letter-spacing:-2px; }
-    #idleScreen .sub { font-size:20px; color:#a0a0b0;
-      margin-bottom:40px; font-weight:500; }
+    #idleScreen .sub { font-size:clamp(14px,2vw,20px); color:#a0a0b0;
+      margin-bottom:30px; font-weight:500; }
 
-    /* QR overlay */
-    #qrOverlay { margin-top:20px;
-      padding:30px; background:rgba(0,0,0,0.6);
+    #qrOverlay { margin-top:20px; padding:clamp(16px,3vw,30px);
+      background:rgba(0,0,0,0.6);
       border:2px solid var(--gold);
-      border-radius:24px; backdrop-filter:blur(20px);
-      box-shadow:0 0 60px rgba(255,215,0,0.3); }
+      border-radius:24px;
+      -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+      box-shadow:0 0 60px rgba(255,215,0,0.3); max-width:90vw; }
     #qrOverlay.hidden { display:none; }
-    #qrOverlay .title { font-size:22px; font-weight:800;
+    #qrOverlay .title { font-size:clamp(16px,2vw,22px); font-weight:800;
       color:var(--gold); margin-bottom:16px; }
-    #qrImg { width:260px; height:260px;
+    #qrImg { width:clamp(180px,30vw,260px); height:auto; aspect-ratio:1;
       background:#fff; padding:12px; border-radius:16px;
-      display:block; }
-    #qrCode { font-family:monospace;
-      font-size:40px; font-weight:900; color:var(--gold);
+      display:block; margin:0 auto; }
+    #qrCode { font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:clamp(28px,4vw,40px); font-weight:900; color:var(--gold);
       letter-spacing:10px; margin-top:16px;
       text-shadow:0 0 20px rgba(255,215,0,0.6); }
     #qrUrl { font-size:11px; color:#8888a0;
-      margin-top:10px; word-break:break-all; max-width:280px; }
+      margin-top:10px; word-break:break-all; max-width:280px;
+      margin-left:auto; margin-right:auto; }
 
-    /* Host control panel */
     #hostControls { margin-top:24px; display:flex; gap:10px;
       flex-wrap:wrap; justify-content:center; }
     #hostControls button { padding:12px 24px;
       border:none; border-radius:12px;
       font-size:14px; font-weight:700; cursor:pointer;
-      font-family:inherit; color:#fff; }
-    #startPartyBtn { background:linear-gradient(135deg,#22c55e,#16a34a); }
+      font-family:inherit; color:#fff; -webkit-appearance:none; }
     #stopPartyBtn { background:linear-gradient(135deg,#6b7280,#4b5563); }
     #hostControls button:active { transform:scale(0.97); }
 
-    #hostPwBox { margin-top:20px; padding:20px;
-      background:rgba(0,0,0,0.6);
-      border:1px solid rgba(255,255,255,0.1);
-      border-radius:14px; display:none; }
-    #hostPwBox.show { display:block; }
-    #hostPwBox input { padding:12px 16px;
-      background:#1e1630; color:#fff; border:1px solid rgba(255,255,255,0.1);
-      border-radius:10px; font-size:15px;
-      font-family:inherit; width:220px; text-align:center; }
-    #hostPwBox input:focus { outline:none; border-color:var(--gold); }
-    #hostPwBox .row { display:flex; gap:8px; margin-top:12px;
-      justify-content:center; }
-    #hostPwBox .row button { padding:10px 20px;
-      border:none; border-radius:10px; font-weight:700;
-      cursor:pointer; font-family:inherit; font-size:13px; }
-    #hostPwBox .row .primary { background:var(--red); color:#fff; }
-    #hostPwBox .row .secondary { background:#1e1630; color:#fff;
-      border:1px solid rgba(255,255,255,0.1); }
-    #hostPwErr { color:#ff6b6b; font-size:12px;
-      margin-top:10px; min-height:14px; }
-
-    /* ⭐ TOP BAR — medium compact */
     #topBar { position:absolute; top:0; left:0; right:0;
-      z-index:50;
-      padding:6px 8px;
+      z-index:50; padding:6px 8px;
+      padding-top:max(6px,env(safe-area-inset-top));
       display:none; align-items:center; gap:6px;
       pointer-events:none; }
     #topBar.show { display:flex; }
 
-    /* ⭐ NOW SINGING — medium maliit */
     #nowHud { flex:0 0 auto; max-width:34%;
       padding:6px 12px;
       background:rgba(0,0,0,0.82);
       border:1.5px solid rgba(255,215,0,0.5);
-      border-radius:14px; backdrop-filter:blur(14px);
+      border-radius:14px;
+      -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
       display:flex; align-items:center; gap:8px;
       box-shadow:0 3px 12px rgba(0,0,0,0.6);
       min-height:36px; }
     #nowHud .icon { font-size:16px; flex-shrink:0; }
     #nowHud .info { min-width:0; display:flex;
-      flex-direction:column; gap:0;
-      overflow:hidden; }
+      flex-direction:column; gap:0; overflow:hidden; }
     #nowHud .label { font-size:7px; font-weight:800;
       color:var(--gold); letter-spacing:1.5px;
       line-height:1; margin-bottom:2px; }
@@ -120,68 +96,63 @@
       overflow:hidden; text-overflow:ellipsis;
       white-space:nowrap; }
 
-    /* ⭐ RESERVED — horizontal strip medium */
     #queueHud { flex:1; min-width:0;
       padding:6px 12px;
       background:rgba(0,0,0,0.82);
       border:1.5px solid rgba(255,46,85,0.5);
-      border-radius:14px; backdrop-filter:blur(14px);
+      border-radius:14px;
+      -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
       display:flex; flex-direction:column;
       box-shadow:0 3px 12px rgba(0,0,0,0.6);
       min-height:36px; justify-content:center; }
+    #queueHud.flash { animation:qflash 1.1s ease; }
+    @keyframes qflash {
+      0%, 100% { border-color: rgba(255,46,85,0.5);
+        box-shadow: 0 3px 12px rgba(0,0,0,0.6); }
+      35% { border-color: var(--gold);
+        box-shadow: 0 0 34px rgba(255,215,0,0.85); }
+    }
     #queueHud .head { display:flex; justify-content:space-between;
-      align-items:center;
-      margin-bottom:3px; }
+      align-items:center; margin-bottom:3px; }
     #queueHud .label { font-size:7px; font-weight:800;
       color:#ff6b6b; letter-spacing:1.5px;
-      display:flex; align-items:center; gap:4px;
-      line-height:1; }
-    #queueHud .count {
-      background:#ff2e55; color:#fff; font-size:8px;
-      padding:0px 5px; border-radius:6px;
-      font-weight:700; line-height:1.3; }
+      display:flex; align-items:center; gap:4px; line-height:1; }
+    #queueHud .count { background:#ff2e55; color:#fff; font-size:8px;
+      padding:0px 5px; border-radius:6px; font-weight:700; line-height:1.3; }
     #queueHud .items { display:flex; flex-direction:row;
-      gap:5px; overflow-x:auto;
-      scrollbar-width:none;
+      gap:5px; overflow-x:auto; scrollbar-width:none;
       align-items:center; }
     #queueHud .items::-webkit-scrollbar { display:none; }
     #queueHud .q-item { display:flex; align-items:center; gap:5px;
       padding:3px 8px 3px 4px;
       background:rgba(255,255,255,0.06);
-      border-radius:10px;
-      flex-shrink:0;
-      max-width:180px; }
+      border-radius:10px; flex-shrink:0; max-width:180px; }
     #queueHud .q-item:first-child {
       background:rgba(255,46,85,0.2);
       border:1px solid rgba(255,46,85,0.5); }
     #queueHud .q-pos { background:var(--gold); color:#000;
       font-size:8px; font-weight:800; min-width:14px; height:14px;
       border-radius:50%; display:flex; align-items:center;
-      justify-content:center; flex-shrink:0;
-      line-height:1; }
-    #queueHud .q-item:first-child .q-pos {
-      background:#ff2e55; color:#fff; }
+      justify-content:center; flex-shrink:0; line-height:1; }
+    #queueHud .q-item:first-child .q-pos { background:#ff2e55; color:#fff; }
     #queueHud .q-info { min-width:0; display:flex;
-      align-items:baseline; gap:4px;
-      overflow:hidden; }
+      align-items:baseline; gap:4px; overflow:hidden; }
     #queueHud .q-singer { font-weight:800; font-size:11px;
       color:#fff; overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; line-height:1;
-      flex-shrink:0; max-width:80px; }
+      white-space:nowrap; line-height:1; flex-shrink:0; max-width:80px; }
     #queueHud .q-song { font-size:10px; color:#a0a0b0;
       overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; line-height:1;
-      min-width:0; flex:1; }
+      white-space:nowrap; line-height:1; min-width:0; flex:1; }
     #queueHud .q-empty { font-size:10px; color:#666;
       font-style:italic; line-height:1; }
 
-    /* Countdown overlay */
     #countdown { position:absolute; inset:0; z-index:200;
       display:none; align-items:center; justify-content:center;
-      background:rgba(0,0,0,0.7); backdrop-filter:blur(10px);
+      background:rgba(0,0,0,0.7);
+      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
       pointer-events:none; }
     #countdown.show { display:flex; }
-    #countdown .num { font-size:200px; font-weight:900;
+    #countdown .num { font-size:clamp(100px,25vw,200px); font-weight:900;
       color:var(--gold);
       text-shadow:0 0 60px rgba(255,215,0,0.8);
       animation:pulse 1s ease-in-out infinite; }
@@ -190,37 +161,50 @@
       50% { transform:scale(1.1); opacity:0.7; }
     }
 
-    /* ⭐ FULLSCREEN BUTTON — always visible */
     #fsBtn { position:absolute; bottom:14px; right:14px;
+      bottom:max(14px,env(safe-area-inset-bottom));
+      right:max(14px,env(safe-area-inset-right));
       z-index:500;
       width:44px; height:44px; border-radius:12px;
       background:rgba(0,0,0,0.7);
       border:1.5px solid rgba(255,255,255,0.4);
       color:#fff; font-size:18px; cursor:pointer;
       display:flex; align-items:center; justify-content:center;
-      backdrop-filter:blur(20px);
-      transition:background 0.2s, transform 0.2s, opacity 0.2s;
-      opacity:1; }
+      -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+      transition:background 0.2s, transform 0.2s;
+      -webkit-appearance:none; }
     #fsBtn:hover { background:rgba(255,215,0,0.9);
-      color:#000; transform:scale(1.08);
-      border-color:var(--gold); }
+      color:#000; border-color:var(--gold); }
     #fsBtn:active { transform:scale(0.95); }
-
-    /* Kapag naka-fullscreen, mas visible pa rin */
     body.is-fullscreen #fsBtn {
-      opacity:0.85;
       background:rgba(0,0,0,0.75);
       border-color:rgba(255,215,0,0.6); }
-    body.is-fullscreen #fsBtn:hover {
-      opacity:1;
-      background:rgba(255,215,0,0.9);
-      color:#000; }
 
-    /* Connection status */
-    #connStatus { position:absolute; bottom:14px; left:14px;
-      z-index:60; padding:6px 14px;
+    #ttsBtn {
+      position:absolute;
+      bottom:14px; right:64px;
+      bottom:max(14px,env(safe-area-inset-bottom));
+      right:max(64px,calc(env(safe-area-inset-right) + 50px));
+      z-index:500;
+      width:44px; height:44px;
+      border-radius:12px;
       background:rgba(0,0,0,0.7);
-      border-radius:14px; font-size:11px;
+      border:1.5px solid rgba(255,255,255,0.4);
+      color:#fff; font-size:18px;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+      transition:background 0.2s, transform 0.2s;
+      -webkit-appearance:none; }
+    #ttsBtn:hover { background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
+    #ttsBtn:active { transform:scale(0.95); }
+    #ttsBtn.off { opacity:0.45; }
+
+    #connStatus { position:absolute; bottom:14px; left:14px;
+      bottom:max(14px,env(safe-area-inset-bottom));
+      left:max(14px,env(safe-area-inset-left));
+      z-index:60; padding:6px 14px;
+      background:rgba(0,0,0,0.7); border-radius:14px; font-size:11px;
       display:flex; align-items:center; gap:5px;
       pointer-events:none; }
     #connDot { width:7px; height:7px; border-radius:50%;
@@ -228,13 +212,80 @@
     #connDot.offline { background:var(--red); box-shadow:0 0 8px var(--red); }
 
     body.is-fullscreen #idleScreen { display:none; }
+
+    #hostGate { display:none; position:fixed; inset:0; z-index:9999;
+      background:radial-gradient(ellipse at top,#2a0a1a,#0a0512);
+      flex-direction:column; align-items:center; justify-content:center;
+      padding:30px 20px; text-align:center; overflow-y:auto; }
+    #hostGate.show { display:flex; }
+    #hostGate .icon { font-size:64px; margin-bottom:16px; }
+    #hostGate h2 { font-size:22px; font-weight:800; margin-bottom:8px;
+      background:linear-gradient(135deg,#ffd700,#ff8a00);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent; }
+    #hostGate p { color:#a0a0b0; font-size:13px; margin-bottom:20px;
+      max-width:340px; line-height:1.6; }
+    #hostGate input { padding:14px; font-size:15px; width:100%; max-width:360px;
+      background:#16101f;color:#fff;border:2px solid #333;
+      border-radius:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      text-align:center; margin-bottom:12px;
+      -webkit-appearance:none; }
+    #hostGate input:focus { outline:none; border-color:#ffd700; }
+    #hostGate .go { padding:14px 40px;
+      background:linear-gradient(135deg,#ff2e55,#ff0044);
+      border:none; border-radius:12px; color:#fff;
+      font-size:15px; font-weight:700; cursor:pointer;
+      font-family:inherit; max-width:360px; width:100%;
+      -webkit-appearance:none; }
+    #hostGate .err { color:#ff6b6b; font-size:12px;
+      margin-top:12px; min-height:16px; }
+    #hostGate .divider { margin-top:22px; color:#666; font-size:12px; }
+    #hostGate .new-btn { margin-top:12px; padding:10px 24px;
+      background:transparent; border:1px solid #444;
+      color:#888; border-radius:8px; font-size:12px;
+      cursor:pointer; font-family:inherit;
+      -webkit-appearance:none; }
+
+    #ttsControl {
+      margin-top:16px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    #ttsControl button {
+      padding:9px 16px;
+      border-radius:10px;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      font-family:inherit;
+      -webkit-appearance:none;
+      transition:all 0.15s;
+    }
+    #ttsStatusBtn {
+      background:rgba(74,222,128,0.15);
+      border:1.5px solid rgba(74,222,128,0.5);
+      color:#4ade80;
+    }
+    #ttsStatusBtn.off {
+      background:rgba(136,136,160,0.15);
+      border:1.5px solid rgba(136,136,160,0.5);
+      color:#8888a0;
+    }
+    #ttsTestBtn {
+      background:rgba(255,215,0,0.12);
+      border:1.5px solid rgba(255,215,0,0.4);
+      color:var(--gold);
+    }
+    #ttsControl button:active { transform:scale(0.96); }
   </style>
 </head>
 <body>
   <div id="playerWrap">
     <div id="player"></div>
 
-    <!-- ⭐ TOP BAR -->
     <div id="topBar">
       <div id="nowHud">
         <div class="icon">🎤</div>
@@ -254,24 +305,24 @@
       </div>
     </div>
 
-    <!-- Countdown -->
     <div id="countdown">
       <div class="num" id="countdownNum">3</div>
     </div>
 
-    <!-- Connection status -->
     <div id="connStatus">
       <span id="connDot"></span>
       <span id="connText">Connected</span>
     </div>
 
-    <!-- Fullscreen button — visible lagi -->
+    <button id="ttsBtn" onclick="toggleTTS()" title="AI Voice Announcements">
+      <span id="ttsIcon">🔊</span>
+    </button>
+
     <button id="fsBtn" onclick="toggleFullscreen()" title="Fullscreen">
       <span id="fsIcon">⛶</span>
     </button>
   </div>
 
-  <!-- Idle screen with QR -->
   <div id="idleScreen">
     <div class="logo">🎤 VIDEoke</div>
     <div class="sub" id="subText">Let's sing! Scan the QR code to join.</div>
@@ -286,21 +337,31 @@
     </div>
 
     <div id="hostControls">
-      <button id="startPartyBtn" onclick="hostStartParty()">🎉 Start Party</button>
-      <button id="stopPartyBtn" onclick="hostStopParty()" style="display:none">🚫 End Party</button>
+      <button id="stopPartyBtn" onclick="hostEndParty()">🚫 End Party</button>
     </div>
 
-    <div id="hostPwBox">
-      <div style="font-size:13px;color:#a0b0c0;margin-bottom:8px">
-        Enter admin password:
-      </div>
-      <input type="password" id="hostPwInput" placeholder="••••••••">
-      <div class="row">
-        <button class="primary" onclick="hostConfirmPassword()">Confirm</button>
-        <button class="secondary" onclick="hostCancelPassword()">Cancel</button>
-      </div>
-      <div id="hostPwErr"></div>
+    <div id="hostAdminInfo" style="display:none;margin-top:18px;padding:10px 18px;
+      background:rgba(0,0,0,0.6);border:1px solid rgba(255,215,0,0.3);
+      border-radius:10px;font-size:12px;color:#a0a0b0">
+      🔑 Admin Password: <span id="hostAdminPw"
+        style="color:#ffd700;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800;letter-spacing:1px">--------</span>
     </div>
+
+    <div id="ttsControl">
+      <button id="ttsStatusBtn" onclick="toggleTTS()">🔊 AI Voice: On</button>
+      <button id="ttsTestBtn" onclick="testTTS()">▶ Test Voice</button>
+    </div>
+  </div>
+
+  <div id="hostGate">
+    <div class="icon">📺</div>
+    <h2>Host Access</h2>
+    <p>Enter your host code to open the karaoke screen.</p>
+    <input id="hostCodeInput" placeholder="Host code..." autocomplete="off">
+    <button class="go" onclick="submitHostCode()">Open Karaoke</button>
+    <div class="err" id="hostGateErr"></div>
+    <div class="divider">or</div>
+    <button class="new-btn" onclick="location.href='/index.html'">🎉 Start a New Karaoke</button>
   </div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
@@ -309,484 +370,538 @@
     const BACKEND_URL = window.VIDEOKE_CONFIG?.BACKEND_URL || 'http://localhost:3000';
     const API = BACKEND_URL;
 
-    let ytPlayer = null;
-    let ytReady = false;
-    let currentVideoId = null;
-    let errorCheckTimeout = null;
-    let lastPartyCode = null;
-    let hostAdminToken = null;
-    let pendingAdminAction = null;
-    let autoFullscreenAttempted = false;
-    let firstInteractionDone = false;
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+    const isMobile = isIOS || isAndroid || /Mobi|Tablet/.test(ua);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlPartyCode = (urlParams.get('party') || '').toUpperCase() || null;
-    if (urlPartyCode) console.log('📌 Locked to party code from URL:', urlPartyCode);
+    let ytPlayer = null, ytReady = false, currentVideoId = null;
+    let errorCheckTimeout = null, hostCode = null, hostAdminToken = null;
+    let autoFullscreenAttempted = false, firstInteractionDone = false;
+    let lastQueueLen = -1;
 
-    // =====================================================
-    // FULLSCREEN
-    // =====================================================
-    function isFullscreen() {
-      return !!(document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.msFullscreenElement);
+    const socket = io(BACKEND_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 20,
+      reconnectionDelay: 2000,
+    });
+
+    function getFsElement() {
+      return document.fullscreenElement || document.webkitFullscreenElement ||
+             document.mozFullScreenElement || document.msFullscreenElement;
     }
+    function isFullscreen() { return !!getFsElement(); }
 
     function toggleFullscreen() {
-      const wrap = document.getElementById('playerWrap');
+      if (isIOS) { showToast('Tap the ⛶ button inside the video to fullscreen'); return; }
+      const w = document.getElementById('playerWrap');
       if (!isFullscreen()) {
-        const req = wrap.requestFullscreen ||
-                    wrap.webkitRequestFullscreen ||
-                    wrap.msRequestFullscreen;
-        if (req) req.call(wrap).catch(err => {
-          console.error('FS err:', err);
-          alert('Fullscreen failed. Try pressing F11 or F key.');
-        });
+        const req = w.requestFullscreen || w.webkitRequestFullscreen ||
+                    w.mozRequestFullScreen || w.msRequestFullscreen;
+        if (req) req.call(w).catch(() => {});
       } else {
-        const exit = document.exitFullscreen ||
-                     document.webkitExitFullscreen ||
-                     document.msExitFullscreen;
+        const exit = document.exitFullscreen || document.webkitExitFullscreen ||
+                     document.mozCancelFullScreen || document.msExitFullscreen;
         if (exit) exit.call(document).catch(() => {});
       }
     }
 
     async function tryAutoFullscreen() {
-      if (isFullscreen()) return;
-      if (!firstInteractionDone && !autoFullscreenAttempted) {
-        // Hindi pa may user interaction — hindi pa pwede
-        showFullscreenHint();
-        return;
-      }
+      if (isIOS) return;
+      if (isFullscreen() || !firstInteractionDone) return;
       try {
-        const wrap = document.getElementById('playerWrap');
-        const req = wrap.requestFullscreen ||
-                    wrap.webkitRequestFullscreen ||
-                    wrap.msRequestFullscreen;
-        if (req) {
-          await req.call(wrap);
-          console.log('✓ Auto-fullscreen entered');
-          autoFullscreenAttempted = true;
-          // Remove hint kung meron
-          const hint = document.getElementById('fsHint');
-          if (hint) hint.remove();
-        }
-      } catch (err) {
-        console.log('Auto-fullscreen blocked:', err.message);
-        if (!autoFullscreenAttempted) {
-          showFullscreenHint();
-          autoFullscreenAttempted = true;
-        }
-      }
+        const w = document.getElementById('playerWrap');
+        const req = w.requestFullscreen || w.webkitRequestFullscreen ||
+                    w.mozRequestFullScreen || w.msRequestFullscreen;
+        if (req) await req.call(w);
+        autoFullscreenAttempted = true;
+      } catch { autoFullscreenAttempted = true; }
     }
 
-    function showFullscreenHint() {
-      if (document.getElementById('fsHint')) return;
-      const hint = document.createElement('div');
-      hint.id = 'fsHint';
-      hint.textContent = '🔲 Tap anywhere or press F for fullscreen';
-      hint.style.cssText = `
-        position:absolute; bottom:70px; left:50%;
-        transform:translateX(-50%);
-        padding:10px 22px; background:rgba(255,215,0,0.95);
-        color:#000; font-weight:800; font-size:13px;
-        border-radius:24px; z-index:400;
-        box-shadow:0 4px 20px rgba(255,215,0,0.5);
-        pointer-events:none;
-        animation:pulse 1.5s infinite;
-      `;
-      document.getElementById('playerWrap').appendChild(hint);
-      // Auto-remove after 8s
-      setTimeout(() => { if (hint.parentNode) hint.remove(); }, 8000);
-    }
-
-    // First interaction handler
     function markFirstInteraction() {
       if (firstInteractionDone) return;
       firstInteractionDone = true;
-      console.log('✓ First user interaction detected');
-      // Kung may tumutugtog na, mag-auto-fullscreen agad
-      if (currentVideoId && !autoFullscreenAttempted) {
-        tryAutoFullscreen();
-      }
-      // Remove hint
-      const hint = document.getElementById('fsHint');
-      if (hint) hint.remove();
+      primeTTS();
+      if (currentVideoId) tryAutoFullscreen();
     }
-    document.addEventListener('click', markFirstInteraction);
-    document.addEventListener('touchstart', markFirstInteraction);
-    document.addEventListener('keydown', markFirstInteraction);
+    ['click','touchstart','keydown'].forEach(e =>
+      document.addEventListener(e, markFirstInteraction, { passive: true }));
 
-    function handleFullscreenChange() {
+    function handleFsChange() {
       const fs = isFullscreen();
       document.body.classList.toggle('is-fullscreen', fs);
       document.getElementById('fsIcon').textContent = fs ? '✕' : '⛶';
-      document.getElementById('fsBtn').title = fs ? 'Exit Fullscreen' : 'Fullscreen';
-      console.log('Fullscreen:', fs ? 'ON' : 'OFF');
     }
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+      .forEach(e => document.addEventListener(e, handleFsChange));
+
+    let toastEl = null;
+    function showToast(msg) {
+      if (!toastEl) {
+        toastEl = document.createElement('div');
+        toastEl.style.cssText = `position:fixed;bottom:70px;left:50%;
+          transform:translateX(-50%);padding:10px 20px;
+          background:rgba(0,0,0,0.9);color:#fff;border-radius:24px;
+          font-size:13px;z-index:9999;pointer-events:none;
+          border:1px solid rgba(255,215,0,0.5);opacity:0;
+          transition:opacity 0.3s;max-width:80vw;text-align:center;`;
+        document.body.appendChild(toastEl);
+      }
+      toastEl.textContent = msg;
+      toastEl.style.opacity = '1';
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(() => { toastEl.style.opacity = '0'; }, 2500);
+    }
 
     // =====================================================
-    // SOCKET
+    // AI VOICE
     // =====================================================
-    const socket = io(BACKEND_URL, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 20,
-      reconnectionDelay: 2000
-    });
+    const TTS_KEY = 'videoke:ttsEnabled';
+    let ttsEnabled = localStorage.getItem(TTS_KEY) !== '0';
+    let ttsVoice = null;
+    let ttsPrimed = false;
+    const ttsSupported = 'speechSynthesis' in window;
+
+    function initTTS() {
+      if (!ttsSupported) { updateTTSButton(); return; }
+      const loadVoices = () => {
+        const voices = speechSynthesis.getVoices();
+        if (!voices.length) return;
+        const preferred = [
+          'Google US English', 'Microsoft Aria Online', 'Microsoft Aria',
+          'Samantha', 'Karen', 'Microsoft Zira', 'Google UK English Female',
+          'Tessa', 'Moira',
+        ];
+        for (const name of preferred) {
+          const v = voices.find(v => v.name === name || v.name.includes(name));
+          if (v) { ttsVoice = v; break; }
+        }
+        if (!ttsVoice) {
+          ttsVoice = voices.find(v =>
+            v.lang.startsWith('en') &&
+            /female|woman|aria|samantha|zira|karen|tessa|moira|susan|kate/i.test(v.name));
+        }
+        if (!ttsVoice) {
+          ttsVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+        }
+      };
+      loadVoices();
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function primeTTS() {
+      if (!ttsSupported || ttsPrimed) return;
+      try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0;
+        speechSynthesis.speak(u);
+        ttsPrimed = true;
+      } catch (e) {}
+    }
+
+    function speak(text, opts = {}) {
+      if (!ttsSupported || !ttsEnabled) return;
+      try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        if (ttsVoice) u.voice = ttsVoice;
+        u.rate = opts.rate ?? 1.0;
+        u.pitch = opts.pitch ?? 1.05;
+        u.volume = 1.0;
+        u.lang = opts.lang || (ttsVoice?.lang || 'en-US');
+        speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    function buildAnnouncement(song) {
+      if (!song) return '';
+      let singer = (song.singer || 'Guest').trim();
+      const rawTitle = (song.title || '').trim();
+      if (!rawTitle) return '';
+      let duetPart = '';
+      const partMatch = singer.match(/\((👦|👧)\s*(Boy|Girl)\)/i);
+      if (partMatch) {
+        duetPart = partMatch[2].toLowerCase();
+        singer = singer.replace(/\(.*?\)/g, '').trim() || 'Guest';
+      }
+      let title = rawTitle
+        .replace(/\((?:[^)]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^)]*?)\)/gi, '')
+        .replace(/\[(?:[^\]]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^\]]*?)\]/gi, '')
+        .replace(/\b(karaoke|ktv|minus\s*one|instrumental|lyrics?)\b/gi, '')
+        .replace(/\bofficial\s+(music\s+)?video\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .replace(/^[\s\-–—:|]+|[\s\-–—:|]+$/g, '')
+        .trim();
+      if (!title) title = rawTitle;
+      let artist = '';
+      let songName = title;
+      const dash = title.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+      if (dash) { artist = dash[1].trim(); songName = dash[2].trim(); }
+      if (songName.length > 55) songName = songName.slice(0, 52).trim() + '...';
+      if (artist.length > 35) artist = artist.slice(0, 32).trim() + '...';
+      if (singer.length > 25) singer = singer.slice(0, 22).trim() + '...';
+      if (duetPart) {
+        return artist
+          ? `Next up, ${singer}, singing the ${duetPart} part of ${songName} by ${artist}.`
+          : `Next up, ${singer}, singing the ${duetPart} part of ${songName}.`;
+      }
+      return artist
+        ? `Next up, ${singer}, singing ${songName} by ${artist}. Get ready!`
+        : `Next up, ${singer}, singing ${songName}. Get ready!`;
+    }
+
+    function announceNextSong(song) {
+      if (!ttsEnabled) return;
+      const text = buildAnnouncement(song);
+      if (!text) return;
+      speak(text, { rate: 1.0, pitch: 1.05 });
+    }
+
+    function toggleTTS() {
+      ttsEnabled = !ttsEnabled;
+      localStorage.setItem(TTS_KEY, ttsEnabled ? '1' : '0');
+      if (!ttsEnabled && ttsSupported) speechSynthesis.cancel();
+      updateTTSButton();
+      if (ttsEnabled) {
+        primeTTS();
+        setTimeout(() => speak('AI voice enabled.', { rate: 1.0 }), 120);
+      }
+    }
+
+    function updateTTSButton() {
+      const icon = document.getElementById('ttsIcon');
+      const btn  = document.getElementById('ttsBtn');
+      const statusBtn = document.getElementById('ttsStatusBtn');
+      if (!ttsSupported) {
+        if (icon) icon.textContent = '🔇';
+        if (btn) { btn.classList.add('off'); btn.title = 'Voice not supported'; }
+        if (statusBtn) {
+          statusBtn.textContent = '🔇 Voice Not Supported';
+          statusBtn.classList.add('off');
+          statusBtn.disabled = true;
+        }
+        return;
+      }
+      if (icon) icon.textContent = ttsEnabled ? '🔊' : '🔇';
+      if (btn) btn.classList.toggle('off', !ttsEnabled);
+      if (statusBtn) {
+        statusBtn.textContent = ttsEnabled ? '🔊 AI Voice: On' : '🔇 AI Voice: Off';
+        statusBtn.classList.toggle('off', !ttsEnabled);
+      }
+    }
+
+    function testTTS() {
+      if (!ttsSupported) {
+        alert('🔇 Voice announcements not supported.\nTry Chrome, Edge, or Safari.');
+        return;
+      }
+      if (!ttsEnabled) {
+        ttsEnabled = true;
+        localStorage.setItem(TTS_KEY, '1');
+        updateTTSButton();
+      }
+      primeTTS();
+      const sample = { singer: 'Juan', title: 'Tadhana by Moira (Karaoke)' };
+      setTimeout(() => speak(buildAnnouncement(sample), { rate: 1.0, pitch: 1.05 }), 100);
+    }
+
+    initTTS();
+    updateTTSButton();
+
+    // =====================================================
+    // HOST GATE
+    // =====================================================
+    function showHostGate() { document.getElementById('hostGate').classList.add('show'); }
+    function hideHostGate() { document.getElementById('hostGate').classList.remove('show'); }
+
+    async function verifyAndLoadHost(code) {
+      try {
+        const r = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(code));
+        const d = await r.json();
+        if (!d.valid) return false;
+        hostCode = code;
+        hostAdminToken = d.token;
+        localStorage.setItem('videoke:hostCode', code);
+        document.getElementById('hostAdminPw').textContent = d.adminPassword;
+        document.getElementById('hostAdminInfo').style.display = 'block';
+        socket.emit('registerHost', { hostCode: code });
+        updateQR(d.partyCode);
+        hideHostGate();
+        return true;
+      } catch { return false; }
+    }
+
+    async function initHost() {
+      const u = new URLSearchParams(location.search);
+      const code = (u.get('session') || localStorage.getItem('videoke:hostCode') || '').trim();
+      if (!code) return showHostGate();
+      const ok = await verifyAndLoadHost(code);
+      if (!ok) {
+        localStorage.removeItem('videoke:hostCode');
+        showHostGate();
+      }
+    }
+
+    function submitHostCode() {
+      const c = document.getElementById('hostCodeInput').value.trim();
+      if (!c) return;
+      document.getElementById('hostGateErr').textContent = '';
+      verifyAndLoadHost(c).then(ok => {
+        if (!ok) document.getElementById('hostGateErr').textContent = '❌ Invalid host code';
+      });
+    }
+
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('player', {
+        height: '100%', width: '100%', videoId: '',
+        playerVars: {
+          autoplay: 0, controls: 1, modestbranding: 1,
+          rel: 0, fs: 1, playsinline: 1, iv_load_policy: 3,
+          enablejsapi: 1, origin: window.location.origin,
+          hl: 'en', cc_load_policy: 0, disablekb: 0, loop: 0,
+        },
+        events: {
+          onReady: (e) => {
+            ytReady = true;
+            try { e.target.setPlaybackQuality('default'); } catch {}
+            try {
+              if (typeof e.target.setPlaybackQualityRange === 'function')
+                e.target.setPlaybackQualityRange('default', 'default');
+            } catch {}
+          },
+          onStateChange: (e) => {
+            if (e.data === 0 && currentVideoId) socket.emit('songEnded');
+            if (e.data === 1 && currentVideoId && !autoFullscreenAttempted && !isIOS) {
+              autoFullscreenAttempted = true;
+              tryAutoFullscreen();
+            }
+          },
+          onError: (e) => {
+            if (!currentVideoId) return;
+            if ([2, 5, 100, 101, 150].includes(e.data)) {
+              socket.emit('videoFailed', {
+                videoId: currentVideoId,
+                title: document.getElementById('nowSong').textContent || '',
+              });
+            }
+          },
+        },
+      });
+    }
 
     socket.on('connect', () => {
       document.getElementById('connDot').classList.remove('offline');
       document.getElementById('connText').textContent = 'Connected';
-      socket.emit('registerHost');
+      if (hostCode) socket.emit('registerHost', { hostCode });
     });
     socket.on('disconnect', () => {
       document.getElementById('connDot').classList.add('offline');
       document.getElementById('connText').textContent = 'Disconnected';
     });
-
-    // =====================================================
-    // YOUTUBE
-    // =====================================================
-    function onYouTubeIframeAPIReady() {
-      ytPlayer = new YT.Player('player', {
-        height: '100%',
-        width: '100%',
-        videoId: '',
-        playerVars: {
-          autoplay: 0, controls: 1, modestbranding: 1,
-          rel: 0, fs: 0, playsinline: 1, iv_load_policy: 3
-        },
-        events: {
-          onReady: () => { ytReady = true; console.log('✓ YT ready'); },
-          onStateChange: onPlayerStateChange,
-          onError: onPlayerError
-        }
-      });
-    }
-
-    function onPlayerStateChange(event) {
-      const state = event.data;
-      if (state === 0 && currentVideoId) socket.emit('songEnded');
-      // ⭐ State 1 = playing — auto fullscreen
-      if (state === 1 && currentVideoId && !autoFullscreenAttempted) {
-        tryAutoFullscreen();
-      }
-    }
-
-    function onPlayerError(event) {
-      const code = event.data;
-      if (!currentVideoId) return;
-      if ([2, 5, 100, 101, 150].includes(code)) {
-        socket.emit('videoFailed', {
-          videoId: currentVideoId,
-          title: document.getElementById('nowSong').textContent || ''
-        });
-      }
-    }
-
-    // =====================================================
-    // COMMANDS
-    // =====================================================
-    socket.on('command', cmd => {
+    socket.on('hostRejected', () => {
+      localStorage.removeItem('videoke:hostCode');
+      hostCode = null;
+      showHostGate();
+    });
+    socket.on('command', (cmd) => {
       switch (cmd.type) {
         case 'play': playVideo(cmd.song); break;
-        case 'countdown': showCountdown(cmd.seconds || 3, cmd.song); break;
+        case 'countdown':
+          showCountdown(cmd.seconds || 5, cmd.song);
+          announceNextSong(cmd.song);
+          break;
         case 'countdownTick': updateCountdown(cmd.seconds); break;
-        case 'pause': if (ytPlayer && ytReady) ytPlayer.pauseVideo(); break;
-        case 'resume': if (ytPlayer && ytReady) ytPlayer.playVideo(); break;
+        case 'pause': if (ytReady && ytPlayer) ytPlayer.pauseVideo(); break;
+        case 'resume': if (ytReady && ytPlayer) ytPlayer.playVideo(); break;
         case 'stop': stopVideo(); break;
-        case 'seek': if (ytPlayer && ytReady) ytPlayer.seekTo(cmd.seconds, true); break;
-        case 'volume': if (ytPlayer && ytReady) ytPlayer.setVolume(cmd.value); break;
+        case 'volume': if (ytReady && ytPlayer) ytPlayer.setVolume(cmd.value); break;
         case 'idle': showIdle(); break;
       }
     });
-
-    socket.on('state', s => {
+    socket.on('state', (s) => {
+      const len = (s.queue || []).length;
+      if (lastQueueLen >= 0 && len > lastQueueLen) {
+        const qh = document.getElementById('queueHud');
+        qh.classList.remove('flash');
+        void qh.offsetWidth;
+        qh.classList.add('flash');
+        setTimeout(() => qh.classList.remove('flash'), 1200);
+      }
+      lastQueueLen = len;
       updateQueueHud(s);
       if (s.nowPlaying) updateNowHud(s.nowPlaying);
       else if (!currentVideoId) showIdle();
-      if (typeof s.partyActive === 'boolean') {
-        updatePartyVisibility(s.partyActive);
-        toggleHostButtons(s.partyActive);
-      }
     });
-
-    socket.on('partyStatus', ({ active, code }) => {
-      updateQR(active, code);
-      updatePartyVisibility(active);
-      toggleHostButtons(active);
-    });
-
     socket.on('partyChanged', ({ active }) => {
-      if (active) {
-        fetch(API + '/api/party').then(r => r.json())
-          .then(d => { updateQR(d.active, d.code); updatePartyVisibility(true); toggleHostButtons(true); })
-          .catch(() => {});
-      } else {
-        updateQR(false, null); updatePartyVisibility(false); toggleHostButtons(false);
+      if (!active) {
+        document.getElementById('topBar').classList.remove('show');
+        document.getElementById('qrOverlay').classList.add('hidden');
+        document.getElementById('noPartyMsg').textContent = '🎉 Party has ended.';
+        document.getElementById('noPartyMsg').style.display = 'block';
+        document.getElementById('hostAdminInfo').style.display = 'none';
+        stopVideo();
       }
     });
+    socket.on('sessionEnded', () => {
+      localStorage.removeItem('videoke:hostCode');
+      hostCode = null;
+      hostAdminToken = null;
+      stopVideo();
+      showHostGate();
+    });
 
-    socket.on('kicked', () => {});
-
-    // =====================================================
-    // PLAYBACK
-    // =====================================================
     function playVideo(song) {
-      if (!song || !song.videoId) return;
-      if (!ytPlayer || !ytReady) {
-        setTimeout(() => playVideo(song), 500);
-        return;
-      }
-
+      if (!song?.videoId) return;
+      if (!ytPlayer || !ytReady) return setTimeout(() => playVideo(song), 500);
       currentVideoId = song.videoId;
       updateNowHud(song);
       hideIdle();
-
-      ytPlayer.loadVideoById(song.videoId);
-      ytPlayer.setVolume(80);
-      ytPlayer.playVideo();
-
-      // ⭐ Subukang mag-auto-fullscreen pagkatapos ng 500ms
-      setTimeout(() => tryAutoFullscreen(), 500);
-
+      try {
+        ytPlayer.loadVideoById({ videoId: song.videoId, suggestedQuality: 'default' });
+      } catch {
+        ytPlayer.loadVideoById(song.videoId);
+      }
+      setTimeout(() => {
+        try { if (ytPlayer && ytReady) ytPlayer.setPlaybackQuality('default'); } catch {}
+      }, 800);
+      try { ytPlayer.setVolume(80); } catch {}
+      const attemptPlay = () => { try { ytPlayer.playVideo(); } catch {} };
+      attemptPlay();
+      if (isMobile) {
+        setTimeout(() => {
+          try {
+            const st = ytPlayer.getPlayerState();
+            if (st !== 1 && st !== 3) attemptPlay();
+          } catch {}
+        }, 1200);
+      }
+      if (!isIOS) setTimeout(tryAutoFullscreen, 500);
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
-        if (!ytReady || !ytPlayer) return;
         try {
-          const state = ytPlayer.getPlayerState();
-          if (state === -1 || state === 5) {
+          const st = ytPlayer.getPlayerState();
+          if (st === -1 || st === 5) {
             socket.emit('videoFailed', {
-              videoId: currentVideoId, title: song.title || ''
+              videoId: currentVideoId, title: song.title || '',
             });
           }
-        } catch (e) {}
-      }, 6000);
+        } catch {}
+      }, 8000);
     }
 
     function stopVideo() {
       currentVideoId = null;
-      if (ytPlayer && ytReady) ytPlayer.stopVideo();
+      if (ytPlayer && ytReady) { try { ytPlayer.stopVideo(); } catch {} }
       document.getElementById('topBar').classList.remove('show');
       showIdle();
       autoFullscreenAttempted = false;
     }
 
-    // =====================================================
-    // HUDs
-    // =====================================================
     function updateNowHud(song) {
       if (!song) return;
       document.getElementById('nowSinger').textContent = song.singer || '—';
       document.getElementById('nowSong').textContent = song.title || song.videoId || '—';
       document.getElementById('topBar').classList.add('show');
     }
-
     function updateQueueHud(state) {
       const list = state.queue || [];
       document.getElementById('queueCount').textContent = list.length;
-      const itemsEl = document.getElementById('queueItems');
-
+      const el = document.getElementById('queueItems');
       if (!list.length) {
-        itemsEl.innerHTML = '<div class="q-empty">No reservations</div>';
+        el.innerHTML = '<div class="q-empty">No reservations</div>';
         document.getElementById('topBar').classList.add('show');
         return;
       }
-
-      itemsEl.innerHTML = list.map((q, i) => `
+      el.innerHTML = list.map((q, i) => `
         <div class="q-item">
-          <div class="q-pos">${i + 1}</div>
+          <div class="q-pos">${i+1}</div>
           <div class="q-info">
-            <span class="q-singer">${escapeHtml(q.singer || 'Guest')}</span>
-            <span class="q-song">${escapeHtml(q.title || q.videoId || 'Unknown')}</span>
+            <span class="q-singer">${esc(q.singer || 'Guest')}</span>
+            <span class="q-song">${esc(q.title || q.videoId || 'Unknown')}</span>
           </div>
-        </div>
-      `).join('');
-
+        </div>`).join('');
       document.getElementById('topBar').classList.add('show');
     }
 
-    // =====================================================
-    // COUNTDOWN
-    // =====================================================
-    function showCountdown(seconds, song) {
+    function showCountdown(sec, song) {
       updateNowHud(song);
-      document.getElementById('countdownNum').textContent = seconds;
+      document.getElementById('countdownNum').textContent = sec;
       document.getElementById('countdown').classList.add('show');
     }
-    function updateCountdown(seconds) {
-      if (seconds <= 0) document.getElementById('countdown').classList.remove('show');
-      else document.getElementById('countdownNum').textContent = seconds;
+    function updateCountdown(sec) {
+      if (sec <= 0) document.getElementById('countdown').classList.remove('show');
+      else document.getElementById('countdownNum').textContent = sec;
     }
 
-    // =====================================================
-    // IDLE / QR
-    // =====================================================
     function showIdle() { document.getElementById('idleScreen').classList.remove('hidden'); }
     function hideIdle() { document.getElementById('idleScreen').classList.add('hidden'); }
 
-    function updateQR(active, code) {
+    function updateQR(code) {
       const overlay = document.getElementById('qrOverlay');
-      const noPartyMsg = document.getElementById('noPartyMsg');
-      const subText = document.getElementById('subText');
-
-      if (!active || !code) {
+      const noParty = document.getElementById('noPartyMsg');
+      if (!code) {
         overlay.classList.add('hidden');
-        noPartyMsg.style.display = 'block';
-        subText.textContent = "Waiting for the party to start...";
-        lastPartyCode = null;
+        noParty.style.display = 'block';
+        noParty.textContent = '⏳ Waiting for a party...';
         return;
       }
-
-      const url = window.location.origin + '/remote.html?party=' + code;
+      const url = location.origin + '/remote.html?party=' + code;
       document.getElementById('qrImg').src =
-        'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' +
-        encodeURIComponent(url);
+        'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' + encodeURIComponent(url);
       document.getElementById('qrCode').textContent = code;
       document.getElementById('qrUrl').textContent = url;
       overlay.classList.remove('hidden');
-      noPartyMsg.style.display = 'none';
-      subText.textContent = "Let's sing! Scan the QR code to join.";
-      if (code !== lastPartyCode) lastPartyCode = code;
+      noParty.style.display = 'none';
     }
 
-    function updatePartyVisibility(active) {
-      if (!active) {
-        document.getElementById('topBar').classList.remove('show');
-      }
-    }
-
-    function toggleHostButtons(active) {
-      document.getElementById('startPartyBtn').style.display = active ? 'none' : 'inline-block';
-      document.getElementById('stopPartyBtn').style.display = active ? 'inline-block' : 'none';
-    }
-
-    // =====================================================
-    // HOST START/STOP
-    // =====================================================
-    function hostStartParty() {
-      document.getElementById('hostPwBox').classList.add('show');
-      document.getElementById('hostPwInput').value = '';
-      document.getElementById('hostPwErr').textContent = '';
-      document.getElementById('hostPwInput').focus();
-      pendingAdminAction = 'start-party';
-    }
-
-    function hostStopParty() {
-      if (!hostAdminToken) {
-        document.getElementById('hostPwBox').classList.add('show');
-        document.getElementById('hostPwInput').value = '';
-        document.getElementById('hostPwErr').textContent = '';
-        document.getElementById('hostPwInput').focus();
-        pendingAdminAction = 'end-party';
-        return;
-      }
-      if (!confirm('End the party?')) return;
-      doHostAdminAction('end-party');
-    }
-
-    async function hostConfirmPassword() {
-      const pw = document.getElementById('hostPwInput').value;
-      if (!pw) { document.getElementById('hostPwErr').textContent = 'Enter password'; return; }
-      document.getElementById('hostPwErr').textContent = 'Checking...';
-
+    async function hostEndParty() {
+      if (!confirm('End the party? Guests will be locked out.')) return;
       try {
-        const r = await fetch(API + '/api/admin/login?password=' + encodeURIComponent(pw));
-        if (!r.ok) {
-          if (r.status === 401) throw new Error('Wrong password');
-          throw new Error('Server error ' + r.status);
-        }
-        const { token } = await r.json();
-        hostAdminToken = token;
-        localStorage.setItem('videoke:hostAdminToken', token);
-        document.getElementById('hostPwBox').classList.remove('show');
-        document.getElementById('hostPwErr').textContent = '';
-
-        if (pendingAdminAction) {
-          if (pendingAdminAction === 'end-party' && !confirm('End the party?')) {
-            pendingAdminAction = null; return;
-          }
-          doHostAdminAction(pendingAdminAction);
-          pendingAdminAction = null;
-        }
-      } catch (e) {
-        document.getElementById('hostPwErr').textContent = '❌ ' + e.message;
-      }
-    }
-
-    function hostCancelPassword() {
-      document.getElementById('hostPwBox').classList.remove('show');
-      document.getElementById('hostPwErr').textContent = '';
-      pendingAdminAction = null;
-    }
-
-    async function doHostAdminAction(action) {
-      if (!hostAdminToken) return;
-      try {
-        const r = await fetch(
-          API + '/api/admin/' + action + '?token=' + encodeURIComponent(hostAdminToken)
-        );
-        if (r.status === 401) {
-          hostAdminToken = null;
-          localStorage.removeItem('videoke:hostAdminToken');
-          document.getElementById('hostPwErr').textContent = '❌ Session expired.';
-          return;
-        }
+        const r = await fetch(API + '/api/admin/end-party', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': hostAdminToken },
+          body: '{}',
+        });
         if (!r.ok) throw new Error('Server error ' + r.status);
-        await r.json();
-      } catch (e) {
-        alert('❌ Host action error\n\n' + e.message);
-      }
+        localStorage.removeItem('videoke:hostCode');
+        location.href = '/index.html';
+      } catch (e) { alert('❌ ' + e.message); }
     }
 
-    // =====================================================
-    // AUTO-SYNC
-    // =====================================================
     async function syncPartyStatus() {
+      if (!hostCode) return;
       try {
-        const r = await fetch(API + '/api/party');
+        const r = await fetch(API + '/api/party?host=' + encodeURIComponent(hostCode));
         const d = await r.json();
-        updateQR(d.active, d.code);
-        updatePartyVisibility(d.active);
-        toggleHostButtons(d.active);
-      } catch (e) {}
+        if (d.active) updateQR(d.code);
+      } catch {}
     }
-    syncPartyStatus();
-    setInterval(syncPartyStatus, 5000);
 
-    const savedHostToken = localStorage.getItem('videoke:hostAdminToken');
-    if (savedHostToken) hostAdminToken = savedHostToken;
-
-    // =====================================================
-    // KEYBOARD
-    // =====================================================
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') {
-        if (e.key === 'Enter') hostConfirmPassword();
-        if (e.key === 'Escape') hostCancelPassword();
+        if (e.key === 'Enter') submitHostCode();
         return;
       }
       if (e.key === 'p' || e.key === 'P') {
         if (ytPlayer && ytReady) {
-          const state = ytPlayer.getPlayerState();
-          if (state === 1) ytPlayer.pauseVideo();
-          else ytPlayer.playVideo();
+          ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
         }
       }
-      if (e.key === 's' || e.key === 'S') socket.emit('skip');
+      if ((e.key === 's' || e.key === 'S') && hostAdminToken) {
+        socket.emit('skip', { adminToken: hostAdminToken });
+      }
       if (e.key === 'f' || e.key === 'F') toggleFullscreen();
     });
 
-    // =====================================================
-    // UTIL
-    // =====================================================
-    function escapeHtml(s) {
-      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    initHost();
+    setInterval(syncPartyStatus, 5000);
   </script>
 </body>
 </html>
