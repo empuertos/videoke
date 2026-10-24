@@ -785,7 +785,7 @@
     <div style="text-align:center;padding:26px 20px 10px;
       font-size:10px;color:#555;letter-spacing:0.3px;line-height:1.7">
       🎤 <b style="color:#777">VIDEoke YT</b> · by
-      <span style="color:#ffd700;font-weight:700">Your Name</span>
+      <span style="color:#ffd700;font-weight:700">Steve</span>
       <div style="margin-top:4px;opacity:0.7">
         © <span id="remoteYear"></span>
       </div>
@@ -1062,7 +1062,6 @@
     function updateShareSection() {
       const sec = document.getElementById('shareSection');
       if (!partyVerified || !partyCode) { sec.classList.remove('show'); return; }
-      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + partyCode;
       document.getElementById('shareQrImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' +
@@ -1073,7 +1072,6 @@
 
     function copyPartyLink() {
       if (!partyCode) return;
-      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + partyCode;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(() => {
@@ -1086,7 +1084,6 @@
 
     async function sharePartyLink() {
       if (!partyCode) return;
-      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + partyCode;
       const shareData = {
         title: 'Join Videoke Party!',
@@ -2191,7 +2188,6 @@
     }
 
     function showAdminQR(code) {
-      // DITO ANG FIX: Tinanggal ang .html
       const url = window.location.origin + '/remote?party=' + code;
       document.getElementById('adminQRImg').src =
         'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' +
@@ -2246,6 +2242,7 @@
     document.getElementById('langIcon').textContent =
       (localStorage.getItem('videoke:lang') === 'en') ? '🇵🇭' : '🇺🇸';
 
+    // Auto-update copyright year
     document.getElementById('remoteYear').textContent = new Date().getFullYear();
   </script>
 </body>
