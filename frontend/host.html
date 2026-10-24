@@ -266,6 +266,7 @@
     }
     #ttsControl button:active { transform:scale(0.96); }
 
+    /* AUTO-PLAY UNLOCK OVERLAY */
     #autoplayOverlay {
       position:fixed; inset:0; z-index:10000;
       background:rgba(10,5,18,0.95); backdrop-filter:blur(10px);
@@ -329,7 +330,7 @@
   <div id="autoplayOverlay">
     <div class="icon">👆</div>
     <h2>Tap Anywhere to Start</h2>
-    <p>To enable auto-play and sound, browsers require you to tap the screen once. After this, reserved songs will play automatically.</p>
+    <p>To enable auto-play, sound, and fullscreen, browsers require you to tap the screen once. After this, everything will be automatic.</p>
   </div>
 
   <div id="idleScreen">
@@ -426,17 +427,23 @@
                     w.mozRequestFullScreen || w.msRequestFullscreen;
         if (req) await req.call(w);
         autoFullscreenAttempted = true;
-      } catch { autoFullscreenAttempted = true; }
+      } catch (e) { 
+        console.log('Fullscreen blocked:', e);
+        autoFullscreenAttempted = true; 
+      }
     }
 
+    // PAGKA-TAP SA OVERLAY, DERETSO FULLSCREEN AGAD
     function markFirstInteraction() {
       if (firstInteractionDone) return;
       firstInteractionDone = true;
       primeTTS();
       
+      // Try to go fullscreen immediately on this user gesture
+      tryAutoFullscreen();
+
       if (currentVideoId) {
         try { ytPlayer.playVideo(); } catch {}
-        tryAutoFullscreen();
       }
       
       const overlay = document.getElementById('autoplayOverlay');
@@ -772,6 +779,10 @@
       currentVideoId = song.videoId;
       updateNowHud(song);
       hideIdle();
+
+      // Ensure we are fullscreen if user already tapped
+      if (!isIOS) tryAutoFullscreen();
+
       try {
         ytPlayer.loadVideoById({ videoId: song.videoId, suggestedQuality: 'default' });
       } catch {
@@ -791,7 +802,7 @@
           } catch {}
         }, 1200);
       }
-      if (!isIOS) setTimeout(tryAutoFullscreen, 500);
+      
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         try {
