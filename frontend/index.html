@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a0512">
+  <title>Videoke — Start</title>
+  <script src="/config.js"></script>
+  <style>
+    :root { --gold:#ffd700; --red:#ff2e55; --bg:#0a0512; --card:#16101f; --dim:#8888a0; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:#fff;
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+      min-height:100vh; min-height:100dvh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:20px; text-align:center; }
+    .logo { font-size:64px; margin-bottom:10px; animation:float 2.4s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    h1 { font-size:30px; font-weight:900; margin-bottom:6px;
+      background:linear-gradient(135deg,#ffd700,#ff2e55);
+      -webkit-background-clip:text; background-clip:text;
+      -webkit-text-fill-color:transparent; letter-spacing:-1px; }
+    .sub { color:var(--dim); font-size:13px; margin-bottom:30px;
+      max-width:340px; line-height:1.6; }
+    .btn { padding:16px 32px; border:none; border-radius:14px;
+      font-size:15px; font-weight:800; cursor:pointer;
+      font-family:inherit; color:#fff; margin:6px;
+      transition:transform 0.15s; width:100%; max-width:340px;
+      -webkit-appearance:none; }
+    .btn:active { transform:scale(0.97); }
+    .btn-start { background:linear-gradient(135deg,#22c55e,#16a34a);
+      box-shadow:0 6px 24px rgba(34,197,94,0.35); }
+    .btn-join  { background:linear-gradient(135deg,#ff2e55,#ff0044);
+      box-shadow:0 6px 24px rgba(255,46,85,0.35); }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .result { margin-top:26px; padding:22px; background:var(--card);
+      border:1px solid rgba(255,215,0,0.25); border-radius:16px;
+      max-width:420px; width:100%; display:none;
+      box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+    .result.show { display:block; animation:fadeIn 0.4s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+    .result h2 { font-size:17px; margin-bottom:14px; color:var(--gold); }
+    .lbl { font-size:10px; color:var(--dim); text-transform:uppercase;
+      letter-spacing:2px; margin-top:14px; }
+    .code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:34px; font-weight:900; color:var(--gold);
+      letter-spacing:8px; padding:14px;
+      background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.2);
+      border-radius:10px; margin:8px 0; }
+    .pw { font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:20px; font-weight:800; color:#fff;
+      padding:10px; background:rgba(255,46,85,0.08);
+      border:1px solid rgba(255,46,85,0.25); border-radius:10px; margin-top:6px; }
+    .warn { font-size:11px; color:#ff6b6b; margin-top:14px; line-height:1.5;
+      padding:10px; background:rgba(255,46,85,0.08); border-radius:8px; }
+    .result button { margin-top:10px; width:100%; padding:14px;
+      border:none; border-radius:10px; font-size:14px; font-weight:700;
+      cursor:pointer; font-family:inherit; color:#fff;
+      transition:opacity 0.2s; -webkit-appearance:none; }
+    .result button:active { transform:scale(0.98); }
+    .open-host { background:linear-gradient(135deg,#22c55e,#16a34a); }
+    .copy { background:#2a1a1a; border:1px solid #444; margin-top:8px; }
+    .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.9);
+      z-index:9999; display:none; align-items:center;
+      justify-content:center; padding:20px; }
+    .modal-bg.show { display:flex; }
+    .modal { background:var(--card); padding:22px; border-radius:16px;
+      max-width:360px; width:100%; border:1px solid #333; }
+    .modal h3 { margin-bottom:14px; font-size:16px; }
+    .modal input { width:100%; padding:16px; font-size:20px;
+      text-align:center; background:#1e1630; color:#fff;
+      border:2px solid #333; border-radius:10px;
+      letter-spacing:6px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      text-transform:uppercase; margin-bottom:10px; font-weight:800;
+      -webkit-appearance:none; }
+    .modal input:focus { outline:none; border-color:var(--gold); }
+    .modal button { width:100%; padding:12px; border:none; border-radius:10px;
+      font-weight:700; cursor:pointer; font-family:inherit;
+      font-size:14px; color:#fff; margin-top:6px;
+      -webkit-appearance:none; }
+    .modal .go { background:linear-gradient(135deg,#ff2e55,#ff0044); }
+    .modal .cancel { background:#1e1630; border:1px solid #333; }
+  </style>
+</head>
+<body>
+  <div class="logo">🎤</div>
+  <h1>VIDEoke YT</h1>
+  <div class="sub">Start your own karaoke party or join one</div>
+
+  <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
+  <button class="btn btn-join" onclick="joinExisting()">📱 Join a Party</button>
+
+  <div class="result" id="result">
+    <h2>🎉 Your Party is Ready!</h2>
+    <div class="lbl">Party Code</div>
+    <div class="code" id="rCode">------</div>
+    <div class="lbl">Admin Password</div>
+    <div class="pw" id="rPw">--------</div>
+    <div class="warn">⚠️ Save this! Co-hosts on other phones need it to unlock controls.</div>
+    <button class="open-host" onclick="openHost()">📺 Open Host Screen on This Device</button>
+    <button class="copy" onclick="copyVal(current.adminPassword)">📋 Copy Admin Password</button>
+    <button class="copy" onclick="copyVal(current.guestUrl)">🔗 Copy Guest Link</button>
+  </div>
+
+  <div style="margin-top:50px;padding:24px 20px 20px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    text-align:center;font-size:11px;color:#666;
+    letter-spacing:0.5px;line-height:1.9;max-width:420px;width:100%">
+    <div style="font-size:13px;color:#8888a0;font-weight:700;
+      letter-spacing:1px;margin-bottom:8px">
+      🎤 VIDEoke YT
+    </div>
+    <div>
+      Created with <span style="color:#ff2e55">❤️</span> by
+      <a href="#" onclick="return false;"
+        style="color:#ffd700;text-decoration:none;font-weight:800;
+        letter-spacing:0.5px">Your Name</a>
+    </div>
+    <div style="margin-top:8px;font-size:10px;opacity:0.55;
+      letter-spacing:1px;text-transform:uppercase">
+      © <span id="copyrightYear">2025</span> · All rights reserved
+    </div>
+  </div>
+
+  <div class="modal-bg" id="joinModal">
+    <div class="modal">
+      <h3>📱 Join a Party</h3>
+      <input type="text" id="joinCode" placeholder="ABC123"
+        maxlength="6" autocomplete="off">
+      <button class="go" onclick="submitJoin()">Join</button>
+      <button class="cancel" onclick="closeJoin()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const API = (window.VIDEOKE_CONFIG?.BACKEND_URL) || 'http://localhost:3000';
+    let current = null;
+
+    async function createSession() {
+      const btn = document.getElementById('startBtn');
+      btn.disabled = true; btn.textContent = '⏳ Creating...';
+      try {
+        const r = await fetch(API + '/api/session/create', { method: 'POST' });
+        if (!r.ok) {
+          const e = await r.json().catch(() => ({}));
+          throw new Error(e.error || ('HTTP ' + r.status));
+        }
+        current = await r.json();
+        localStorage.setItem('videoke:lastSession', JSON.stringify(current));
+        document.getElementById('rCode').textContent = current.partyCode;
+        document.getElementById('rPw').textContent   = current.adminPassword;
+        document.getElementById('result').classList.add('show');
+        btn.textContent = '✓ Session Active';
+        btn.disabled = true;
+        document.getElementById('result').scrollIntoView({ behavior:'smooth', block:'center' });
+      } catch (e) {
+        alert('❌ ' + e.message);
+        btn.disabled = false; btn.textContent = '🎉 Start New Karaoke';
+      }
+    }
+
+    function openHost() {
+      if (current) location.href = current.hostUrl;
+    }
+    function copyVal(v) {
+      if (!v) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(v).then(() => alert('✓ Copied!'));
+      } else {
+        prompt('Copy:', v);
+      }
+    }
+    function joinExisting() {
+      document.getElementById('joinModal').classList.add('show');
+      setTimeout(() => document.getElementById('joinCode').focus(), 100);
+    }
+    function closeJoin() { document.getElementById('joinModal').classList.remove('show'); }
+    function submitJoin() {
+      const c = document.getElementById('joinCode').value.trim().toUpperCase();
+      if (c.length !== 6) return alert('Must be 6 characters');
+      // DITO ANG FIX: Tinanggal ang .html
+      location.href = '/remote?party=' + encodeURIComponent(c);
+    }
+    document.getElementById('joinCode').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitJoin();
+    });
+    document.getElementById('joinCode').addEventListener('input', e => {
+      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+
+    (async () => {
+      try {
+        const last = JSON.parse(localStorage.getItem('videoke:lastSession') || 'null');
+        if (!last) return;
+        const r = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(last.hostCode));
+        const d = await r.json();
+        if (d.valid) {
+          current = last;
+          document.getElementById('rCode').textContent = last.partyCode;
+          document.getElementById('rPw').textContent   = last.adminPassword;
+          document.getElementById('result').classList.add('show');
+          const b = document.getElementById('startBtn');
+          b.textContent = '✓ Session Active'; b.disabled = true;
+        }
+      } catch {}
+    })();
+
+    document.getElementById('copyrightYear').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
