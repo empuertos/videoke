@@ -19,330 +19,140 @@
 
     #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; }
     #player { position:absolute; inset:0; }
-    
-    /* =====================================================
-       DITO ANG PERMANENTENG FIX: AGRESSIVE CROP
-       Pinalaki natin ng 30% at ginawang center para maitulak
-       palabas ng screen ang lahat ng YouTube buttons (Fullscreen, Share, etc.)
-       ===================================================== */
     #player iframe { 
       position: absolute;
-      top: -15%; 
-      left: -15%;
-      width: 130%; 
-      height: 130%; 
-      display:block; 
-      border:0; 
-      pointer-events: none; /* Blocker para hindi ma-click */
+      top: -15%; left: -15%;
+      width: 130%; height: 130%; 
+      display:block; border:0; pointer-events: none; 
     }
-
-    /* INVISIBLE BLOCKER & FOCUS TRAP */
     #playerBlocker { position: absolute; inset: 0; z-index: 10; background: transparent; }
-    #focusTrap {
-      position: absolute;
-      inset: 0;
-      z-index: 9999;
-      outline: none;
-    }
+    #focusTrap { position: absolute; inset: 0; z-index: 9999; outline: none; }
 
-    /* IDLE SCREEN */
-    #idleScreen { position:fixed; inset:0;
-      display:flex; flex-direction:column;
+    #idleScreen { position:fixed; inset:0; display:flex; flex-direction:column;
       align-items:center; justify-content:center;
       background:radial-gradient(ellipse at center,#1a0033,#0a0512);
-      z-index:100; text-align:center; padding:40px 20px;
-      overflow-y:auto; }
+      z-index:100; text-align:center; padding:40px 20px; overflow-y:auto; }
     #idleScreen.hidden { display:none; }
     #idleScreen .logo { font-size:clamp(48px,8vw,72px); font-weight:900;
       background:linear-gradient(135deg,#ffd700,#ff2e55);
       -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;
-      margin-bottom:20px; letter-spacing:-2px; }
-    #idleScreen .sub { font-size:clamp(14px,2vw,20px); color:#a0a0b0;
-      margin-bottom:30px; font-weight:500; }
+      -webkit-text-fill-color:transparent; margin-bottom:20px; letter-spacing:-2px; }
+    #idleScreen .sub { font-size:clamp(14px,2vw,20px); color:#a0a0b0; margin-bottom:30px; font-weight:500; }
 
-    #qrOverlay { margin-top:20px; padding:clamp(16px,3vw,30px);
-      background:rgba(0,0,0,0.6);
-      border:2px solid var(--gold);
-      border-radius:24px;
+    #qrOverlay { margin-top:20px; padding:clamp(16px,3vw,30px); background:rgba(0,0,0,0.6);
+      border:2px solid var(--gold); border-radius:24px;
       -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
       box-shadow:0 0 60px rgba(255,215,0,0.3); max-width:90vw; }
     #qrOverlay.hidden { display:none; }
-    #qrOverlay .title { font-size:clamp(16px,2vw,22px); font-weight:800;
-      color:var(--gold); margin-bottom:16px; }
+    #qrOverlay .title { font-size:clamp(16px,2vw,22px); font-weight:800; color:var(--gold); margin-bottom:16px; }
     #qrImg { width:clamp(180px,30vw,260px); height:auto; aspect-ratio:1;
-      background:#fff; padding:12px; border-radius:16px;
-      display:block; margin:0 auto; }
+      background:#fff; padding:12px; border-radius:16px; display:block; margin:0 auto; }
     #qrCode { font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
       font-size:clamp(28px,4vw,40px); font-weight:900; color:var(--gold);
-      letter-spacing:10px; margin-top:16px;
-      text-shadow:0 0 20px rgba(255,215,0,0.6); }
-    #qrUrl { font-size:11px; color:#8888a0;
-      margin-top:10px; word-break:break-all; max-width:280px;
-      margin-left:auto; margin-right:auto; }
+      letter-spacing:10px; margin-top:16px; text-shadow:0 0 20px rgba(255,215,0,0.6); }
+    #qrUrl { font-size:11px; color:#8888a0; margin-top:10px; word-break:break-all; max-width:280px; margin-left:auto; margin-right:auto; }
 
-    #hostControls { margin-top:24px; display:flex; gap:10px;
-      flex-wrap:wrap; justify-content:center; }
-    #hostControls button { padding:12px 24px;
-      border:none; border-radius:12px;
-      font-size:14px; font-weight:700; cursor:pointer;
-      font-family:inherit; color:#fff; -webkit-appearance:none; }
+    #hostControls { margin-top:24px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+    #hostControls button { padding:12px 24px; border:none; border-radius:12px;
+      font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; color:#fff; -webkit-appearance:none; }
     #stopPartyBtn { background:linear-gradient(135deg,#6b7280,#4b5563); }
-    #hostControls button:active { transform:scale(0.97); }
 
-    /* TOP BAR HUD */
-    #topBar { position:absolute; top:0; left:0; right:0;
-      z-index:50; padding:6px 8px;
+    #topBar { position:absolute; top:0; left:0; right:0; z-index:50; padding:6px 8px;
       padding-top:max(6px,env(safe-area-inset-top));
       display:none; align-items:flex-start; justify-content:space-between; gap:6px;
-      pointer-events:none;
-      transition: opacity 0.5s ease; }
+      pointer-events:none; transition: opacity 0.5s ease; }
     #topBar.show { display:flex; }
     #topBar.faded { opacity: 0.55; }
 
-    #nowHud { flex:0 1 auto; max-width:45%;
-      padding:6px 12px;
-      background:rgba(0,0,0,0.7);
-      border:1.5px solid rgba(255,215,0,0.4);
-      border-radius:14px;
+    #nowHud { flex:0 1 auto; max-width:45%; padding:6px 12px; background:rgba(0,0,0,0.7);
+      border:1.5px solid rgba(255,215,0,0.4); border-radius:14px;
       -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
-      display:flex; align-items:center; gap:8px;
-      box-shadow:0 3px 12px rgba(0,0,0,0.6);
-      min-height:36px; }
+      display:flex; align-items:center; gap:8px; box-shadow:0 3px 12px rgba(0,0,0,0.6); min-height:36px; }
     #nowHud .icon { font-size:16px; flex-shrink:0; }
-    #nowHud .info { min-width:0; display:flex;
-      flex-direction:column; gap:0; overflow:hidden; }
-    #nowHud .label { font-size:7px; font-weight:800;
-      color:var(--gold); letter-spacing:1.5px;
-      line-height:1; margin-bottom:2px; }
-    #nowHud .singer { font-size:12px; font-weight:800;
-      color:#fff; line-height:1.1;
-      overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; }
-    #nowHud .song { font-size:10px; color:#a0a0b0;
-      line-height:1.1; margin-top:1px;
-      overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; }
+    #nowHud .info { min-width:0; display:flex; flex-direction:column; gap:0; overflow:hidden; }
+    #nowHud .label { font-size:7px; font-weight:800; color:var(--gold); letter-spacing:1.5px; line-height:1; margin-bottom:2px; }
+    #nowHud .singer { font-size:12px; font-weight:800; color:#fff; line-height:1.1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #nowHud .song { font-size:10px; color:#a0a0b0; line-height:1.1; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-    #queueHud { flex:0 1 auto; max-width:45%;
-      padding:6px 12px;
-      background:rgba(0,0,0,0.7);
-      border:1.5px solid rgba(255,46,85,0.4);
-      border-radius:14px;
+    #queueHud { flex:0 1 auto; max-width:45%; padding:6px 12px; background:rgba(0,0,0,0.7);
+      border:1.5px solid rgba(255,46,85,0.4); border-radius:14px;
       -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
-      display:flex; flex-direction:column;
-      box-shadow:0 3px 12px rgba(0,0,0,0.6);
-      min-height:36px; justify-content:center; }
+      display:flex; flex-direction:column; box-shadow:0 3px 12px rgba(0,0,0,0.6); min-height:36px; justify-content:center; }
     #queueHud.flash { animation:qflash 1.1s ease; }
-    @keyframes qflash {
-      0%, 100% { border-color: rgba(255,46,85,0.4); opacity: 1; }
-      35% { border-color: var(--gold);
-        box-shadow: 0 0 34px rgba(255,215,0,0.85); opacity: 1; }
-    }
-    #queueHud .head { display:flex; justify-content:space-between;
-      align-items:center; margin-bottom:3px; }
-    #queueHud .label { font-size:7px; font-weight:800;
-      color:#ff6b6b; letter-spacing:1.5px;
-      display:flex; align-items:center; gap:4px; line-height:1; }
-    #queueHud .count { background:#ff2e55; color:#fff; font-size:8px;
-      padding:0px 5px; border-radius:6px; font-weight:700; line-height:1.3; }
-    #queueHud .items { display:flex; flex-direction:row;
-      gap:5px; overflow-x:auto; scrollbar-width:none;
-      align-items:center; }
+    @keyframes qflash { 0%, 100% { border-color: rgba(255,46,85,0.4); opacity: 1; } 35% { border-color: var(--gold); box-shadow: 0 0 34px rgba(255,215,0,0.85); opacity: 1; } }
+    #queueHud .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+    #queueHud .label { font-size:7px; font-weight:800; color:#ff6b6b; letter-spacing:1.5px; display:flex; align-items:center; gap:4px; line-height:1; }
+    #queueHud .count { background:#ff2e55; color:#fff; font-size:8px; padding:0px 5px; border-radius:6px; font-weight:700; line-height:1.3; }
+    #queueHud .items { display:flex; flex-direction:row; gap:5px; overflow-x:auto; scrollbar-width:none; align-items:center; }
     #queueHud .items::-webkit-scrollbar { display:none; }
-    #queueHud .q-item { display:flex; align-items:center; gap:5px;
-      padding:3px 8px 3px 4px;
-      background:rgba(255,255,255,0.06);
-      border-radius:10px; flex-shrink:0; max-width:180px; }
-    #queueHud .q-item:first-child {
-      background:rgba(255,46,85,0.2);
-      border:1px solid rgba(255,46,85,0.5); }
-    #queueHud .q-pos { background:var(--gold); color:#000;
-      font-size:8px; font-weight:800; min-width:14px; height:14px;
-      border-radius:50%; display:flex; align-items:center;
-      justify-content:center; flex-shrink:0; line-height:1; }
+    #queueHud .q-item { display:flex; align-items:center; gap:5px; padding:3px 8px 3px 4px; background:rgba(255,255,255,0.06); border-radius:10px; flex-shrink:0; max-width:180px; }
+    #queueHud .q-item:first-child { background:rgba(255,46,85,0.2); border:1px solid rgba(255,46,85,0.5); }
+    #queueHud .q-pos { background:var(--gold); color:#000; font-size:8px; font-weight:800; min-width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1; }
     #queueHud .q-item:first-child .q-pos { background:#ff2e55; color:#fff; }
-    #queueHud .q-info { min-width:0; display:flex;
-      align-items:baseline; gap:4px; overflow:hidden; }
-    #queueHud .q-singer { font-weight:800; font-size:11px;
-      color:#fff; overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; line-height:1; flex-shrink:0; max-width:80px; }
-    #queueHud .q-song { font-size:10px; color:#a0a0b0;
-      overflow:hidden; text-overflow:ellipsis;
-      white-space:nowrap; line-height:1; min-width:0; flex:1; }
-    #queueHud .q-empty { font-size:10px; color:#666;
-      font-style:italic; line-height:1; }
+    #queueHud .q-info { min-width:0; display:flex; align-items:baseline; gap:4px; overflow:hidden; }
+    #queueHud .q-singer { font-weight:800; font-size:11px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1; flex-shrink:0; max-width:80px; }
+    #queueHud .q-song { font-size:10px; color:#a0a0b0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1; min-width:0; flex:1; }
+    #queueHud .q-empty { font-size:10px; color:#666; font-style:italic; line-height:1; }
 
-    /* MINI QR CODE */
-    #miniQr {
-      position: absolute;
-      bottom: max(8px, env(safe-area-inset-bottom));
-      left: max(12px, env(safe-area-inset-left));
-      z-index: 400;
-      display: none;
-      flex-direction: row;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px 4px 4px;
-      background: rgba(0, 0, 0, 0.3); 
-      border: 1.5px solid rgba(255, 215, 0, 0.8);
-      border-radius: 8px;
-      -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
-      pointer-events: none;
-    }
+    #miniQr { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left));
+      z-index: 400; display: none; flex-direction: row; align-items: center; gap: 8px; padding: 4px 10px 4px 4px;
+      background: rgba(0, 0, 0, 0.3); border: 1.5px solid rgba(255, 215, 0, 0.8); border-radius: 8px;
+      -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); pointer-events: none; }
     #miniQr.show { display: flex; }
-    #miniQr img { 
-      width: 42px; height: 42px; 
-      border-radius: 4px; background: #fff; padding: 2px; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    }
+    #miniQr img { width: 42px; height: 42px; border-radius: 4px; background: #fff; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
     #miniQrInfo { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
-    #miniQrCodeText { 
-      font-family: ui-monospace,SFMono-Regular,Menlo,monospace; 
-      font-size: 13px; font-weight: 800; color: var(--gold); 
-      letter-spacing: 1px; line-height: 1.1; 
-      text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000; 
-    }
-    #miniQrHint { 
-      font-size: 9px; color: #fff; line-height: 1.1; font-weight: 800; 
-      letter-spacing: 0.5px; text-transform: uppercase; 
-      text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000; 
-    }
+    #miniQrCodeText { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: 13px; font-weight: 800; color: var(--gold); letter-spacing: 1px; line-height: 1.1; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000; }
+    #miniQrHint { font-size: 9px; color: #fff; line-height: 1.1; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000; }
 
-    /* FS BUTTON & CONTROLS */
-    #fsBtn { position:absolute; 
-      bottom:max(12px,env(safe-area-inset-bottom));
-      right:max(12px,env(safe-area-inset-right));
-      z-index:500;
-      width:34px; height:34px; border-radius:10px;
-      background:rgba(0,0,0,0.4);
-      border:1px solid rgba(255,255,255,0.2);
-      color:#fff; font-size:14px; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
-      transition:all 0.2s;
-      -webkit-appearance:none;
-      opacity: 0.6; }
+    #fsBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(12px,env(safe-area-inset-right)); z-index:500;
+      width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2);
+      color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity: 0.6; }
     #fsBtn:hover { opacity: 1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
-    #fsBtn:active { transform:scale(0.95); }
     
-    #ttsBtn {
-      position:absolute;
-      bottom:max(12px,env(safe-area-inset-bottom));
-      right:max(54px,calc(env(safe-area-inset-right) + 42px));
-      z-index:500;
-      width:34px; height:34px;
-      border-radius:10px;
-      background:rgba(0,0,0,0.4);
-      border:1px solid rgba(255,255,255,0.2);
-      color:#fff; font-size:14px;
-      cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
-      transition:all 0.2s;
-      -webkit-appearance:none;
-      opacity: 0.6; }
+    #ttsBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(54px,calc(env(safe-area-inset-right) + 42px)); z-index:500;
+      width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2);
+      color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity: 0.6; }
     #ttsBtn:hover { opacity: 1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
-    #ttsBtn:active { transform:scale(0.95); }
     #ttsBtn.off { opacity: 0.2; }
 
-    /* Connection Status */
-    #connStatus { position:absolute; bottom:14px; left:14px;
-      bottom:max(14px,env(safe-area-inset-bottom));
-      left:max(14px,env(safe-area-inset-left));
-      z-index:60; padding:6px 14px;
-      background:rgba(0,0,0,0.7); border-radius:14px; font-size:11px;
-      display:flex; align-items:center; gap:5px;
-      pointer-events:none; transition: opacity 0.3s; }
-    #connDot { width:7px; height:7px; border-radius:50%;
-      background:var(--green); box-shadow:0 0 8px var(--green); }
+    #connStatus { position:absolute; bottom:14px; left:14px; bottom:max(14px,env(safe-area-inset-bottom)); left:max(14px,env(safe-area-inset-left)); z-index:60;
+      padding:6px 14px; background:rgba(0,0,0,0.7); border-radius:14px; font-size:11px; display:flex; align-items:center; gap:5px; pointer-events:none; transition: opacity 0.3s; }
+    #connDot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); }
     #connDot.offline { background:var(--red); box-shadow:0 0 8px var(--red); }
 
     body.is-fullscreen #idleScreen { display:none; }
 
-    /* HOST GATE */
-    #hostGate { display:none; position:fixed; inset:0; z-index:9999;
-      background:radial-gradient(ellipse at top,#2a0a1a,#0a0512);
-      flex-direction:column; align-items:center; justify-content:center;
-      padding:30px 20px; text-align:center; overflow-y:auto; }
+    #hostGate { display:none; position:fixed; inset:0; z-index:9999; background:radial-gradient(ellipse at top,#2a0a1a,#0a0512);
+      flex-direction:column; align-items:center; justify-content:center; padding:30px 20px; text-align:center; overflow-y:auto; }
     #hostGate.show { display:flex; }
     #hostGate .icon { font-size:64px; margin-bottom:16px; }
-    #hostGate h2 { font-size:22px; font-weight:800; margin-bottom:8px;
-      background:linear-gradient(135deg,#ffd700,#ff8a00);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent; }
-    #hostGate p { color:#a0a0b0; font-size:13px; margin-bottom:20px;
-      max-width:340px; line-height:1.6; }
-    #hostGate input { padding:14px; font-size:15px; width:100%; max-width:360px;
-      background:#16101f;color:#fff;border:2px solid #333;
-      border-radius:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-      text-align:center; margin-bottom:12px;
-      -webkit-appearance:none; }
+    #hostGate h2 { font-size:22px; font-weight:800; margin-bottom:8px; background:linear-gradient(135deg,#ffd700,#ff8a00); -webkit-background-clip:text;background-clip:text; -webkit-text-fill-color:transparent; }
+    #hostGate p { color:#a0a0b0; font-size:13px; margin-bottom:20px; max-width:340px; line-height:1.6; }
+    #hostGate input { padding:14px; font-size:15px; width:100%; max-width:360px; background:#16101f;color:#fff;border:2px solid #333; border-radius:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; text-align:center; margin-bottom:12px; -webkit-appearance:none; }
     #hostGate input:focus { outline:none; border-color:#ffd700; }
-    #hostGate .go { padding:14px 40px;
-      background:linear-gradient(135deg,#ff2e55,#ff0044);
-      border:none; border-radius:12px; color:#fff;
-      font-size:15px; font-weight:700; cursor:pointer;
-      font-family:inherit; max-width:360px; width:100%;
-      -webkit-appearance:none; }
-    #hostGate .err { color:#ff6b6b; font-size:12px;
-      margin-top:12px; min-height:16px; }
+    #hostGate .go { padding:14px 40px; background:linear-gradient(135deg,#ff2e55,#ff0044); border:none; border-radius:12px; color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; max-width:360px; width:100%; -webkit-appearance:none; }
+    #hostGate .err { color:#ff6b6b; font-size:12px; margin-top:12px; min-height:16px; }
     #hostGate .divider { margin-top:22px; color:#666; font-size:12px; }
-    #hostGate .new-btn { margin-top:12px; padding:10px 24px;
-      background:transparent; border:1px solid #444;
-      color:#888; border-radius:8px; font-size:12px;
-      cursor:pointer; font-family:inherit;
-      -webkit-appearance:none; }
+    #hostGate .new-btn { margin-top:12px; padding:10px 24px; background:transparent; border:1px solid #444; color:#888; border-radius:8px; font-size:12px; cursor:pointer; font-family:inherit; -webkit-appearance:none; }
 
-    #ttsControl {
-      margin-top:16px; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap;
-    }
-    #ttsControl button {
-      padding:9px 16px; border-radius:10px; font-size:12px; font-weight:700;
-      cursor:pointer; font-family:inherit; -webkit-appearance:none; transition:all 0.15s;
-    }
+    #ttsControl { margin-top:16px; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    #ttsControl button { padding:9px 16px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; -webkit-appearance:none; transition:all 0.15s; }
     #ttsStatusBtn { background:rgba(74,222,128,0.15); border:1.5px solid rgba(74,222,128,0.5); color:#4ade80; }
     #ttsStatusBtn.off { background:rgba(136,136,160,0.15); border:1.5px solid rgba(136,136,160,0.5); color:#8888a0; }
     #ttsTestBtn { background:rgba(255,215,0,0.12); border:1.5px solid rgba(255,215,0,0.4); color:var(--gold); }
-    #ttsControl button:active { transform:scale(0.96); }
 
-    #autoplayOverlay {
-      position:fixed; inset:0; z-index:10000;
-      background:rgba(10,5,18,0.95); backdrop-filter:blur(10px);
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:30px; cursor:pointer;
-    }
+    #autoplayOverlay { position:fixed; inset:0; z-index:10000; background:rgba(10,5,18,0.95); backdrop-filter:blur(10px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; cursor:pointer; }
     #autoplayOverlay .icon { font-size:80px; margin-bottom:20px; animation:tapPulse 1.5s infinite; }
     @keyframes tapPulse { 0%, 100% { transform:scale(1); } 50% { transform:scale(1.15); } }
     #autoplayOverlay h2 { font-size:24px; font-weight:800; color:var(--gold); margin-bottom:10px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
     #autoplayOverlay p { font-size:14px; color:#a0a0b0; max-width:360px; line-height:1.6; }
 
-    /* RESERVED NOTIFICATION TOAST */
-    #resNotif {
-      position: absolute;
-      top: 50px;
-      right: max(12px, env(safe-area-inset-right));
-      left: auto;
-      transform: translateX(120%);
-      background: rgba(10,5,18,0.3); 
-      border-left: 3px solid var(--gold);
-      border-radius: 6px;
-      padding: 6px 12px; 
-      display: flex;
-      align-items: center;
-      gap: 8px; 
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 1000;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.8);
-      backdrop-filter: blur(4px);
-      max-width: 250px;
-    }
-    #resNotif.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    #resNotif { position: absolute; top: 50px; right: max(12px, env(safe-area-inset-right)); left: auto; transform: translateX(120%);
+      background: rgba(10,5,18,0.3); border-left: 3px solid var(--gold); border-radius: 6px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; opacity: 0;
+      pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.8); backdrop-filter: blur(4px); max-width: 250px; }
+    #resNotif.show { opacity: 1; transform: translateX(0); }
     #resNotif .res-icon { font-size: 14px; }
     #resNotif .res-content { display: flex; flex-direction: column; gap: 0px; }
     #resNotif .res-header { font-size: 7px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 1px 2px #000; }
@@ -353,8 +163,6 @@
 <body>
   <div id="playerWrap">
     <div id="player"></div>
-    
-    <!-- FOCUS TRAP & BLOCKER -->
     <div id="focusTrap" tabindex="0"></div>
     <div id="playerBlocker"></div>
 
@@ -447,8 +255,8 @@
   <div id="hostGate">
     <div class="icon">📺</div>
     <h2>Host Access</h2>
-    <p>Enter your host code to open the karaoke screen.</p>
-    <input id="hostCodeInput" placeholder="Host code..." autocomplete="off">
+    <p>Enter your host code or party code to open the karaoke screen.</p>
+    <input id="hostCodeInput" placeholder="Host code or Party code..." autocomplete="off">
     <button class="go" onclick="submitHostCode()">Open Karaoke</button>
     <div class="err" id="hostGateErr"></div>
     <div class="divider">or</div>
@@ -468,7 +276,7 @@
     const isMobile = isIOS || isAndroid || /Mobi|Tablet/.test(ua);
 
     let ytPlayer = null, ytReady = false, currentVideoId = null;
-    let errorCheckTimeout = null, hostCode = null, hostAdminToken = null;
+    let errorCheckTimeout = null, hostCode = null, hostPartyCode = null, hostAdminToken = null;
     let autoFullscreenAttempted = false, firstInteractionDone = false;
     let lastQueueLen = -1;
     let hudFadeTimer = null;
@@ -481,7 +289,6 @@
       reconnectionDelay: 2000,
     });
 
-    // AGGRESSIVE FOCUS KILLER: Patuloy na tinatanggal ang focus sa YouTube iframe
     setInterval(() => {
       const iframe = document.querySelector('#player iframe');
       const focusTrap = document.getElementById('focusTrap');
@@ -491,7 +298,6 @@
       }
     }, 500);
 
-    // I-intercept ang TV remote keys para hindi pumasok sa YouTube
     window.addEventListener('keydown', (e) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' '].includes(e.key)) {
         const focusTrap = document.getElementById('focusTrap');
@@ -502,14 +308,10 @@
 
     function resetHudVisibility() {
       const topBar = document.getElementById('topBar');
-      
       topBar.classList.remove('faded');
       clearTimeout(hudFadeTimer);
-      
       if (currentVideoId) {
-        hudFadeTimer = setTimeout(() => {
-          topBar.classList.add('faded');
-        }, 5000);
+        hudFadeTimer = setTimeout(() => { topBar.classList.add('faded'); }, 5000);
       }
     }
 
@@ -517,12 +319,9 @@
       const notif = document.getElementById('resNotif');
       document.getElementById('resNotifSinger').textContent = `🎤 ${singer}`;
       document.getElementById('resNotifTitle').textContent = title || 'Unknown Song';
-
       notif.classList.add('show');
       clearTimeout(resNotifTimer);
-      resNotifTimer = setTimeout(() => {
-        notif.classList.remove('show');
-      }, 5000); 
+      resNotifTimer = setTimeout(() => { notif.classList.remove('show'); }, 5000); 
     }
 
     function getFsElement() {
@@ -554,9 +353,7 @@
                     w.mozRequestFullScreen || w.msRequestFullscreen;
         if (req) await req.call(w);
         autoFullscreenAttempted = true;
-      } catch (e) { 
-        autoFullscreenAttempted = true; 
-      }
+      } catch (e) { autoFullscreenAttempted = true; }
     }
 
     function markFirstInteraction() {
@@ -565,14 +362,9 @@
       primeTTS();
       tryAutoFullscreen();
       resetHudVisibility();
-
       const focusTrap = document.getElementById('focusTrap');
       if (focusTrap) focusTrap.focus();
-
-      if (currentVideoId) {
-        try { ytPlayer.playVideo(); } catch {}
-      }
-      
+      if (currentVideoId) { try { ytPlayer.playVideo(); } catch {} }
       const overlay = document.getElementById('autoplayOverlay');
       if (overlay) overlay.style.display = 'none';
     }
@@ -592,12 +384,7 @@
     function showToast(msg) {
       if (!toastEl) {
         toastEl = document.createElement('div');
-        toastEl.style.cssText = `position:fixed;bottom:70px;left:50%;
-          transform:translateX(-50%);padding:10px 20px;
-          background:rgba(0,0,0,0.9);color:#fff;border-radius:24px;
-          font-size:13px;z-index:9999;pointer-events:none;
-          border:1px solid rgba(255,215,0,0.5);opacity:0;
-          transition:opacity 0.3s;max-width:80vw;text-align:center;`;
+        toastEl.style.cssText = `position:fixed;bottom:70px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(0,0,0,0.9);color:#fff;border-radius:24px;font-size:13px;z-index:9999;pointer-events:none;border:1px solid rgba(255,215,0,0.5);opacity:0;transition:opacity 0.3s;max-width:80vw;text-align:center;`;
         document.body.appendChild(toastEl);
       }
       toastEl.textContent = msg;
@@ -617,23 +404,13 @@
       const loadVoices = () => {
         const voices = speechSynthesis.getVoices();
         if (!voices.length) return;
-        const preferred = [
-          'Google US English', 'Microsoft Aria Online', 'Microsoft Aria',
-          'Samantha', 'Karen', 'Microsoft Zira', 'Google UK English Female',
-          'Tessa', 'Moira',
-        ];
+        const preferred = ['Google US English', 'Microsoft Aria Online', 'Microsoft Aria', 'Samantha', 'Karen', 'Microsoft Zira', 'Google UK English Female', 'Tessa', 'Moira'];
         for (const name of preferred) {
           const v = voices.find(v => v.name === name || v.name.includes(name));
           if (v) { ttsVoice = v; break; }
         }
-        if (!ttsVoice) {
-          ttsVoice = voices.find(v =>
-            v.lang.startsWith('en') &&
-            /female|woman|aria|samantha|zira|karen|tessa|moira|susan|kate/i.test(v.name));
-        }
-        if (!ttsVoice) {
-          ttsVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-        }
+        if (!ttsVoice) ttsVoice = voices.find(v => v.lang.startsWith('en') && /female|woman|aria|samantha|zira|karen|tessa|moira|susan|kate/i.test(v.name));
+        if (!ttsVoice) ttsVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
       };
       loadVoices();
       speechSynthesis.onvoiceschanged = loadVoices;
@@ -674,14 +451,7 @@
         duetPart = partMatch[2].toLowerCase();
         singer = singer.replace(/\(.*?\)/g, '').trim() || 'Guest';
       }
-      let title = rawTitle
-        .replace(/\((?:[^)]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^)]*?)\)/gi, '')
-        .replace(/\[(?:[^\]]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^\]]*?)\]/gi, '')
-        .replace(/\b(karaoke|ktv|minus\s*one|instrumental|lyrics?)\b/gi, '')
-        .replace(/\bofficial\s+(music\s+)?video\b/gi, '')
-        .replace(/\s+/g, ' ')
-        .replace(/^[\s\-–—:|]+|[\s\-–—:|]+$/g, '')
-        .trim();
+      let title = rawTitle.replace(/\((?:[^)]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^)]*?)\)/gi, '').replace(/\[(?:[^\]]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^\]]*?)\]/gi, '').replace(/\b(karaoke|ktv|minus\s*one|instrumental|lyrics?)\b/gi, '').replace(/\bofficial\s+(music\s+)?video\b/gi, '').replace(/\s+/g, ' ').replace(/^[\s\-–—:|]+|[\s\-–—:|]+$/g, '').trim();
       if (!title) title = rawTitle;
       let artist = '';
       let songName = title;
@@ -691,13 +461,9 @@
       if (artist.length > 35) artist = artist.slice(0, 32).trim() + '...';
       if (singer.length > 25) singer = singer.slice(0, 22).trim() + '...';
       if (duetPart) {
-        return artist
-          ? `Next up, ${singer}, singing the ${duetPart} part of ${songName} by ${artist}.`
-          : `Next up, ${singer}, singing the ${duetPart} part of ${songName}.`;
+        return artist ? `Next up, ${singer}, singing the ${duetPart} part of ${songName} by ${artist}.` : `Next up, ${singer}, singing the ${duetPart} part of ${songName}.`;
       }
-      return artist
-        ? `Next up, ${singer}, singing ${songName} by ${artist}. Get ready!`
-        : `Next up, ${singer}, singing ${songName}. Get ready!`;
+      return artist ? `Next up, ${singer}, singing ${songName} by ${artist}. Get ready!` : `Next up, ${singer}, singing ${songName}. Get ready!`;
     }
 
     function announceNextSong(song) {
@@ -725,31 +491,17 @@
       if (!ttsSupported) {
         if (icon) icon.textContent = '🔇';
         if (btn) { btn.classList.add('off'); btn.title = 'Voice not supported'; }
-        if (statusBtn) {
-          statusBtn.textContent = '🔇 Voice Not Supported';
-          statusBtn.classList.add('off');
-          statusBtn.disabled = true;
-        }
+        if (statusBtn) { statusBtn.textContent = '🔇 Voice Not Supported'; statusBtn.classList.add('off'); statusBtn.disabled = true; }
         return;
       }
       if (icon) icon.textContent = ttsEnabled ? '🔊' : '🔇';
       if (btn) btn.classList.toggle('off', !ttsEnabled);
-      if (statusBtn) {
-        statusBtn.textContent = ttsEnabled ? '🔊 AI Voice: On' : '🔇 AI Voice: Off';
-        statusBtn.classList.toggle('off', !ttsEnabled);
-      }
+      if (statusBtn) { statusBtn.textContent = ttsEnabled ? '🔊 AI Voice: On' : '🔇 AI Voice: Off'; statusBtn.classList.toggle('off', !ttsEnabled); }
     }
 
     function testTTS() {
-      if (!ttsSupported) {
-        alert('🔇 Voice announcements not supported.\nTry Chrome, Edge, or Safari.');
-        return;
-      }
-      if (!ttsEnabled) {
-        ttsEnabled = true;
-        localStorage.setItem(TTS_KEY, '1');
-        updateTTSButton();
-      }
+      if (!ttsSupported) { alert('🔇 Voice announcements not supported.\nTry Chrome, Edge, or Safari.'); return; }
+      if (!ttsEnabled) { ttsEnabled = true; localStorage.setItem(TTS_KEY, '1'); updateTTSButton(); }
       primeTTS();
       const sample = { singer: 'Juan', title: 'Tadhana by Moira (Karaoke)' };
       setTimeout(() => speak(buildAnnouncement(sample), { rate: 1.0, pitch: 1.05 }), 100);
@@ -761,18 +513,37 @@
     function showHostGate() { document.getElementById('hostGate').classList.add('show'); }
     function hideHostGate() { document.getElementById('hostGate').classList.remove('show'); }
 
-    async function verifyAndLoadHost(code) {
+    // BINAGO DITO: Tinatanggap ang Host Code o Party Code
+    async function verifyAndLoadHost(code, isPartyCode = false) {
       try {
-        const r = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(code));
-        const d = await r.json();
-        if (!d.valid) return false;
-        hostCode = code;
-        hostAdminToken = d.token;
-        localStorage.setItem('videoke:hostCode', code);
-        document.getElementById('hostAdminPw').textContent = d.adminPassword;
-        document.getElementById('hostAdminInfo').style.display = 'block';
-        socket.emit('registerHost', { hostCode: code });
-        updateQR(d.partyCode);
+        if (isPartyCode) {
+          // Verify party code
+          const r = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(code));
+          const d = await r.json();
+          if (!d.valid) return false;
+          hostPartyCode = d.partyCode;
+          hostCode = null;
+          hostAdminToken = null;
+          localStorage.setItem('videoke:hostPartyCode', d.partyCode);
+          document.getElementById('hostAdminInfo').style.display = 'none';
+          document.getElementById('hostControls').style.display = 'none';
+          socket.emit('registerHost', { partyCode: d.partyCode });
+          updateQR(d.partyCode);
+        } else {
+          // Verify host code
+          const r = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(code));
+          const d = await r.json();
+          if (!d.valid) return false;
+          hostCode = code;
+          hostAdminToken = d.token;
+          hostPartyCode = d.partyCode;
+          localStorage.setItem('videoke:hostCode', code);
+          document.getElementById('hostAdminPw').textContent = d.adminPassword;
+          document.getElementById('hostAdminInfo').style.display = 'block';
+          document.getElementById('hostControls').style.display = 'flex';
+          socket.emit('registerHost', { hostCode: code });
+          updateQR(d.partyCode);
+        }
         hideHostGate();
         return true;
       } catch { return false; }
@@ -780,11 +551,25 @@
 
     async function initHost() {
       const u = new URLSearchParams(location.search);
-      const code = (u.get('session') || localStorage.getItem('videoke:hostCode') || '').trim();
-      if (!code) return showHostGate();
-      const ok = await verifyAndLoadHost(code);
-      if (!ok) {
-        localStorage.removeItem('videoke:hostCode');
+      const sessionCode = u.get('session');
+      const partyCode = u.get('party');
+      
+      const savedHost = localStorage.getItem('videoke:hostCode');
+      const savedParty = localStorage.getItem('videoke:hostPartyCode');
+
+      if (sessionCode) {
+        const ok = await verifyAndLoadHost(sessionCode, false);
+        if (!ok) { localStorage.removeItem('videoke:hostCode'); showHostGate(); }
+      } else if (partyCode) {
+        const ok = await verifyAndLoadHost(partyCode, true);
+        if (!ok) { showHostGate(); }
+      } else if (savedHost) {
+        const ok = await verifyAndLoadHost(savedHost, false);
+        if (!ok) { localStorage.removeItem('videoke:hostCode'); showHostGate(); }
+      } else if (savedParty) {
+        const ok = await verifyAndLoadHost(savedParty, true);
+        if (!ok) { localStorage.removeItem('videoke:hostPartyCode'); showHostGate(); }
+      } else {
         showHostGate();
       }
     }
@@ -793,8 +578,11 @@
       const c = document.getElementById('hostCodeInput').value.trim();
       if (!c) return;
       document.getElementById('hostGateErr').textContent = '';
-      verifyAndLoadHost(c).then(ok => {
-        if (!ok) document.getElementById('hostGateErr').textContent = '❌ Invalid host code';
+      
+      // Kung 6 characters, gawing Party Code, kung mahaba, Host Code
+      const isParty = c.length === 6;
+      verifyAndLoadHost(c, isParty).then(ok => {
+        if (!ok) document.getElementById('hostGateErr').textContent = '❌ Invalid host or party code';
       });
     }
 
@@ -802,52 +590,28 @@
       ytPlayer = new YT.Player('player', {
         height: '100%', width: '100%', videoId: '',
         playerVars: {
-          autoplay: 0, 
-          controls: 0, 
-          modestbranding: 1,
-          rel: 0, 
-          fs: 0, 
-          playsinline: 1, 
-          iv_load_policy: 3,
-          enablejsapi: 1, 
-          origin: window.location.origin,
-          hl: 'en', 
-          cc_load_policy: 0, 
-          disablekb: 1, 
-          loop: 0,
+          autoplay: 0, controls: 0, modestbranding: 1, rel: 0, fs: 0, playsinline: 1, iv_load_policy: 3,
+          enablejsapi: 1, origin: window.location.origin, hl: 'en', cc_load_policy: 0, disablekb: 1, loop: 0,
         },
         events: {
           onReady: (e) => {
             ytReady = true;
             const focusTrap = document.getElementById('focusTrap');
             if (focusTrap) focusTrap.focus();
-            
             try { e.target.setPlaybackQuality('default'); } catch {}
-            try {
-              if (typeof e.target.setPlaybackQualityRange === 'function')
-                e.target.setPlaybackQualityRange('default', 'default');
-            } catch {}
+            try { if (typeof e.target.setPlaybackQualityRange === 'function') e.target.setPlaybackQualityRange('default', 'default'); } catch {}
           },
           onStateChange: (e) => {
             if (e.data === 0 && currentVideoId) socket.emit('songEnded');
-            if (e.data === 1 && currentVideoId && !autoFullscreenAttempted && !isIOS) {
-              autoFullscreenAttempted = true;
-              tryAutoFullscreen();
-            }
+            if (e.data === 1 && currentVideoId && !autoFullscreenAttempted && !isIOS) { autoFullscreenAttempted = true; tryAutoFullscreen(); }
             if (e.data === 1) resetHudVisibility();
           },
           onError: (e) => {
             if (!currentVideoId) return;
             if ([2, 5, 100, 101, 150].includes(e.data)) {
-              console.warn('YouTube Error:', e.data, 'Skipping and blacklisting...');
-              socket.emit('videoFailed', {
-                videoId: currentVideoId,
-                title: document.getElementById('nowSong').textContent || '',
-              });
+              socket.emit('videoFailed', { videoId: currentVideoId, title: document.getElementById('nowSong').textContent || '' });
               currentVideoId = null;
-              setTimeout(() => {
-                stopVideo();
-              }, 1000);
+              setTimeout(() => { stopVideo(); }, 1000);
             }
           },
         },
@@ -858,6 +622,7 @@
       document.getElementById('connDot').classList.remove('offline');
       document.getElementById('connText').textContent = 'Connected';
       if (hostCode) socket.emit('registerHost', { hostCode });
+      else if (hostPartyCode) socket.emit('registerHost', { partyCode: hostPartyCode });
     });
     socket.on('disconnect', () => {
       document.getElementById('connDot').classList.add('offline');
@@ -865,15 +630,14 @@
     });
     socket.on('hostRejected', () => {
       localStorage.removeItem('videoke:hostCode');
-      hostCode = null;
+      localStorage.removeItem('videoke:hostPartyCode');
+      hostCode = null; hostPartyCode = null;
       showHostGate();
     });
     
     socket.on('command', (cmd) => {
       switch (cmd.type) {
-        case 'play': 
-          playVideo(cmd.song); 
-          break;
+        case 'play': playVideo(cmd.song); break;
         case 'pause': if (ytReady && ytPlayer) ytPlayer.pauseVideo(); break;
         case 'resume': if (ytReady && ytPlayer) ytPlayer.playVideo(); break;
         case 'stop': stopVideo(); break;
@@ -884,30 +648,19 @@
     
     socket.on('state', (s) => {
       const len = (s.queue || []).length;
-      
       if (lastQueueLen >= 0 && len > lastQueueLen) {
         const qh = document.getElementById('queueHud');
-        qh.classList.remove('flash');
-        void qh.offsetWidth;
-        qh.classList.add('flash');
+        qh.classList.remove('flash'); void qh.offsetWidth; qh.classList.add('flash');
         setTimeout(() => qh.classList.remove('flash'), 1200);
-        
         const newestSong = s.queue[s.queue.length - 1];
-        if (newestSong) {
-          showResNotif(newestSong.singer, newestSong.title);
-        }
-
+        if (newestSong) showResNotif(newestSong.singer, newestSong.title);
         resetHudVisibility(); 
       }
-      
       lastQueueLen = len;
       updateQueueHud(s);
-      
       if (s.nowPlaying) {
         updateNowHud(s.nowPlaying);
-        if (!currentVideoId) {
-          playVideo(s.nowPlaying, true);
-        }
+        if (!currentVideoId) playVideo(s.nowPlaying, true);
       } else {
         if (!currentVideoId) showIdle();
       }
@@ -925,59 +678,36 @@
     });
     socket.on('sessionEnded', () => {
       localStorage.removeItem('videoke:hostCode');
-      hostCode = null;
-      hostAdminToken = null;
+      localStorage.removeItem('videoke:hostPartyCode');
+      hostCode = null; hostPartyCode = null;
       stopVideo();
       showHostGate();
     });
 
     function playVideo(song, isSync = false) {
       if (!song?.videoId) return;
-      
       if (!isSync) announceNextSong(song);
-
       if (!ytPlayer || !ytReady) return setTimeout(() => playVideo(song, isSync), 500);
       currentVideoId = song.videoId;
       updateNowHud(song);
       hideIdle();
-
       document.getElementById('miniQr').classList.add('show');
       document.getElementById('connStatus').style.display = 'none';
-
       resetHudVisibility(); 
-
       if (!isIOS) tryAutoFullscreen();
-
-      try {
-        ytPlayer.loadVideoById({ videoId: song.videoId, suggestedQuality: 'default' });
-      } catch {
-        ytPlayer.loadVideoById(song.videoId);
-      }
-      setTimeout(() => {
-        try { if (ytPlayer && ytReady) ytPlayer.setPlaybackQuality('default'); } catch {}
-      }, 800);
+      try { ytPlayer.loadVideoById({ videoId: song.videoId, suggestedQuality: 'default' }); } catch { ytPlayer.loadVideoById(song.videoId); }
+      setTimeout(() => { try { if (ytPlayer && ytReady) ytPlayer.setPlaybackQuality('default'); } catch {} }, 800);
       try { ytPlayer.setVolume(80); } catch {}
       const attemptPlay = () => { try { ytPlayer.playVideo(); } catch {} };
       attemptPlay();
-      if (isMobile) {
-        setTimeout(() => {
-          try {
-            const st = ytPlayer.getPlayerState();
-            if (st !== 1 && st !== 3) attemptPlay();
-          } catch {}
-        }, 1200);
-      }
-      
+      if (isMobile) { setTimeout(() => { try { const st = ytPlayer.getPlayerState(); if (st !== 1 && st !== 3) attemptPlay(); } catch {} }, 1200); }
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         try {
           const st = ytPlayer.getPlayerState();
           if (st === -1 || st === 5) {
-            socket.emit('videoFailed', {
-              videoId: currentVideoId, title: song.title || '',
-            });
-            currentVideoId = null;
-            stopVideo();
+            socket.emit('videoFailed', { videoId: currentVideoId, title: song.title || '' });
+            currentVideoId = null; stopVideo();
           }
         } catch {}
       }, 8000);
@@ -987,10 +717,8 @@
       currentVideoId = null;
       if (ytPlayer && ytReady) { try { ytPlayer.stopVideo(); } catch {} }
       document.getElementById('topBar').classList.remove('show');
-      
       document.getElementById('miniQr').classList.remove('show');
       document.getElementById('connStatus').style.display = 'flex';
-      
       showIdle();
       autoFullscreenAttempted = false;
       clearTimeout(hudFadeTimer);
@@ -1007,11 +735,7 @@
       const list = state.queue || [];
       document.getElementById('queueCount').textContent = list.length;
       const el = document.getElementById('queueItems');
-      if (!list.length) {
-        el.innerHTML = '<div class="q-empty">No reservations</div>';
-        document.getElementById('topBar').classList.add('show');
-        return;
-      }
+      if (!list.length) { el.innerHTML = '<div class="q-empty">No reservations</div>'; document.getElementById('topBar').classList.add('show'); return; }
       el.innerHTML = list.map((q, i) => `
         <div class="q-item">
           <div class="q-pos">${i+1}</div>
@@ -1029,72 +753,46 @@
     function updateQR(code) {
       const overlay = document.getElementById('qrOverlay');
       const noParty = document.getElementById('noPartyMsg');
-      
-      if (!code) {
-        overlay.classList.add('hidden');
-        noParty.style.display = 'block';
-        noParty.textContent = '⏳ Waiting for a party...';
-        return;
-      }
-      
+      if (!code) { overlay.classList.add('hidden'); noParty.style.display = 'block'; noParty.textContent = '⏳ Waiting for a party...'; return; }
       const url = location.origin + '/remote?party=' + code;
-      
-      document.getElementById('qrImg').src =
-        'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' + encodeURIComponent(url);
+      document.getElementById('qrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' + encodeURIComponent(url);
       document.getElementById('qrCode').textContent = code;
       document.getElementById('qrUrl').textContent = url;
-      
-      document.getElementById('miniQrImg').src =
-        'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(url);
+      document.getElementById('miniQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(url);
       document.getElementById('miniQrCodeText').textContent = code;
-
       overlay.classList.remove('hidden');
       noParty.style.display = 'none';
     }
 
     async function hostEndParty() {
+      if (!hostAdminToken) return alert('You cannot end the party from a shared TV display. Use the host device.');
       if (!confirm('End the party? Guests will be locked out.')) return;
       try {
-        const r = await fetch(API + '/api/admin/end-party', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': hostAdminToken },
-          body: '{}',
-        });
+        const r = await fetch(API + '/api/admin/end-party', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': hostAdminToken }, body: '{}' });
         if (!r.ok) throw new Error('Server error ' + r.status);
         localStorage.removeItem('videoke:hostCode');
+        localStorage.removeItem('videoke:hostPartyCode');
         location.href = '/';
       } catch (e) { alert('❌ ' + e.message); }
     }
 
     async function syncPartyStatus() {
-      if (!hostCode) return;
+      if (!hostPartyCode) return;
       try {
-        const r = await fetch(API + '/api/party?host=' + encodeURIComponent(hostCode));
+        const r = await fetch(API + '/api/party?party=' + encodeURIComponent(hostPartyCode));
         const d = await r.json();
         if (d.active) updateQR(d.code);
       } catch {}
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT') {
-        if (e.key === 'Enter') submitHostCode();
-        return;
-      }
-      if (e.key === 'p' || e.key === 'P') {
-        if (ytPlayer && ytReady) {
-          ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
-        }
-      }
-      if ((e.key === 's' || e.key === 'S') && hostAdminToken) {
-        socket.emit('skip', { adminToken: hostAdminToken });
-      }
+      if (e.target.tagName === 'INPUT') { if (e.key === 'Enter') submitHostCode(); return; }
+      if (e.key === 'p' || e.key === 'P') { if (ytPlayer && ytReady) { ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); } }
+      if ((e.key === 's' || e.key === 'S') && hostAdminToken) socket.emit('skip', { adminToken: hostAdminToken });
       if (e.key === 'f' || e.key === 'F') toggleFullscreen();
     });
 
-    function esc(s) {
-      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     initHost();
     setInterval(syncPartyStatus, 5000);
