@@ -7,208 +7,39 @@
   <title>VIDEoke — Start</title>
   <script src="/config.js"></script>
   <style>
-    :root { 
-      --gold: #ffd700; 
-      --red: #ff2e55; 
-      --bg: #0a0512; 
-      --card: #16101f; 
-      --dim: #8888a0; 
-    }
+    :root { --gold: #ffd700; --red: #ff2e55; --bg: #0a0512; --card: #16101f; --dim: #8888a0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      background: var(--bg); 
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      min-height: 100vh; 
-      min-height: 100dvh;
-      display: flex; 
-      flex-direction: column;
-      align-items: center; 
-      justify-content: center;
-      padding: 20px; 
-      text-align: center; 
-    }
+    body { background: var(--bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
     .logo { font-size: 64px; margin-bottom: 10px; animation: float 2.4s ease-in-out infinite; }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-    h1 { 
-      font-size: 32px; 
-      font-weight: 900; 
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, var(--gold), var(--red));
-      -webkit-background-clip: text; 
-      background-clip: text;
-      -webkit-text-fill-color: transparent; 
-      letter-spacing: -1px; 
-    }
-    .subtitle { 
-      color: var(--dim); 
-      font-size: 14px; 
-      margin-bottom: 32px;
-      max-width: 340px; 
-      line-height: 1.6; 
-    }
-    .btn { 
-      padding: 16px 32px; 
-      border: none; 
-      border-radius: 14px;
-      font-size: 16px; 
-      font-weight: 800; 
-      cursor: pointer;
-      font-family: inherit; 
-      color: #fff; 
-      margin: 6px;
-      transition: transform 0.15s, opacity 0.2s; 
-      width: 100%; 
-      max-width: 340px;
-      -webkit-appearance: none; 
-    }
+    h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, var(--gold), var(--red)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+    .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 32px; max-width: 340px; line-height: 1.6; }
+    .btn { padding: 16px 32px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; color: #fff; margin: 6px; transition: transform 0.15s, opacity 0.2s; width: 100%; max-width: 340px; -webkit-appearance: none; }
     .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-start { 
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35); 
-    }
-    .btn-join { 
-      background: linear-gradient(135deg, var(--red), #ff0044);
-      box-shadow: 0 6px 24px rgba(255, 46, 85, 0.35); 
-    }
-    .result-card { 
-      margin-top: 28px; 
-      padding: 24px; 
-      background: var(--card);
-      border: 1px solid rgba(255, 215, 0, 0.25); 
-      border-radius: 20px;
-      max-width: 420px; 
-      width: 100%; 
-      display: none;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4); 
-    }
+    .btn-start { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35); }
+    .btn-join { background: linear-gradient(135deg, var(--red), #ff0044); box-shadow: 0 6px 24px rgba(255, 46, 85, 0.35); }
+    .result-card { margin-top: 28px; padding: 24px; background: var(--card); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 20px; max-width: 420px; width: 100%; display: none; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4); }
     .result-card.show { display: block; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
     .result-card h2 { font-size: 18px; margin-bottom: 16px; color: var(--gold); }
-    .label { 
-      font-size: 11px; 
-      color: var(--dim); 
-      text-transform: uppercase;
-      letter-spacing: 2px; 
-      margin-top: 16px; 
-      font-weight: 700;
-    }
-    .code-box { 
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 36px; 
-      font-weight: 900; 
-      color: var(--gold);
-      letter-spacing: 8px; 
-      padding: 16px;
-      background: rgba(255, 215, 0, 0.08); 
-      border: 1px solid rgba(255, 215, 0, 0.2);
-      border-radius: 12px; 
-      margin: 8px 0; 
-    }
-    .pw-box { 
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 22px; 
-      font-weight: 800; 
-      color: #fff;
-      padding: 12px; 
-      background: rgba(255, 46, 85, 0.08);
-      border: 1px solid rgba(255, 46, 85, 0.25); 
-      border-radius: 12px; 
-      margin-top: 6px; 
-    }
-    .warning-box { 
-      font-size: 12px; 
-      color: var(--gold); 
-      margin-top: 16px; 
-      line-height: 1.5;
-      padding: 12px; 
-      background: rgba(255, 215, 0, 0.1); 
-      border: 1px solid rgba(255, 215, 0, 0.3);
-      border-radius: 10px; 
-    }
-    .result-card button { 
-      margin-top: 12px; 
-      width: 100%; 
-      padding: 16px;
-      border: none; 
-      border-radius: 12px; 
-      font-size: 15px; 
-      font-weight: 700;
-      cursor: pointer; 
-      font-family: inherit; 
-      color: #fff;
-      transition: opacity 0.2s; 
-      -webkit-appearance: none; 
-    }
+    .label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 2px; margin-top: 16px; font-weight: 700; }
+    .code-box { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 36px; font-weight: 900; color: var(--gold); letter-spacing: 8px; padding: 16px; background: rgba(255, 215, 0, 0.08); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 12px; margin: 8px 0; }
+    .pw-box { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 22px; font-weight: 800; color: #fff; padding: 12px; background: rgba(255, 46, 85, 0.08); border: 1px solid rgba(255, 46, 85, 0.25); border-radius: 12px; margin-top: 6px; }
+    .warning-box { font-size: 12px; color: var(--gold); margin-top: 16px; line-height: 1.5; padding: 12px; background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 10px; }
+    .result-card button { margin-top: 12px; width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; color: #fff; transition: opacity 0.2s; -webkit-appearance: none; }
     .result-card button:active { transform: scale(0.98); }
     .btn-open-host { background: linear-gradient(135deg, #22c55e, #16a34a); }
     .btn-copy { background: #2a1a1a; border: 1px solid #444; margin-top: 8px; }
-    
-    .footer { 
-      margin-top: 50px; 
-      padding: 24px 20px 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      text-align: center; 
-      font-size: 12px; 
-      color: #666;
-      letter-spacing: 0.5px; 
-      line-height: 1.9; 
-      max-width: 420px; 
-      width: 100%;
-    }
+    .footer { margin-top: 50px; padding: 24px 20px 20px; border-top: 1px solid rgba(255, 255, 255, 0.06); text-align: center; font-size: 12px; color: #666; letter-spacing: 0.5px; line-height: 1.9; max-width: 420px; width: 100%; }
     .footer b { color: var(--gold); font-weight: 800; }
-    
-    .modal-bg { 
-      position: fixed; 
-      inset: 0; 
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 9999; 
-      display: none; 
-      align-items: center;
-      justify-content: center; 
-      padding: 20px; 
-    }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-bg.show { display: flex; }
-    .modal { 
-      background: var(--card); 
-      padding: 24px; 
-      border-radius: 20px;
-      max-width: 360px; 
-      width: 100%; 
-      border: 1px solid #333; 
-    }
+    .modal { background: var(--card); padding: 24px; border-radius: 20px; max-width: 360px; width: 100%; border: 1px solid #333; }
     .modal h3 { margin-bottom: 16px; font-size: 18px; }
-    .modal input { 
-      width: 100%; 
-      padding: 16px; 
-      font-size: 22px;
-      text-align: center; 
-      background: #1e1630; 
-      color: #fff;
-      border: 2px solid #333; 
-      border-radius: 12px;
-      letter-spacing: 6px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      text-transform: uppercase; 
-      margin-bottom: 12px; 
-      font-weight: 800;
-      -webkit-appearance: none; 
-    }
+    .modal input { width: 100%; padding: 16px; font-size: 22px; text-align: center; background: #1e1630; color: #fff; border: 2px solid #333; border-radius: 12px; letter-spacing: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; margin-bottom: 12px; font-weight: 800; -webkit-appearance: none; }
     .modal input:focus { outline: none; border-color: var(--gold); }
-    .modal button { 
-      width: 100%; 
-      padding: 14px; 
-      border: none; 
-      border-radius: 12px;
-      font-weight: 700; 
-      cursor: pointer; 
-      font-family: inherit;
-      font-size: 15px; 
-      color: #fff; 
-      margin-top: 8px;
-      -webkit-appearance: none; 
-    }
+    .modal button { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 15px; color: #fff; margin-top: 8px; -webkit-appearance: none; }
     .modal .btn-go { background: linear-gradient(135deg, var(--red), #ff0044); }
     .modal .btn-cancel { background: #1e1630; border: 1px solid #333; }
   </style>
@@ -223,32 +54,22 @@
 
   <div class="result-card" id="resultCard">
     <h2>🎉 Your Party is Ready!</h2>
-    
     <div class="label">Party Code</div>
     <div class="code-box" id="displayPartyCode">------</div>
-    
     <div class="label">Admin Password</div>
     <div class="pw-box" id="displayAdminPw">--------</div>
-    
     <div class="warning-box">
       👆 <b>REMINDER:</b> When you open the Host Screen, tap the screen once to enable Auto-Play!
     </div>
-    
     <button class="btn-open-host" onclick="openHostScreen()">📺 Open Host Screen on This Device</button>
     <button class="btn-copy" onclick="copyToClipboard(currentSession.adminPassword)">📋 Copy Admin Password</button>
-    <button class="btn-copy" onclick="copyToClipboard(currentSession.guestUrl)">🔗 Copy Guest Link</button>
+    <button class="btn-copy" onclick="copyToClipboard(guestLink())">🔗 Copy Guest Link</button>
   </div>
 
   <div class="footer">
-    <div style="font-size:14px; color:#8888a0; font-weight:700; letter-spacing:1px; margin-bottom:8px;">
-      🎤 VIDEoke YT
-    </div>
-    <div>
-      Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b>
-    </div>
-    <div style="margin-top:8px; font-size:10px; opacity:0.55; letter-spacing:1px; text-transform:uppercase;">
-      © <span id="copyrightYear"></span> · All rights reserved
-    </div>
+    <div style="font-size:14px; color:#8888a0; font-weight:700; letter-spacing:1px; margin-bottom:8px;">🎤 VIDEoke YT</div>
+    <div>Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
+    <div style="margin-top:8px; font-size:10px; opacity:0.55; letter-spacing:1px; text-transform:uppercase;">© <span id="copyrightYear"></span> · All rights reserved</div>
   </div>
 
   <div class="modal-bg" id="joinModal">
@@ -264,41 +85,41 @@
     const API = (window.VIDEOKE_CONFIG?.BACKEND_URL) || 'http://localhost:3000';
     let currentSession = null;
 
+    function guestLink() {
+      if (!currentSession) return '';
+      return window.location.origin + '/remote?party=' + encodeURIComponent(currentSession.partyCode);
+    }
+
     async function createSession() {
       const btn = document.getElementById('startBtn');
-      btn.disabled = true; 
+      btn.disabled = true;
       btn.textContent = '⏳ Creating...';
-      
       try {
         const res = await fetch(API + '/api/session/create', { method: 'POST' });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.error || ('HTTP ' + res.status));
         }
-        
         currentSession = await res.json();
         localStorage.setItem('videoke:lastSession', JSON.stringify(currentSession));
-        
         document.getElementById('displayPartyCode').textContent = currentSession.partyCode;
         document.getElementById('displayAdminPw').textContent = currentSession.adminPassword;
         document.getElementById('resultCard').classList.add('show');
-        
         btn.textContent = '✓ Session Active';
         btn.disabled = false;
-        btn.onclick = openHostScreen; // Redirect to host on click
-        
+        btn.onclick = openHostScreen;
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (e) {
         alert('❌ ' + e.message);
-        btn.disabled = false; 
+        btn.disabled = false;
         btn.textContent = '🎉 Start New Karaoke';
       }
     }
 
+    // 🔧 FIX: use relative path so we never land on the API host by mistake
     function openHostScreen() {
-      if (currentSession) {
-        window.location.href = currentSession.hostUrl;
-      }
+      if (!currentSession?.hostCode) return;
+      window.location.href = '/host?session=' + encodeURIComponent(currentSession.hostCode);
     }
 
     function copyToClipboard(text) {
@@ -314,44 +135,36 @@
       document.getElementById('joinModal').classList.add('show');
       setTimeout(() => document.getElementById('joinCodeInput').focus(), 100);
     }
-
-    function closeJoinModal() {
-      document.getElementById('joinModal').classList.remove('show');
-    }
-
+    function closeJoinModal() { document.getElementById('joinModal').classList.remove('show'); }
     function submitJoinCode() {
       const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
       if (code.length !== 6) return alert('Party code must be 6 characters.');
       window.location.href = '/remote?party=' + encodeURIComponent(code);
     }
-
     document.getElementById('joinCodeInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') submitJoinCode();
     });
-    
     document.getElementById('joinCodeInput').addEventListener('input', (e) => {
       e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     });
 
-    // Restore Last Session on Load
     (async () => {
       try {
         const saved = JSON.parse(localStorage.getItem('videoke:lastSession') || 'null');
         if (!saved) return;
-        
         const res = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(saved.hostCode));
         const data = await res.json();
-        
         if (data.valid) {
           currentSession = saved;
           document.getElementById('displayPartyCode').textContent = saved.partyCode;
-          document.getElementById('displayAdminPw').textContent = saved.adminPassword;
+          document.getElementById('displayAdminPw').textContent = saved.adminPassword || '(password unavailable — check host screen)';
           document.getElementById('resultCard').classList.add('show');
-          
           const btn = document.getElementById('startBtn');
           btn.textContent = '✓ Session Active';
           btn.disabled = false;
           btn.onclick = openHostScreen;
+        } else {
+          localStorage.removeItem('videoke:lastSession');
         }
       } catch {}
     })();
