@@ -1,16 +1,17 @@
 {
   "name": "videoke-backend",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Multi-tenant YouTube karaoke backend",
   "main": "server.js",
+  "engines": { "node": ">=18" },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "dependencies": {
+    "compression": "^1.7.4",
     "express": "^4.19.2",
+    "helmet": "^7.1.0",
     "socket.io": "^4.7.5"
-  },
-  "engines": {
-    "node": ">=18"
   }
 }
