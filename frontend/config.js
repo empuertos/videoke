@@ -1,13 +1,10 @@
 // ============================================================
-//  I-EDIT ITO PAGKATAPOS MA-DEPLOY ANG BACKEND SA RENDER
+//  CONFIG — point BACKEND_URL to your deployed backend
+//  No trailing slash.
 // ============================================================
-
 window.VIDEOKE_CONFIG = {
-  // ⬇️ PALITAN ITO ng Render backend URL mo
   BACKEND_URL: 'https://videoke.onrender.com',
-
-  // Optional settings
-  RECONNECT_ATTEMPTS: 5,
-  RECONNECT_DELAY: 2000,
-  DEBUG: false
+  RECONNECT_ATTEMPTS: 10,
+  RECONNECT_DELAY: 1500,
+  DEBUG: false,
 };
