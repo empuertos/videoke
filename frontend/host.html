@@ -7,407 +7,108 @@
   <title>VIDEoke — Host Display</title>
   <script src="/config.js"></script>
   <style>
-    :root { 
-      --gold: #ffd700; 
-      --red: #ff2e55; 
-      --bg: #0a0512;
-      --card: #16101f; 
-      --dim: #8888a0; 
-      --green: #4ade80; 
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    body { 
-      background: var(--bg); 
-      color: #fff; 
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      height: 100vh; 
-      height: 100dvh; 
-      height: -webkit-fill-available;
-      width: 100vw; 
-      -webkit-text-size-adjust: 100%;
-      -webkit-tap-highlight-color: transparent; 
-    }
+    :root { --gold:#ffd700; --red:#ff2e55; --bg:#0a0512; --card:#16101f; --dim:#8888a0; --green:#4ade80; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; }
+    body { background:var(--bg); color:#fff; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; height:100vh; height:100dvh; height:-webkit-fill-available; width:100vw; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent; }
 
-    /* Player Wrapper & Anti-Click Blocker */
-    #playerWrap { position: fixed; inset: 0; background: #000; overflow: hidden; }
-    #player { position: absolute; inset: 0; }
-    
-    /* CSS Crop strategy to hide YouTube UI */
-    #player iframe { 
-      position: absolute;
-      top: -15%; 
-      left: -15%;
-      width: 130%; 
-      height: 130%; 
-      display: block; 
-      border: 0; 
-      pointer-events: none; /* Disables YouTube click interactions */
-    }
-    
-    #playerBlocker { position: absolute; inset: 0; z-index: 10; background: transparent; }
-    #focusTrap { position: absolute; inset: 0; z-index: 9999; outline: none; }
+    #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; }
+    #player { position:absolute; inset:0; }
+    #player iframe { position:absolute; top:-15%; left:-15%; width:130%; height:130%; display:block; border:0; pointer-events:none; }
+    #playerBlocker { position:absolute; inset:0; z-index:10; background:transparent; }
+    #focusTrap { position:absolute; inset:0; z-index:9999; outline:none; }
 
-    /* Idle Screen */
-    #idleScreen { 
-      position: fixed; 
-      inset: 0; 
-      display: flex; 
-      flex-direction: column;
-      align-items: center; 
-      justify-content: center;
-      background: radial-gradient(ellipse at center, #1a0033, #0a0512);
-      z-index: 100; 
-      text-align: center; 
-      padding: 40px 20px; 
-      overflow-y: auto; 
-    }
-    #idleScreen.hidden { display: none; }
-    #idleScreen .logo { 
-      font-size: clamp(48px, 8vw, 72px); 
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--gold), var(--red));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent; 
-      margin-bottom: 20px; 
-      letter-spacing: -2px; 
-    }
-    #idleScreen .subtitle { 
-      font-size: clamp(14px, 2vw, 20px); 
-      color: #a0a0b0;
-      margin-bottom: 30px; 
-      font-weight: 500; 
-    }
+    #idleScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#1a0033,#0a0512); z-index:100; text-align:center; padding:40px 20px; overflow-y:auto; }
+    #idleScreen.hidden { display:none; }
+    #idleScreen .logo { font-size:clamp(48px,8vw,72px); font-weight:900; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:20px; letter-spacing:-2px; }
+    #idleScreen .subtitle { font-size:clamp(14px,2vw,20px); color:#a0a0b0; margin-bottom:30px; font-weight:500; }
 
-    /* QR Overlay */
-    #qrOverlay { 
-      margin-top: 20px; 
-      padding: clamp(16px, 3vw, 30px); 
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid var(--gold); 
-      border-radius: 24px;
-      -webkit-backdrop-filter: blur(20px); 
-      backdrop-filter: blur(20px);
-      box-shadow: 0 0 60px rgba(255, 215, 0, 0.3); 
-      max-width: 90vw; 
-    }
-    #qrOverlay.hidden { display: none; }
-    #qrOverlay .title { 
-      font-size: clamp(16px, 2vw, 22px); 
-      font-weight: 800; 
-      color: var(--gold); 
-      margin-bottom: 16px; 
-    }
-    #qrImg { 
-      width: clamp(180px, 30vw, 260px); 
-      height: auto; 
-      aspect-ratio: 1;
-      background: #fff; 
-      padding: 12px; 
-      border-radius: 16px; 
-      display: block; 
-      margin: 0 auto; 
-    }
-    #qrCode { 
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: clamp(28px, 4vw, 40px); 
-      font-weight: 900; 
-      color: var(--gold);
-      letter-spacing: 10px; 
-      margin-top: 16px; 
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); 
-    }
-    #qrUrl { 
-      font-size: 11px; 
-      color: var(--dim); 
-      margin-top: 10px; 
-      word-break: break-all; 
-      max-width: 280px; 
-      margin-left: auto; 
-      margin-right: auto; 
-    }
+    #qrOverlay { margin-top:20px; padding:clamp(16px,3vw,30px); background:rgba(0,0,0,0.6); border:2px solid var(--gold); border-radius:24px; -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); box-shadow:0 0 60px rgba(255,215,0,0.3); max-width:90vw; }
+    #qrOverlay.hidden { display:none; }
+    #qrOverlay .title { font-size:clamp(16px,2vw,22px); font-weight:800; color:var(--gold); margin-bottom:16px; }
+    #qrImg { width:clamp(180px,30vw,260px); height:auto; aspect-ratio:1; background:#fff; padding:12px; border-radius:16px; display:block; margin:0 auto; }
+    #qrCode { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:clamp(28px,4vw,40px); font-weight:900; color:var(--gold); letter-spacing:10px; margin-top:16px; text-shadow:0 0 20px rgba(255,215,0,0.6); }
+    #qrUrl { font-size:11px; color:var(--dim); margin-top:10px; word-break:break-all; max-width:280px; margin-left:auto; margin-right:auto; }
 
-    /* Top HUD */
-    #topBar { 
-      position: absolute; 
-      top: 0; 
-      left: 0; 
-      right: 0; 
-      z-index: 50; 
-      padding: 6px 8px;
-      padding-top: max(6px, env(safe-area-inset-top));
-      display: none; 
-      align-items: flex-start; 
-      justify-content: space-between; 
-      gap: 6px;
-      pointer-events: none; 
-      transition: opacity 0.5s ease; 
-    }
-    #topBar.show { display: flex; }
-    #topBar.faded { opacity: 0.55; }
+    #topBar { position:absolute; top:0; left:0; right:0; z-index:50; padding:6px 8px; padding-top:max(6px,env(safe-area-inset-top)); display:none; align-items:flex-start; justify-content:space-between; gap:6px; pointer-events:none; transition:opacity 0.5s ease; }
+    #topBar.show { display:flex; }
+    #topBar.faded { opacity:0.55; }
 
-    #nowHud { 
-      flex: 0 1 auto; 
-      max-width: 45%; 
-      padding: 6px 12px; 
-      background: rgba(0, 0, 0, 0.7);
-      border: 1.5px solid rgba(255, 215, 0, 0.4); 
-      border-radius: 14px;
-      -webkit-backdrop-filter: blur(10px); 
-      backdrop-filter: blur(10px);
-      display: flex; 
-      align-items: center; 
-      gap: 8px; 
-      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6); 
-      min-height: 36px; 
-    }
-    #nowHud .icon { font-size: 16px; flex-shrink: 0; }
-    #nowHud .info { min-width: 0; display: flex; flex-direction: column; gap: 0; overflow: hidden; }
-    #nowHud .label { font-size: 7px; font-weight: 800; color: var(--gold); letter-spacing: 1.5px; line-height: 1; margin-bottom: 2px; }
-    #nowHud .singer { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #nowHud .song { font-size: 10px; color: #a0a0b0; line-height: 1.1; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #nowHud { flex:0 1 auto; max-width:45%; padding:6px 12px; background:rgba(0,0,0,0.7); border:1.5px solid rgba(255,215,0,0.4); border-radius:14px; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); display:flex; align-items:center; gap:8px; box-shadow:0 3px 12px rgba(0,0,0,0.6); min-height:36px; }
+    #nowHud .icon { font-size:16px; flex-shrink:0; }
+    #nowHud .info { min-width:0; display:flex; flex-direction:column; gap:0; overflow:hidden; }
+    #nowHud .label { font-size:7px; font-weight:800; color:var(--gold); letter-spacing:1.5px; line-height:1; margin-bottom:2px; }
+    #nowHud .singer { font-size:12px; font-weight:800; color:#fff; line-height:1.1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #nowHud .song { font-size:10px; color:#a0a0b0; line-height:1.1; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-    #queueHud { 
-      flex: 0 1 auto; 
-      max-width: 45%; 
-      padding: 6px 12px; 
-      background: rgba(0, 0, 0, 0.7);
-      border: 1.5px solid rgba(255, 46, 85, 0.4); 
-      border-radius: 14px;
-      -webkit-backdrop-filter: blur(10px); 
-      backdrop-filter: blur(10px);
-      display: flex; 
-      flex-direction: column; 
-      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6); 
-      min-height: 36px; 
-      justify-content: center; 
-    }
-    #queueHud.flash { animation: qflash 1.1s ease; }
-    @keyframes qflash { 
-      0%, 100% { border-color: rgba(255, 46, 85, 0.4); opacity: 1; } 
-      35% { border-color: var(--gold); box-shadow: 0 0 34px rgba(255, 215, 0, 0.85); opacity: 1; } 
-    }
-    #queueHud .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-    #queueHud .label { font-size: 7px; font-weight: 800; color: #ff6b6b; letter-spacing: 1.5px; display: flex; align-items: center; gap: 4px; line-height: 1; }
-    #queueHud .count { background: #ff2e55; color: #fff; font-size: 8px; padding: 0px 5px; border-radius: 6px; font-weight: 700; line-height: 1.3; }
-    #queueHud .items { display: flex; flex-direction: row; gap: 5px; overflow-x: auto; scrollbar-width: none; align-items: center; }
-    #queueHud .items::-webkit-scrollbar { display: none; }
-    #queueHud .q-item { display: flex; align-items: center; gap: 5px; padding: 3px 8px 3px 4px; background: rgba(255,255,255,0.06); border-radius: 10px; flex-shrink: 0; max-width: 180px; }
-    #queueHud .q-item:first-child { background: rgba(255,46,85,0.2); border: 1px solid rgba(255,46,85,0.5); }
-    #queueHud .q-pos { background: var(--gold); color: #000; font-size: 8px; font-weight: 800; min-width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
-    #queueHud .q-item:first-child .q-pos { background: #ff2e55; color: #fff; }
-    #queueHud .q-info { min-width: 0; display: flex; align-items: baseline; gap: 4px; overflow: hidden; }
-    #queueHud .q-singer { font-weight: 800; font-size: 11px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; flex-shrink: 0; max-width: 80px; }
-    #queueHud .q-song { font-size: 10px; color: #a0a0b0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; min-width: 0; flex: 1; }
-    #queueHud .q-empty { font-size: 10px; color: #666; font-style: italic; line-height: 1; }
+    #queueHud { flex:0 1 auto; max-width:45%; padding:6px 12px; background:rgba(0,0,0,0.7); border:1.5px solid rgba(255,46,85,0.4); border-radius:14px; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); display:flex; flex-direction:column; box-shadow:0 3px 12px rgba(0,0,0,0.6); min-height:36px; justify-content:center; }
+    #queueHud.flash { animation:qflash 1.1s ease; }
+    @keyframes qflash { 0%,100%{border-color:rgba(255,46,85,0.4);opacity:1;} 35%{border-color:var(--gold);box-shadow:0 0 34px rgba(255,215,0,0.85);opacity:1;} }
+    #queueHud .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+    #queueHud .label { font-size:7px; font-weight:800; color:#ff6b6b; letter-spacing:1.5px; display:flex; align-items:center; gap:4px; line-height:1; }
+    #queueHud .count { background:#ff2e55; color:#fff; font-size:8px; padding:0px 5px; border-radius:6px; font-weight:700; line-height:1.3; }
+    #queueHud .items { display:flex; flex-direction:row; gap:5px; overflow-x:auto; scrollbar-width:none; align-items:center; }
+    #queueHud .items::-webkit-scrollbar { display:none; }
+    #queueHud .q-item { display:flex; align-items:center; gap:5px; padding:3px 8px 3px 4px; background:rgba(255,255,255,0.06); border-radius:10px; flex-shrink:0; max-width:180px; }
+    #queueHud .q-item:first-child { background:rgba(255,46,85,0.2); border:1px solid rgba(255,46,85,0.5); }
+    #queueHud .q-pos { background:var(--gold); color:#000; font-size:8px; font-weight:800; min-width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1; }
+    #queueHud .q-item:first-child .q-pos { background:#ff2e55; color:#fff; }
+    #queueHud .q-info { min-width:0; display:flex; align-items:baseline; gap:4px; overflow:hidden; }
+    #queueHud .q-singer { font-weight:800; font-size:11px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1; flex-shrink:0; max-width:80px; }
+    #queueHud .q-song { font-size:10px; color:#a0a0b0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1; min-width:0; flex:1; }
+    #queueHud .q-empty { font-size:10px; color:#666; font-style:italic; line-height:1; }
 
-    /* Mini QR Code */
-    #miniQr { 
-      position: absolute; 
-      bottom: max(8px, env(safe-area-inset-bottom)); 
-      left: max(12px, env(safe-area-inset-left));
-      z-index: 400; 
-      display: none; 
-      flex-direction: row; 
-      align-items: center; 
-      gap: 8px; 
-      padding: 4px 10px 4px 4px;
-      background: rgba(0, 0, 0, 0.3); 
-      border: 1.5px solid rgba(255, 215, 0, 0.8); 
-      border-radius: 8px;
-      -webkit-backdrop-filter: blur(3px); 
-      backdrop-filter: blur(3px); 
-      pointer-events: none; 
-    }
-    #miniQr.show { display: flex; }
-    #miniQr img { width: 42px; height: 42px; border-radius: 4px; background: #fff; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-    #miniQrInfo { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
-    #miniQrCodeText { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; font-weight: 800; color: var(--gold); letter-spacing: 1px; line-height: 1.1; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000; }
-    #miniQrHint { font-size: 9px; color: #fff; line-height: 1.1; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000; }
+    #miniQr { position:absolute; bottom:max(8px,env(safe-area-inset-bottom)); left:max(12px,env(safe-area-inset-left)); z-index:400; display:none; flex-direction:row; align-items:center; gap:8px; padding:4px 10px 4px 4px; background:rgba(0,0,0,0.3); border:1.5px solid rgba(255,215,0,0.8); border-radius:8px; -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); pointer-events:none; }
+    #miniQr.show { display:flex; }
+    #miniQr img { width:42px; height:42px; border-radius:4px; background:#fff; padding:2px; box-shadow:0 2px 5px rgba(0,0,0,0.5); }
+    #miniQrInfo { display:flex; flex-direction:column; gap:2px; justify-content:center; }
+    #miniQrCodeText { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; font-weight:800; color:var(--gold); letter-spacing:1px; line-height:1.1; text-shadow:0 2px 4px rgba(0,0,0,0.9),0 0 2px #000; }
+    #miniQrHint { font-size:9px; color:#fff; line-height:1.1; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; text-shadow:0 2px 4px rgba(0,0,0,0.9),0 0 2px #000; }
 
-    /* Controls */
-    #fsBtn { 
-      position: absolute; 
-      bottom: max(12px, env(safe-area-inset-bottom)); 
-      right: max(12px, env(safe-area-inset-right)); 
-      z-index: 500;
-      width: 34px; height: 34px; border-radius: 10px; 
-      background: rgba(0, 0, 0, 0.4); 
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff; font-size: 14px; cursor: pointer; 
-      display: flex; align-items: center; justify-content: center;
-      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); 
-      transition: all 0.2s; -webkit-appearance: none; opacity: 0.6; 
-    }
-    #fsBtn:hover { opacity: 1; background: rgba(255, 215, 0, 0.9); color: #000; border-color: var(--gold); }
+    #fsBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(12px,env(safe-area-inset-right)); z-index:500; width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity:0.6; }
+    #fsBtn:hover { opacity:1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
 
-    #ttsBtn { 
-      position: absolute; 
-      bottom: max(12px, env(safe-area-inset-bottom)); 
-      right: max(54px, calc(env(safe-area-inset-right) + 42px)); 
-      z-index: 500;
-      width: 34px; height: 34px; border-radius: 10px; 
-      background: rgba(0, 0, 0, 0.4); 
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff; font-size: 14px; cursor: pointer; 
-      display: flex; align-items: center; justify-content: center;
-      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); 
-      transition: all 0.2s; -webkit-appearance: none; opacity: 0.6; 
-    }
-    #ttsBtn:hover { opacity: 1; background: rgba(255, 215, 0, 0.9); color: #000; border-color: var(--gold); }
-    #ttsBtn.off { opacity: 0.2; }
+    #ttsBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(54px,calc(env(safe-area-inset-right)+42px)); z-index:500; width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity:0.6; }
+    #ttsBtn:hover { opacity:1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
+    #ttsBtn.off { opacity:0.2; }
 
-    #connStatus { 
-      position: absolute; 
-      bottom: 14px; 
-      left: 14px; 
-      bottom: max(14px, env(safe-area-inset-bottom)); 
-      left: max(14px, env(safe-area-inset-left)); 
-      z-index: 60;
-      padding: 6px 14px; background: rgba(0, 0, 0, 0.7); border-radius: 14px; font-size: 11px; 
-      display: flex; align-items: center; gap: 5px; pointer-events: none; transition: opacity 0.3s; 
-    }
-    #connDot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
-    #connDot.offline { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    #connStatus { position:absolute; bottom:14px; left:14px; bottom:max(14px,env(safe-area-inset-bottom)); left:max(14px,env(safe-area-inset-left)); z-index:60; padding:6px 14px; background:rgba(0,0,0,0.7); border-radius:14px; font-size:11px; display:flex; align-items:center; gap:5px; pointer-events:none; transition:opacity 0.3s; }
+    #connDot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); }
+    #connDot.offline { background:var(--red); box-shadow:0 0 8px var(--red); }
 
-    body.is-fullscreen #idleScreen { display: none; }
+    body.is-fullscreen #idleScreen { display:none; }
 
-    /* Host Gate */
-    #hostGate { 
-      display: none; 
-      position: fixed; 
-      inset: 0; 
-      z-index: 9999; 
-      background: radial-gradient(ellipse at top, #2a0a1a, #0a0512);
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      padding: 30px 20px; 
-      text-align: center; 
-      overflow-y: auto; 
-    }
-    #hostGate.show { display: flex; }
-    #hostGate .icon { font-size: 64px; margin-bottom: 16px; }
-    #hostGate h2 { 
-      font-size: 24px; 
-      font-weight: 800; 
-      margin-bottom: 8px; 
-      background: linear-gradient(135deg, var(--gold), var(--red)); 
-      -webkit-background-clip: text;
-      background-clip: text; 
-      -webkit-text-fill-color: transparent; 
-    }
-    #hostGate p { color: #a0a0b0; font-size: 14px; margin-bottom: 24px; max-width: 340px; line-height: 1.6; }
-    #hostGate input { 
-      padding: 14px; 
-      font-size: 16px; 
-      width: 100%; 
-      max-width: 360px; 
-      background: var(--card); 
-      color: #fff; 
-      border: 2px solid #333; 
-      border-radius: 12px; 
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; 
-      text-align: center; 
-      margin-bottom: 16px; 
-      -webkit-appearance: none; 
-    }
-    #hostGate input:focus { outline: none; border-color: var(--gold); }
-    #hostGate .btn-go { 
-      padding: 14px 40px; 
-      background: linear-gradient(135deg, var(--red), #ff0044); 
-      border: none; 
-      border-radius: 12px; 
-      color: #fff; 
-      font-size: 16px; 
-      font-weight: 700; 
-      cursor: pointer; 
-      font-family: inherit; 
-      max-width: 360px; 
-      width: 100%; 
-      -webkit-appearance: none; 
-    }
-    #hostGate .err { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 18px; }
-    #hostGate .divider { margin-top: 24px; color: #666; font-size: 13px; }
-    #hostGate .btn-new { 
-      margin-top: 12px; 
-      padding: 12px 24px; 
-      background: transparent; 
-      border: 1px solid #444; 
-      color: #888; 
-      border-radius: 10px; 
-      font-size: 13px; 
-      cursor: pointer; 
-      font-family: inherit; 
-      -webkit-appearance: none; 
-    }
+    #hostGate { display:none; position:fixed; inset:0; z-index:9999; background:radial-gradient(ellipse at top,#2a0a1a,#0a0512); flex-direction:column; align-items:center; justify-content:center; padding:30px 20px; text-align:center; overflow-y:auto; }
+    #hostGate.show { display:flex; }
+    #hostGate .icon { font-size:64px; margin-bottom:16px; }
+    #hostGate h2 { font-size:24px; font-weight:800; margin-bottom:8px; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+    #hostGate p { color:#a0a0b0; font-size:14px; margin-bottom:24px; max-width:340px; line-height:1.6; }
+    #hostGate input { padding:14px; font-size:16px; width:100%; max-width:360px; background:var(--card); color:#fff; border:2px solid #333; border-radius:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; text-align:center; margin-bottom:16px; -webkit-appearance:none; }
+    #hostGate input:focus { outline:none; border-color:var(--gold); }
+    #hostGate .btn-go { padding:14px 40px; background:linear-gradient(135deg,var(--red),#ff0044); border:none; border-radius:12px; color:#fff; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; max-width:360px; width:100%; -webkit-appearance:none; }
+    #hostGate .err { color:var(--red); font-size:13px; margin-top:12px; min-height:18px; }
+    #hostGate .divider { margin-top:24px; color:#666; font-size:13px; }
+    #hostGate .btn-new { margin-top:12px; padding:12px 24px; background:transparent; border:1px solid #444; color:#888; border-radius:10px; font-size:13px; cursor:pointer; font-family:inherit; -webkit-appearance:none; }
 
-    /* TTS Controls */
-    #ttsControl { margin-top: 20px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
-    #ttsControl button { 
-      padding: 10px 18px; 
-      border-radius: 10px; 
-      font-size: 13px; 
-      font-weight: 700; 
-      cursor: pointer; 
-      font-family: inherit; 
-      -webkit-appearance: none; 
-      transition: all 0.15s; 
-    }
-    #ttsStatusBtn { background: rgba(74, 222, 128, 0.15); border: 1.5px solid rgba(74, 222, 128, 0.5); color: var(--green); }
-    #ttsStatusBtn.off { background: rgba(136, 136, 160, 0.15); border: 1.5px solid rgba(136, 136, 160, 0.5); color: var(--dim); }
-    #ttsTestBtn { background: rgba(255, 215, 0, 0.12); border: 1.5px solid rgba(255, 215, 0, 0.4); color: var(--gold); }
+    #ttsControl { margin-top:20px; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    #ttsControl button { padding:10px 18px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; -webkit-appearance:none; transition:all 0.15s; }
+    #ttsStatusBtn { background:rgba(74,222,128,0.15); border:1.5px solid rgba(74,222,128,0.5); color:var(--green); }
+    #ttsStatusBtn.off { background:rgba(136,136,160,0.15); border:1.5px solid rgba(136,136,160,0.5); color:var(--dim); }
+    #ttsTestBtn { background:rgba(255,215,0,0.12); border:1.5px solid rgba(255,215,0,0.4); color:var(--gold); }
 
-    /* Autoplay Overlay */
-    #autoplayOverlay { 
-      position: fixed; 
-      inset: 0; 
-      z-index: 10000; 
-      background: rgba(10, 5, 18, 0.95); 
-      backdrop-filter: blur(10px); 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      text-align: center; 
-      padding: 30px; 
-      cursor: pointer; 
-    }
-    #autoplayOverlay .icon { font-size: 80px; margin-bottom: 20px; animation: tapPulse 1.5s infinite; }
-    @keyframes tapPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
-    #autoplayOverlay h2 { font-size: 26px; font-weight: 800; color: var(--gold); margin-bottom: 12px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-    #autoplayOverlay p { font-size: 15px; color: #a0a0b0; max-width: 380px; line-height: 1.6; }
+    #autoplayOverlay { position:fixed; inset:0; z-index:10000; background:rgba(10,5,18,0.95); backdrop-filter:blur(10px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; cursor:pointer; }
+    #autoplayOverlay .icon { font-size:80px; margin-bottom:20px; animation:tapPulse 1.5s infinite; }
+    @keyframes tapPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.15);} }
+    #autoplayOverlay h2 { font-size:26px; font-weight:800; color:var(--gold); margin-bottom:12px; text-shadow:0 0 20px rgba(255,215,0,0.5); }
+    #autoplayOverlay p { font-size:15px; color:#a0a0b0; max-width:380px; line-height:1.6; }
 
-    /* Reservation Notification */
-    #resNotif { 
-      position: absolute; 
-      top: 50px; 
-      right: max(12px, env(safe-area-inset-right)); 
-      left: auto; 
-      transform: translateX(120%);
-      background: rgba(10, 5, 18, 0.4); 
-      border-left: 3px solid var(--gold); 
-      border-radius: 8px; 
-      padding: 8px 14px; 
-      display: flex; 
-      align-items: center; 
-      gap: 10px; 
-      opacity: 0;
-      pointer-events: none; 
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-      z-index: 1000; 
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8); 
-      backdrop-filter: blur(6px); 
-      max-width: 280px; 
-    }
-    #resNotif.show { opacity: 1; transform: translateX(0); }
-    #resNotif .res-icon { font-size: 16px; }
-    #resNotif .res-content { display: flex; flex-direction: column; gap: 1px; }
-    #resNotif .res-header { font-size: 8px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 1px 2px #000; }
-    #resNotif .res-title { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; text-shadow: 0 1px 2px #000; }
-    #resNotif .res-singer { font-size: 10px; color: var(--red); font-weight: 700; margin-top: 1px; text-shadow: 0 1px 2px #000; }
+    #resNotif { position:absolute; top:50px; right:max(12px,env(safe-area-inset-right)); left:auto; transform:translateX(120%); background:rgba(10,5,18,0.4); border-left:3px solid var(--gold); border-radius:8px; padding:8px 14px; display:flex; align-items:center; gap:10px; opacity:0; pointer-events:none; transition:all 0.3s cubic-bezier(0.175,0.885,0.32,1.275); z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.8); backdrop-filter:blur(6px); max-width:280px; }
+    #resNotif.show { opacity:1; transform:translateX(0); }
+    #resNotif .res-icon { font-size:16px; }
+    #resNotif .res-content { display:flex; flex-direction:column; gap:1px; }
+    #resNotif .res-header { font-size:8px; font-weight:800; color:var(--gold); text-transform:uppercase; letter-spacing:1px; text-shadow:0 1px 2px #000; }
+    #resNotif .res-title { font-size:12px; font-weight:800; color:#fff; line-height:1.2; text-shadow:0 1px 2px #000; }
+    #resNotif .res-singer { font-size:10px; color:var(--red); font-weight:700; margin-top:1px; text-shadow:0 1px 2px #000; }
   </style>
 </head>
 <body>
@@ -416,7 +117,6 @@
     <div id="focusTrap" tabindex="0"></div>
     <div id="playerBlocker"></div>
 
-    <!-- Reservation Notification -->
     <div id="resNotif">
       <div class="res-icon">🔔</div>
       <div class="res-content">
@@ -426,7 +126,6 @@
       </div>
     </div>
 
-    <!-- Top Status Bar -->
     <div id="topBar">
       <div id="nowHud">
         <div class="icon">🎤</div>
@@ -446,7 +145,6 @@
       </div>
     </div>
 
-    <!-- Mini QR Code -->
     <div id="miniQr">
       <img id="miniQrImg" src="" alt="QR">
       <div id="miniQrInfo">
@@ -463,7 +161,6 @@
     <button id="ttsBtn" onclick="toggleTTS()" title="AI Voice Announcements">
       <span id="ttsIcon">🔊</span>
     </button>
-
     <button id="fsBtn" onclick="toggleFullscreen()" title="Fullscreen">
       <span id="fsIcon">⛶</span>
     </button>
@@ -484,28 +181,19 @@
       <div id="qrCode">------</div>
       <div id="qrUrl"></div>
     </div>
-    
-    <div id="noPartyMsg" style="margin-top:20px;color:var(--dim);font-size:15px;">
-      ⏳ Waiting for the host to start the party...
+    <div id="noPartyMsg" style="margin-top:20px;color:var(--dim);font-size:15px;">⏳ Waiting for the host to start the party...</div>
+    <div id="hostControls" style="margin-top:24px; display:none; gap:10px; flex-wrap:wrap; justify-content:center;">
+      <button id="stopPartyBtn" onclick="endParty()" style="padding:12px 24px; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#6b7280,#4b5563); -webkit-appearance:none;">🚫 End Party</button>
     </div>
-
-    <div id="hostControls" style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-      <button id="stopPartyBtn" onclick="endParty()" style="padding:12px 24px; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#6b7280,#4b5563); -webkit-appearance:none;">
-        🚫 End Party
-      </button>
-    </div>
-
     <div id="hostAdminInfo" style="display:none;margin-top:20px;padding:12px 20px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,215,0,0.3); border-radius:10px; font-size:13px; color:#a0a0b0;">
       🔑 Admin Password: <span id="hostAdminPw" style="color:var(--gold); font-family:ui-monospace,monospace; font-weight:800; letter-spacing:1px;">--------</span>
     </div>
-
     <div id="ttsControl">
       <button id="ttsStatusBtn" onclick="toggleTTS()">🔊 AI Voice: On</button>
       <button id="ttsTestBtn" onclick="testTTS()">▶ Test Voice</button>
     </div>
   </div>
 
-  <!-- Host Gate -->
   <div id="hostGate">
     <div class="icon">📺</div>
     <h2>Host Access</h2>
@@ -525,12 +213,12 @@
 
     const ua = navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isAndroid = /Android/.test(ua);
-    const isMobile = isIOS || isAndroid || /Mobi|Tablet/.test(ua);
+    const isMobile = isIOS || /Android/.test(ua) || /Mobi|Tablet/.test(ua);
 
     let ytPlayer = null, ytReady = false, currentVideoId = null;
     let errorCheckTimeout = null;
     let hostCode = null, hostPartyCode = null, hostAdminToken = null;
+    let adminTokenRefreshInterval = null;
     let autoFullscreenAttempted = false, firstInteractionDone = false;
     let lastQueueLen = -1;
     let hudFadeTimer = null;
@@ -543,7 +231,6 @@
       reconnectionDelay: 2000,
     });
 
-    // Focus Killer to prevent YouTube UI from appearing
     setInterval(() => {
       const iframe = document.querySelector('#player iframe');
       const focusTrap = document.getElementById('focusTrap');
@@ -565,19 +252,16 @@
       const topBar = document.getElementById('topBar');
       topBar.classList.remove('faded');
       clearTimeout(hudFadeTimer);
-      if (currentVideoId) {
-        hudFadeTimer = setTimeout(() => { topBar.classList.add('faded'); }, 5000);
-      }
+      if (currentVideoId) hudFadeTimer = setTimeout(() => topBar.classList.add('faded'), 5000);
     }
 
     function showReservationNotification(singer, title) {
       const notif = document.getElementById('resNotif');
       document.getElementById('resNotifSinger').textContent = `🎤 ${singer}`;
       document.getElementById('resNotifTitle').textContent = title || 'Unknown Song';
-      
       notif.classList.add('show');
       clearTimeout(resNotifTimer);
-      resNotifTimer = setTimeout(() => { notif.classList.remove('show'); }, 5000);
+      resNotifTimer = setTimeout(() => notif.classList.remove('show'), 5000);
     }
 
     function getFsElement() {
@@ -598,8 +282,7 @@
     }
 
     async function tryAutoFullscreen() {
-      if (isIOS) return;
-      if (isFullscreen() || !firstInteractionDone) return;
+      if (isIOS || isFullscreen() || !firstInteractionDone) return;
       try {
         const w = document.getElementById('playerWrap');
         const req = w.requestFullscreen || w.webkitRequestFullscreen || w.mozRequestFullScreen || w.msRequestFullscreen;
@@ -614,16 +297,12 @@
       primeTTS();
       tryAutoFullscreen();
       resetHudVisibility();
-      
       const focusTrap = document.getElementById('focusTrap');
       if (focusTrap) focusTrap.focus();
-      
       if (currentVideoId) { try { ytPlayer.playVideo(); } catch {} }
-      
       const overlay = document.getElementById('autoplayOverlay');
       if (overlay) overlay.style.display = 'none';
     }
-
     ['click', 'touchstart', 'keydown'].forEach(e => document.addEventListener(e, markFirstInteraction, { passive: true }));
 
     function handleFsChange() {
@@ -646,7 +325,7 @@
       toastEl._t = setTimeout(() => { toastEl.style.opacity = '0'; }, 2500);
     }
 
-    // --- TTS (Text-to-Speech) ---
+    // ── TTS ──
     const TTS_KEY = 'videoke:ttsEnabled';
     let ttsEnabled = localStorage.getItem(TTS_KEY) !== '0';
     let ttsVoice = null;
@@ -663,9 +342,7 @@
           const v = voices.find(v => v.name === name || v.name.includes(name));
           if (v) { ttsVoice = v; break; }
         }
-        if (!ttsVoice) {
-          ttsVoice = voices.find(v => v.lang.startsWith('en') && /female|woman|aria|samantha|zira|karen|tessa|moira|susan|kate/i.test(v.name));
-        }
+        if (!ttsVoice) ttsVoice = voices.find(v => v.lang.startsWith('en') && /female|woman|aria|samantha|zira|karen|tessa|moira|susan|kate/i.test(v.name));
         if (!ttsVoice) ttsVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
       };
       loadVoices();
@@ -701,29 +378,21 @@
       let singer = (song.singer || 'Guest').trim();
       const rawTitle = (song.title || '').trim();
       if (!rawTitle) return '';
-      
       let duetPart = '';
       const partMatch = singer.match(/\((👦|👧)\s*(Boy|Girl)\)/i);
       if (partMatch) {
         duetPart = partMatch[2].toLowerCase();
         singer = singer.replace(/\(.*?\)/g, '').trim() || 'Guest';
       }
-      
       let title = rawTitle.replace(/\((?:[^)]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^)]*?)\)/gi, '').replace(/\[(?:[^\]]*?(?:karaoke|ktv|official|video|lyrics?|instrumental|minus\s*one|hd|4k)[^\]]*?)\]/gi, '').replace(/\b(karaoke|ktv|minus\s*one|instrumental|lyrics?)\b/gi, '').replace(/\bofficial\s+(music\s+)?video\b/gi, '').replace(/\s+/g, ' ').replace(/^[\s\-–—:|]+|[\s\-–—:|]+$/g, '').trim();
       if (!title) title = rawTitle;
-      
-      let artist = '';
-      let songName = title;
+      let artist = '', songName = title;
       const dash = title.match(/^(.+?)\s*[-–—]\s*(.+)$/);
       if (dash) { artist = dash[1].trim(); songName = dash[2].trim(); }
-      
       if (songName.length > 55) songName = songName.slice(0, 52).trim() + '...';
       if (artist.length > 35) artist = artist.slice(0, 32).trim() + '...';
       if (singer.length > 25) singer = singer.slice(0, 22).trim() + '...';
-      
-      if (duetPart) {
-        return artist ? `Next up, ${singer}, singing the ${duetPart} part of ${songName} by ${artist}.` : `Next up, ${singer}, singing the ${duetPart} part of ${songName}.`;
-      }
+      if (duetPart) return artist ? `Next up, ${singer}, singing the ${duetPart} part of ${songName} by ${artist}.` : `Next up, ${singer}, singing the ${duetPart} part of ${songName}.`;
       return artist ? `Next up, ${singer}, singing ${songName} by ${artist}. Get ready!` : `Next up, ${singer}, singing ${songName}. Get ready!`;
     }
 
@@ -738,24 +407,19 @@
       localStorage.setItem(TTS_KEY, ttsEnabled ? '1' : '0');
       if (!ttsEnabled && ttsSupported) speechSynthesis.cancel();
       updateTTSButton();
-      if (ttsEnabled) {
-        primeTTS();
-        setTimeout(() => speak('AI voice enabled.', { rate: 1.0 }), 120);
-      }
+      if (ttsEnabled) { primeTTS(); setTimeout(() => speak('AI voice enabled.', { rate: 1.0 }), 120); }
     }
 
     function updateTTSButton() {
       const icon = document.getElementById('ttsIcon');
       const btn = document.getElementById('ttsBtn');
       const statusBtn = document.getElementById('ttsStatusBtn');
-      
       if (!ttsSupported) {
         if (icon) icon.textContent = '🔇';
         if (btn) { btn.classList.add('off'); btn.title = 'Voice not supported'; }
         if (statusBtn) { statusBtn.textContent = '🔇 Voice Not Supported'; statusBtn.classList.add('off'); statusBtn.disabled = true; }
         return;
       }
-      
       if (icon) icon.textContent = ttsEnabled ? '🔊' : '🔇';
       if (btn) btn.classList.toggle('off', !ttsEnabled);
       if (statusBtn) {
@@ -774,9 +438,22 @@
     initTTS();
     updateTTSButton();
 
-    // --- Connection & Auth ---
+    // ── Host gate ──
     function showHostGate() { document.getElementById('hostGate').classList.add('show'); }
     function hideHostGate() { document.getElementById('hostGate').classList.remove('show'); }
+
+    // 🔧 FIX: refresh admin token every 2h so overnight sessions keep working
+    function startAdminTokenRefresh() {
+      if (adminTokenRefreshInterval) clearInterval(adminTokenRefreshInterval);
+      adminTokenRefreshInterval = setInterval(async () => {
+        if (!hostCode) return;
+        try {
+          const res = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(hostCode));
+          const data = await res.json();
+          if (data.valid) hostAdminToken = data.token;
+        } catch {}
+      }, 2 * 60 * 60 * 1000);
+    }
 
     async function verifyAndLoadHost(code, isPartyCode = false) {
       try {
@@ -784,33 +461,28 @@
           const res = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(code));
           const data = await res.json();
           if (!data.valid) return false;
-          
           hostPartyCode = data.partyCode;
           hostCode = null;
           hostAdminToken = null;
           localStorage.setItem('videoke:hostPartyCode', data.partyCode);
-          
           document.getElementById('hostAdminInfo').style.display = 'none';
           document.getElementById('hostControls').style.display = 'none';
-          
           socket.emit('registerHost', { partyCode: data.partyCode });
           updateQRCodeDisplay(data.partyCode);
         } else {
           const res = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(code));
           const data = await res.json();
           if (!data.valid) return false;
-          
           hostCode = code;
           hostAdminToken = data.token;
           hostPartyCode = data.partyCode;
           localStorage.setItem('videoke:hostCode', code);
-          
-          document.getElementById('hostAdminPw').textContent = data.adminPassword;
+          document.getElementById('hostAdminPw').textContent = data.adminPassword || '(unavailable)';
           document.getElementById('hostAdminInfo').style.display = 'block';
           document.getElementById('hostControls').style.display = 'flex';
-          
           socket.emit('registerHost', { hostCode: code });
           updateQRCodeDisplay(data.partyCode);
+          startAdminTokenRefresh();
         }
         hideHostGate();
         return true;
@@ -840,16 +512,14 @@
     function submitHostCode() {
       const code = document.getElementById('hostCodeInput').value.trim();
       if (!code) return;
-      
       document.getElementById('hostGateErr').textContent = '';
       const isParty = code.length === 6;
-      
       verifyAndLoadHost(code, isParty).then(ok => {
         if (!ok) document.getElementById('hostGateErr').textContent = '❌ Invalid Host or Party Code';
       });
     }
 
-    // --- YouTube Player Initialization ---
+    // ── YouTube player ──
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('player', {
         height: '100%', width: '100%', videoId: '',
@@ -863,7 +533,6 @@
             const focusTrap = document.getElementById('focusTrap');
             if (focusTrap) focusTrap.focus();
             try { e.target.setPlaybackQuality('default'); } catch {}
-            try { if (typeof e.target.setPlaybackQualityRange === 'function') e.target.setPlaybackQualityRange('default', 'default'); } catch {}
           },
           onStateChange: (e) => {
             if (e.data === 0 && currentVideoId) socket.emit('songEnded');
@@ -875,33 +544,30 @@
             if ([2, 5, 100, 101, 150].includes(e.data)) {
               socket.emit('videoFailed', { videoId: currentVideoId, title: document.getElementById('nowSong').textContent || '' });
               currentVideoId = null;
-              setTimeout(() => { stopVideo(); }, 1000);
+              setTimeout(() => stopVideo(), 1000);
             }
           },
         },
       });
     }
 
-    // --- Socket Events ---
+    // ── Socket ──
     socket.on('connect', () => {
       document.getElementById('connDot').classList.remove('offline');
       document.getElementById('connText').textContent = 'Connected';
       if (hostCode) socket.emit('registerHost', { hostCode });
       else if (hostPartyCode) socket.emit('registerHost', { partyCode: hostPartyCode });
     });
-
     socket.on('disconnect', () => {
       document.getElementById('connDot').classList.add('offline');
       document.getElementById('connText').textContent = 'Disconnected';
     });
-
     socket.on('hostRejected', () => {
       localStorage.removeItem('videoke:hostCode');
       localStorage.removeItem('videoke:hostPartyCode');
       hostCode = null; hostPartyCode = null;
       showHostGate();
     });
-
     socket.on('command', (cmd) => {
       switch (cmd.type) {
         case 'play': playVideo(cmd.song); break;
@@ -912,20 +578,17 @@
         case 'idle': showIdle(); break;
       }
     });
-
     socket.on('state', (s) => {
       const queueLength = (s.queue || []).length;
       if (lastQueueLen >= 0 && queueLength > lastQueueLen) {
         const qh = document.getElementById('queueHud');
         qh.classList.remove('flash'); void qh.offsetWidth; qh.classList.add('flash');
         setTimeout(() => qh.classList.remove('flash'), 1200);
-        
         const newestSong = s.queue[s.queue.length - 1];
         if (newestSong) showReservationNotification(newestSong.singer, newestSong.title);
         resetHudVisibility();
       }
       lastQueueLen = queueLength;
-      
       updateQueueHUD(s);
       if (s.nowPlaying) {
         updateNowHUD(s.nowPlaying);
@@ -934,7 +597,6 @@
         if (!currentVideoId) showIdle();
       }
     });
-
     socket.on('partyChanged', ({ active }) => {
       if (!active) {
         document.getElementById('topBar').classList.remove('show');
@@ -942,10 +604,10 @@
         document.getElementById('noPartyMsg').textContent = '🎉 Party has ended.';
         document.getElementById('noPartyMsg').style.display = 'block';
         document.getElementById('hostAdminInfo').style.display = 'none';
+        document.getElementById('hostControls').style.display = 'none';
         stopVideo();
       }
     });
-
     socket.on('sessionEnded', () => {
       localStorage.removeItem('videoke:hostCode');
       localStorage.removeItem('videoke:hostPartyCode');
@@ -954,31 +616,31 @@
       showHostGate();
     });
 
-    // --- Playback Logic ---
-    function playVideo(song, isSync = false) {
+    // ── Playback ──
+    // 🔧 FIX: retry cap so we don't loop forever if YT never loads
+    function playVideo(song, isSync = false, retry = 0) {
       if (!song?.videoId) return;
       if (!isSync) announceNextSong(song);
-      if (!ytPlayer || !ytReady) return setTimeout(() => playVideo(song, isSync), 500);
-      
+      if (!ytPlayer || !ytReady) {
+        if (retry > 20) {
+          socket.emit('videoFailed', { videoId: song.videoId, title: song.title || '' });
+          return;
+        }
+        return setTimeout(() => playVideo(song, isSync, retry + 1), 500);
+      }
       currentVideoId = song.videoId;
       updateNowHUD(song);
       hideIdle();
-      
       document.getElementById('miniQr').classList.add('show');
       document.getElementById('connStatus').style.display = 'none';
       resetHudVisibility();
-      
       if (!isIOS) tryAutoFullscreen();
-      
-      try { ytPlayer.loadVideoById({ videoId: song.videoId, suggestedQuality: 'default' }); } 
+      try { ytPlayer.loadVideoById({ videoId: song.videoId, suggestedQuality: 'default' }); }
       catch { ytPlayer.loadVideoById(song.videoId); }
-      
       setTimeout(() => { try { if (ytPlayer && ytReady) ytPlayer.setPlaybackQuality('default'); } catch {} }, 800);
       try { ytPlayer.setVolume(80); } catch {}
-      
       const attemptPlay = () => { try { ytPlayer.playVideo(); } catch {} };
       attemptPlay();
-      
       if (isMobile) {
         setTimeout(() => {
           try {
@@ -987,7 +649,6 @@
           } catch {}
         }, 1200);
       }
-      
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         try {
@@ -1022,13 +683,11 @@
       const list = state.queue || [];
       document.getElementById('queueCount').textContent = list.length;
       const el = document.getElementById('queueItems');
-      
       if (!list.length) {
         el.innerHTML = '<div class="q-empty">No reservations</div>';
         document.getElementById('topBar').classList.add('show');
         return;
       }
-      
       el.innerHTML = list.map((q, i) => `
         <div class="q-item">
           <div class="q-pos">${i + 1}</div>
@@ -1046,23 +705,18 @@
     function updateQRCodeDisplay(code) {
       const overlay = document.getElementById('qrOverlay');
       const noParty = document.getElementById('noPartyMsg');
-      
       if (!code) {
         overlay.classList.add('hidden');
         noParty.style.display = 'block';
         noParty.textContent = '⏳ Waiting for a party...';
         return;
       }
-      
       const url = location.origin + '/remote?party=' + code;
-      
       document.getElementById('qrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=' + encodeURIComponent(url);
       document.getElementById('qrCode').textContent = code;
       document.getElementById('qrUrl').textContent = url;
-      
       document.getElementById('miniQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(url);
       document.getElementById('miniQrCodeText').textContent = code;
-      
       overlay.classList.remove('hidden');
       noParty.style.display = 'none';
     }
@@ -1070,15 +724,13 @@
     async function endParty() {
       if (!hostAdminToken) return alert('You cannot end the party from a shared TV display. Use the host device.');
       if (!confirm('End the party? Guests will be locked out.')) return;
-      
       try {
-        const res = await fetch(API + '/api/admin/end-party', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': hostAdminToken }, 
-          body: '{}' 
+        const res = await fetch(API + '/api/admin/end-party', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': hostAdminToken },
+          body: '{}',
         });
         if (!res.ok) throw new Error('Server error ' + res.status);
-        
         localStorage.removeItem('videoke:hostCode');
         localStorage.removeItem('videoke:hostPartyCode');
         window.location.href = '/';
@@ -1095,21 +747,18 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT') { 
-        if (e.key === 'Enter') submitHostCode(); 
-        return; 
-      }
-      if (e.key === 'p' || e.key === 'P') { 
-        if (ytPlayer && ytReady) { 
-          ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); 
-        } 
+      if (e.target.tagName === 'INPUT') { if (e.key === 'Enter') submitHostCode(); return; }
+      if (e.key === 'p' || e.key === 'P') {
+        if (ytPlayer && ytReady) {
+          ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+        }
       }
       if ((e.key === 's' || e.key === 'S') && hostAdminToken) socket.emit('skip', { adminToken: hostAdminToken });
       if (e.key === 'f' || e.key === 'F') toggleFullscreen();
     });
 
-    function esc(s) { 
-      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); 
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     initHost();
