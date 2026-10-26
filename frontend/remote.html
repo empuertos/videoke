@@ -503,34 +503,80 @@
       gap:10px;font-size:12px;line-height:1.5;color:#a0b0c0; }
     .info-box .icon { font-size:20px;flex-shrink:0; }
 
-    #shareSection { display:none; margin-top:20px; padding:16px;
-      background:linear-gradient(135deg,rgba(255,215,0,0.06),rgba(255,46,85,0.03));
-      border:1px solid rgba(255,215,0,0.25);
-      border-radius:14px; text-align:center; }
+    /* =====================================================
+       SHARE SECTION (GINAWANG MALINIS AT NAKA-CENTER)
+       ===================================================== */
+    #shareSection { 
+      display:none; 
+      margin-top:24px; 
+      padding:24px 20px;
+      background:linear-gradient(180deg, rgba(255,215,0,0.05) 0%, rgba(10,5,18,0) 100%);
+      border:1px solid rgba(255,215,0,0.2);
+      border-radius:20px; 
+      text-align:center; 
+    }
     #shareSection.show { display:block; }
-    #shareSection .title { font-size:12px; font-weight:800;
-      color:var(--gold); letter-spacing:1px; margin-bottom:12px; }
-    #shareSection .qr-row { display:flex; gap:14px;
-      align-items:center; justify-content:center; flex-wrap:wrap; }
-    #shareSection #shareQrImg { width:130px; height:130px;
-      background:#fff; padding:8px; border-radius:10px; }
-    #shareSection .info { text-align:left; }
-    #shareSection .code-label { font-size:10px; color:var(--dim);
-      text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-    #shareSection .code-value { font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-      font-size:24px; font-weight:800; color:var(--gold);
-      letter-spacing:4px; margin-bottom:8px; }
-    #shareSection .share-btns { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-    #shareSection .share-btns button { padding:7px 12px;
-      border:none; border-radius:8px; font-size:11px; font-weight:700;
-      cursor:pointer; font-family:inherit; color:#fff;
-      -webkit-appearance:none; }
-    #shareSection .share-btns .copy { background:var(--card2);
-      border:1px solid var(--border); }
-    #shareSection .share-btns .share { background:linear-gradient(135deg,#ff2e55,#ff0044); }
-    #shareSection .share-btns .host-btn { background:linear-gradient(135deg,#3b82f6,#2563eb); width:100%; margin-top:4px; }
-    #shareSection .hint { font-size:10px; color:var(--dim);
-      margin-top:8px; font-style:italic; }
+    #shareSection .title { 
+      font-size:14px; font-weight:800; color:var(--gold); 
+      letter-spacing:1px; margin-bottom:20px; text-transform:uppercase; 
+    }
+    #shareSection .qr-container {
+      display:inline-block;
+      padding:12px;
+      background:#fff;
+      border-radius:16px;
+      margin-bottom:16px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    }
+    #shareSection #shareQrImg { 
+      width:180px; height:180px; 
+      display:block;
+      border-radius:8px;
+    }
+    #shareSection .party-code-container {
+      margin-bottom:20px;
+    }
+    #shareSection .code-label { 
+      font-size:11px; color:var(--dim); 
+      text-transform:uppercase; letter-spacing:1.5px; margin-bottom:4px; 
+    }
+    #shareSection .code-value { 
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:32px; font-weight:900; color:var(--gold);
+      letter-spacing:8px; 
+      text-shadow:0 0 15px rgba(255,215,0,0.4); 
+    }
+    #shareSection .share-btns { 
+      display:flex; gap:10px; justify-content:center; margin-bottom:16px; 
+    }
+    #shareSection .share-btns button { 
+      flex:1; padding:12px; border:none; border-radius:12px; 
+      font-size:13px; font-weight:700; cursor:pointer; 
+      font-family:inherit; color:#fff;
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      transition:transform 0.15s;
+    }
+    #shareSection .share-btns button:active { transform:scale(0.96); }
+    #shareSection .share-btns .copy { 
+      background:var(--card2); border:1px solid var(--border); 
+    }
+    #shareSection .share-btns .share { 
+      background:linear-gradient(135deg,#ff2e55,#ff0044); 
+      box-shadow:0 4px 15px rgba(255,46,85,0.3); 
+    }
+    #shareSection .host-btn {
+      width:100%; padding:14px; border:none; border-radius:12px;
+      font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; color:#fff;
+      background:linear-gradient(135deg,#3b82f6,#2563eb);
+      box-shadow:0 4px 15px rgba(59,130,246,0.3);
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      margin-bottom:12px;
+      transition:transform 0.15s;
+    }
+    #shareSection .host-btn:active { transform:scale(0.98); }
+    #shareSection .hint { 
+      font-size:11px; color:var(--dim); font-style:italic; 
+    }
 
     #partyGate { display:none; position:fixed; inset:0; z-index:9000;
       background:radial-gradient(ellipse at top,#2a0a1a,#0a0512);
@@ -765,21 +811,27 @@
       <div class="song-list" id="historyList"></div>
     </div>
 
+    <!-- BAGONG SHARE SECTION (Naka-center lahat) -->
     <div id="shareSection">
       <div class="title">📤 SHARE THIS PARTY</div>
-      <div class="qr-row">
+      
+      <div class="qr-container">
         <img id="shareQrImg" src="" alt="QR Code">
-        <div class="info">
-          <div class="code-label">Party Code</div>
-          <div class="code-value" id="shareCode">------</div>
-          <div class="share-btns">
-            <button class="copy" onclick="copyPartyLink()">📋 Copy Link</button>
-            <button class="share" onclick="sharePartyLink()">📤 Share</button>
-            <button class="host-btn" onclick="viewHostScreen()">📺 View TV Display</button>
-          </div>
-          <div class="hint">Let friends scan this to join</div>
-        </div>
       </div>
+
+      <div class="party-code-container">
+        <div class="code-label">Party Code</div>
+        <div class="code-value" id="shareCode">------</div>
+      </div>
+
+      <div class="share-btns">
+        <button class="copy" onclick="copyPartyLink()">📋 Copy Link</button>
+        <button class="share" onclick="sharePartyLink()">📤 Share</button>
+      </div>
+
+      <button class="host-btn" onclick="viewHostScreen()">📺 View TV Display</button>
+
+      <div class="hint">Let friends scan this to join</div>
     </div>
 
     <div style="text-align:center;padding:26px 20px 10px;
@@ -1074,7 +1126,7 @@
       }
       const url = window.location.origin + '/remote?party=' + partyCode;
       document.getElementById('shareQrImg').src =
-        'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' +
+        'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' +
         encodeURIComponent(url);
       document.getElementById('shareCode').textContent = partyCode;
       sec.classList.add('show');
