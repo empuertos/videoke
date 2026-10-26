@@ -3,47 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
-  <title>Videoke YouTube — Remote</title>
+  <meta name="theme-color" content="#0a0512">
+  <title>VIDEoke — Remote</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Videoke">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="/i18n.js"></script>
   <script src="/config.js"></script>
-  
+
   <style>
-    /* ================= DESIGN SYSTEM ================= */
     :root {
-      --bg: #0f172a;           /* Deep Slate */
-      --surface: #1e293b;      /* Lighter Slate */
-      --surface-hover: #334155;
-      --border: #334155;
-      --primary: #3b82f6;      /* Modern Blue */
-      --primary-hover: #2563eb;
-      --accent: #fbbf24;       /* Premium Gold */
-      --danger: #ef4444;       /* Soft Red */
-      --success: #10b981;      /* Emerald Green */
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg: #0a0512;
+      --card: #16101f;
+      --card-light: #1e1630;
+      --border: #2a1f3d;
+      --primary: #ff2e55;
+      --accent: #ffd700;
+      --success: #4ade80;
+      --text-main: #ffffff;
+      --text-muted: #8888a0;
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 16px;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    
+
     body {
       background-color: var(--bg);
       color: var(--text-main);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--font-family);
       min-height: 100vh;
       min-height: 100dvh;
       padding-bottom: max(40px, env(safe-area-inset-bottom));
@@ -51,221 +48,124 @@
       -webkit-text-size-adjust: 100%;
     }
 
-    /* ================= HEADER ================= */
+    /* HEADER */
     .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       padding: 16px 20px;
       padding-top: max(16px, env(safe-area-inset-top));
-      background: rgba(15, 23, 42, 0.85);
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
+      background: rgba(10, 5, 18, 0.85);
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
     }
     .header h1 {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     }
     .header .status {
-      font-size: 12px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
-      font-weight: 500;
+      font-size: 12px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px; margin-top: 4px; font-weight: 500;
     }
     .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success); box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
     }
-    .dot.offline { background: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
-    
+    .dot.offline { background: var(--primary); box-shadow: 0 0 8px rgba(255, 46, 85, 0.6); }
+
     .header-actions { display: flex; gap: 8px; }
     .icon-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-md);
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text-main); width: 40px; height: 40px;
+      border-radius: var(--radius-md); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
     }
-    .icon-btn:active { background: var(--surface-hover); transform: scale(0.95); }
+    .icon-btn:active { background: var(--card-light); transform: scale(0.95); }
 
-    /* ================= LAYOUT ================= */
+    /* CONTAINER */
     .container { padding: 20px; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 
-    /* ================= SINGER INPUT ================= */
+    /* SINGER INPUT */
     #singerInputGroup { transition: all 0.25s ease; }
     #singerInputGroup.collapsed { display: none; }
-    
     .input-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      display: block; font-size: 12px; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase;
     }
     input[type=text], input[type=password] {
-      width: 100%;
-      padding: 14px 16px;
-      font-size: 16px;
-      background: var(--surface);
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      font-family: inherit;
-      transition: border-color 0.2s;
+      width: 100%; padding: 14px 16px; font-size: 16px;
+      background: var(--card); color: var(--text-main);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      font-family: inherit; transition: border-color 0.2s;
     }
-    input:focus { outline: none; border-color: var(--primary); background: #1a2436; }
-    
+    input:focus { outline: none; border-color: var(--primary); background: var(--card-light); }
     #guestHint { display: none; font-size: 11px; color: var(--text-muted); margin-top: 8px; }
     #guestHint.show { display: block; }
 
     #singerPill {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      width: fit-content;
-      cursor: pointer;
-      color: var(--text-main);
-      font-family: inherit;
-      font-size: 14px;
-      transition: all 0.2s;
+      display: none; align-items: center; gap: 8px; padding: 8px 16px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; width: fit-content; cursor: pointer;
+      color: var(--text-main); font-family: inherit; font-size: 14px; transition: all 0.2s;
     }
     #singerPill.show { display: inline-flex; }
-    #singerPill:active { background: var(--surface-hover); transform: scale(0.98); }
-    #singerPill .name { font-weight: 600; color: var(--primary); }
+    #singerPill:active { background: var(--card-light); transform: scale(0.98); }
+    #singerPill .name { font-weight: 600; color: var(--accent); }
 
-    /* ================= MAIN CARD (RESERVE) ================= */
+    /* RESERVE CARD */
     .yt-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 20px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     .yt-card .label {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-transform: uppercase;
+      font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-transform: uppercase;
     }
 
-    /* Tabs */
+    /* MODE TABS */
     .mode-tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 16px;
-      background: var(--bg);
-      padding: 4px;
-      border-radius: var(--radius-md);
+      display: flex; gap: 4px; margin-bottom: 16px;
+      background: var(--bg); padding: 4px; border-radius: var(--radius-md);
       border: 1px solid var(--border);
     }
     .mode-tab {
-      flex: 1;
-      padding: 10px;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-family: inherit;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.2s;
+      flex: 1; padding: 10px; background: transparent; border: none;
+      color: var(--text-muted); font-size: 13px; font-weight: 600;
+      border-radius: var(--radius-sm); cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;
     }
-    .mode-tab.active { background: var(--surface-hover); color: var(--text-main); }
+    .mode-tab.active { background: var(--card-light); color: var(--text-main); }
     .mode-panel { display: none; }
     .mode-panel.active { display: block; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     .primary-btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-md);
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.2s;
-      margin-top: 12px;
+      width: 100%; padding: 14px; background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius-md); font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background 0.2s; margin-top: 12px;
     }
-    .primary-btn:active { background: var(--primary-hover); }
+    .primary-btn:active { background: #e01b40; }
     .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* YouTube Hint Box */
     .yt-hint {
-      display: flex;
-      gap: 12px;
-      padding: 16px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      line-height: 1.5;
-      color: var(--text-muted);
-      margin-top: 16px;
+      display: flex; gap: 12px; padding: 16px;
+      background: rgba(255, 46, 85, 0.08); border: 1px solid rgba(255, 46, 85, 0.2);
+      border-radius: var(--radius-md); font-size: 13px; line-height: 1.5; color: var(--text-muted); margin-top: 16px;
     }
     .yt-hint ol { padding-left: 20px; margin-top: 8px; }
     .yt-hint b { color: var(--text-main); }
 
     .yt-open-btn {
-      width: 100%;
-      padding: 14px;
-      margin-top: 16px;
-      background: transparent;
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.2s;
+      width: 100%; padding: 14px; margin-top: 16px;
+      background: transparent; color: var(--text-main);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;
     }
-    .yt-open-btn:active { background: var(--surface-hover); }
+    .yt-open-btn:active { background: var(--card-light); }
 
-    /* Search Bar */
+    /* SEARCH INPUT */
     .search-input-wrap { position: relative; margin-bottom: 12px; }
     .search-input-wrap input { padding-left: 44px; padding-right: 44px; }
     .search-icon {
@@ -275,22 +175,20 @@
     .search-mic {
       position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
       width: 32px; height: 32px; border-radius: 50%;
-      background: var(--surface-hover); border: none;
-      color: var(--text-main); font-size: 14px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
+      background: var(--card-light); border: none; color: var(--text-main);
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
     }
-    .search-mic.recording { background: var(--danger); animation: pulse 1.2s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+    .search-mic.recording { background: var(--primary); animation: pulse 1.2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,46,85,0.5); } 70% { box-shadow: 0 0 0 10px rgba(255,46,85,0); } 100% { box-shadow: 0 0 0 0 rgba(255,46,85,0); } }
 
-    /* Recommendations & Results */
+    /* RESULTS & RECOMMENDATIONS */
     .recommend-title {
       font-size: 12px; font-weight: 700; color: var(--text-muted);
       letter-spacing: 0.5px; text-transform: uppercase; margin: 20px 0 12px;
     }
     .recommend-chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .rec-chip {
-      padding: 8px 14px; background: var(--surface-hover); border: 1px solid var(--border);
+      padding: 8px 14px; background: var(--card-light); border: 1px solid var(--border);
       color: var(--text-main); border-radius: 20px; font-size: 13px; font-weight: 600;
       cursor: pointer; font-family: inherit; transition: all 0.2s;
     }
@@ -309,27 +207,20 @@
       padding: 8px 12px; border-radius: 6px; background: var(--primary); color: #fff;
       border: none; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
     }
-    .sr-add-btn:active { background: var(--primary-hover); }
+    .sr-add-btn:active { background: #e01b40; }
 
-    /* ================= NOW PLAYING ================= */
+    /* NOW PLAYING */
     .now-card {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(135deg, var(--card) 0%, var(--bg) 100%);
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 20px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden;
     }
     .now-card::before {
-      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-      background: var(--primary);
+      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary);
     }
     .now-art {
       width: 64px; height: 64px; border-radius: var(--radius-md);
-      background: var(--surface-hover); display: flex; align-items: center; justify-content: center;
+      background: var(--card-light); display: flex; align-items: center; justify-content: center;
       font-size: 24px; flex-shrink: 0;
     }
     .now-info { flex: 1; min-width: 0; }
@@ -337,34 +228,33 @@
     .now-singer { font-size: 16px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .now-song { font-size: 13px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* ================= CONTROLS ================= */
+    /* CONTROLS */
     .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .ctrl-btn {
-      padding: 12px 8px; background: var(--surface); border: 1px solid var(--border);
+      padding: 12px 8px; background: var(--card); border: 1px solid var(--border);
       border-radius: var(--radius-md); color: var(--text-main); font-size: 18px;
-      cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
-      transition: all 0.2s;
+      cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s;
     }
-    .ctrl-btn:active { background: var(--surface-hover); transform: scale(0.95); }
+    .ctrl-btn:active { background: var(--card-light); transform: scale(0.95); }
     .ctrl-btn .lbl { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-    .ctrl-btn.locked { opacity: 0.4; cursor: not-allowed; }
+    .ctrl-btn.locked { opacity: 0.4; cursor: not-allowed; position: relative; }
     .ctrl-btn.locked::after { content: '🔒'; position: absolute; top: 4px; right: 6px; font-size: 10px; }
 
     .volume-row {
       display: flex; align-items: center; gap: 12px; padding: 16px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md);
     }
     .volume-row input[type=range] {
       flex: 1; -webkit-appearance: none; height: 4px; background: var(--border); border-radius: 2px; outline: none;
     }
     .volume-row input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 18px; height: 18px; background: var(--text-main); border-radius: 50%; cursor: pointer;
+      -webkit-appearance: none; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; cursor: pointer;
     }
     .volume-row.locked { opacity: 0.4; pointer-events: none; }
 
     #lockBanner {
       display: none; align-items: center; gap: 12px; padding: 12px 16px;
-      background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2);
+      background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2);
       border-radius: var(--radius-md); font-size: 13px; color: var(--accent);
     }
     #lockBanner.show { display: flex; }
@@ -373,9 +263,9 @@
       border: none; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer;
     }
 
-    /* ================= TABS & QUEUE ================= */
+    /* TABS & QUEUE */
     .tab-nav {
-      display: flex; gap: 4px; background: var(--surface); padding: 4px;
+      display: flex; gap: 4px; background: var(--card); padding: 4px;
       border-radius: var(--radius-md); border: 1px solid var(--border);
       position: sticky; top: 73px; z-index: 90;
     }
@@ -384,7 +274,7 @@
       font-size: 13px; font-weight: 600; border-radius: var(--radius-sm); cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;
     }
-    .tab-btn.active { background: var(--surface-hover); color: var(--text-main); }
+    .tab-btn.active { background: var(--card-light); color: var(--text-main); }
     .tab-badge { background: var(--primary); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
 
     .section-header {
@@ -392,17 +282,16 @@
       margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
     }
     .section-header h2 { font-size: 14px; font-weight: 700; color: var(--text-main); }
-    .section-header .badge { background: var(--surface-hover); color: var(--text-muted); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
-    
+    .section-header .badge { background: var(--card-light); color: var(--text-muted); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+
     .queue-list { display: flex; flex-direction: column; gap: 8px; }
     .queue-item {
       display: flex; align-items: center; gap: 12px; padding: 12px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md);
     }
-    .queue-item.is-me { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+    .queue-item.is-me { border-color: var(--primary); background: rgba(255, 46, 85, 0.05); }
     .queue-item .pos {
-      width: 28px; height: 28px; border-radius: 50%; background: var(--surface-hover);
+      width: 28px; height: 28px; border-radius: 50%; background: var(--card-light);
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
@@ -415,9 +304,9 @@
     .queue-item .actions button { background: transparent; border: none; color: var(--text-muted); font-size: 16px; padding: 4px 8px; cursor: pointer; }
     .queue-item .actions button.q-act.locked { opacity: 0.3; cursor: not-allowed; }
 
-    /* ================= SHARE SECTION ================= */
+    /* SHARE SECTION */
     #shareSection {
-      display: none; background: var(--surface); border: 1px solid var(--border);
+      display: none; background: var(--card); border: 1px solid var(--border);
       border-radius: var(--radius-lg); padding: 24px; text-align: center; margin-top: 8px;
     }
     #shareSection.show { display: block; }
@@ -430,10 +319,10 @@
       flex: 1; padding: 12px; border-radius: var(--radius-md); border: none;
       font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
     }
-    .share-btns .copy { background: var(--surface-hover); color: var(--text-main); }
+    .share-btns .copy { background: var(--card-light); color: var(--text-main); }
     .share-btns .share { background: var(--primary); color: #fff; }
-    
-    /* ================= MODALS & GATE ================= */
+
+    /* MODALS & GATE */
     .modal-bg {
       position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
       display: none; align-items: center; justify-content: center; padding: 20px;
@@ -441,14 +330,14 @@
     }
     .modal-bg.show { display: flex; }
     .modal {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
       padding: 24px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
     }
     .modal h3 { margin-bottom: 16px; font-size: 18px; font-weight: 700; }
     .modal .row { display: flex; gap: 8px; margin-top: 16px; }
     .modal button { flex: 1; padding: 12px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px; border: none; }
     .modal .primary { background: var(--primary); color: #fff; }
-    .modal .secondary { background: var(--surface-hover); color: var(--text-main); border: 1px solid var(--border); }
+    .modal .secondary { background: var(--card-light); color: var(--text-main); border: 1px solid var(--border); }
 
     #partyGate {
       display: none; position: fixed; inset: 0; z-index: 9000;
@@ -458,21 +347,21 @@
     #partyGate.show { display: flex; }
     #partyGate h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: #fff; }
     #partyGate p { font-size: 14px; color: var(--text-muted); max-width: 300px; margin-bottom: 24px; line-height: 1.5; }
-    #partyGate input { width: 100%; max-width: 280px; padding: 16px; font-size: 24px; letter-spacing: 4px; text-align: center; text-transform: uppercase; font-weight: 800; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px; color: #fff; }
+    #partyGate input { width: 100%; max-width: 280px; padding: 16px; font-size: 24px; letter-spacing: 4px; text-align: center; text-transform: uppercase; font-weight: 800; background: var(--card); border: 2px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px; color: #fff; }
     #partyGate input:focus { border-color: var(--primary); outline: none; }
     #partyGate button { padding: 14px 40px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-md); font-size: 16px; font-weight: 700; cursor: pointer; }
-    #partyGate .err { color: var(--danger); font-size: 13px; margin-top: 12px; min-height: 18px; font-weight: 600; }
+    #partyGate .err { color: var(--primary); font-size: 13px; margin-top: 12px; min-height: 18px; font-weight: 600; }
 
-    /* Toast */
+    /* TOAST */
     #toast {
       position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-      padding: 12px 24px; background: var(--surface); border: 1px solid var(--border);
+      padding: 12px 24px; background: var(--card); border: 1px solid var(--border);
       color: var(--text-main); border-radius: 30px; font-size: 14px; font-weight: 600;
       z-index: 10000; opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
       pointer-events: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    #toast.error { border-color: var(--danger); color: var(--danger); }
+    #toast.error { border-color: var(--primary); color: var(--primary); }
     #toast.success { border-color: var(--success); color: var(--success); }
 
     .empty-state { text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px; }
@@ -544,1068 +433,3 @@
           </div>
         </div>
         <button class="yt-open-btn" onclick="openYouTubeApp()">▶ Open YouTube App</button>
-      </div>
-
-      <!-- SEARCH MODE -->
-      <div class="mode-panel" id="panel-search">
-        <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="searchQuery" placeholder="Search or 🎤 speak a song name..." autocomplete="off" autocorrect="off" spellcheck="false">
-          <button class="search-mic" id="voiceSearchBtn" onclick="toggleVoiceSearch()" title="Voice search">🎤</button>
-        </div>
-
-        <div id="recommendSection">
-          <div class="recommend-title">🔥 Popular Karaoke</div>
-          <div class="search-results" id="recommendResults">
-            <div class="empty-state">Loading recommendations...</div>
-          </div>
-          <div class="recommend-title" style="margin-top:20px;">💡 Browse Categories</div>
-          <div class="recommend-chips" id="recommendChips"></div>
-        </div>
-
-        <div class="search-results" id="searchResults"></div>
-        <button class="primary-btn" id="loadMoreBtn" onclick="loadMore()" style="display:none; background:var(--surface-hover); color:var(--text-main);">⬇ Load More</button>
-      </div>
-    </div>
-
-    <!-- NOW PLAYING -->
-    <div class="now-card">
-      <div class="now-art">🎤</div>
-      <div class="now-info">
-        <div class="now-label"><span style="width:6px; height:6px; border-radius:50%; background:var(--danger); display:inline-block; animation:pulse 1.5s infinite;"></span> NOW SINGING</div>
-        <div id="nowContent">
-          <div class="now-song" style="font-style:italic;">Nothing playing</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONTROLS -->
-    <div id="lockBanner">
-      <span>🔒</span>
-      <span>Host controls locked.</span>
-      <button onclick="promptUnlock()">Unlock</button>
-    </div>
-
-    <div class="controls" id="controlsGrid">
-      <button class="ctrl-btn locked" onclick="sendCmd('pause')" data-ctrl>⏸ <span class="lbl">Pause</span></button>
-      <button class="ctrl-btn locked" onclick="sendCmd('resume')" data-ctrl>▶ <span class="lbl">Play</span></button>
-      <button class="ctrl-btn locked" onclick="sendCmd('skip')" data-ctrl>⏭ <span class="lbl">Skip</span></button>
-      <button class="ctrl-btn locked" onclick="sendCmd('stop')" data-ctrl>⏹ <span class="lbl">Stop</span></button>
-    </div>
-
-    <div class="volume-row locked" id="volumeRow">
-      <span>🔊</span>
-      <input type="range" id="volume" min="0" max="100" value="80">
-    </div>
-
-    <!-- TABS -->
-    <div class="tab-nav">
-      <button class="tab-btn active" data-tab="queue" onclick="switchTab('queue')">📋 Queue <span class="tab-badge" id="qTabBadge">0</span></button>
-      <button class="tab-btn" data-tab="favorites" onclick="switchTab('favorites')">⭐ Favs</button>
-      <button class="tab-btn" data-tab="history" onclick="switchTab('history')">📜 History</button>
-    </div>
-
-    <div class="tab-content" id="tab-queue">
-      <div class="section-header">
-        <h2>📋 Reserved</h2>
-        <span class="badge" id="queueCount">0</span>
-      </div>
-      <div class="queue-list" id="queueList">
-        <div class="empty-state">No reservations</div>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-favorites" style="display:none">
-      <div class="section-header"><h2>⭐ Favorites</h2></div>
-      <div class="song-list" id="favList"></div>
-    </div>
-
-    <div class="tab-content" id="tab-history" style="display:none">
-      <div class="section-header">
-        <h2>📜 History</h2>
-        <button class="icon-btn" onclick="loadHistory()" style="width:28px; height:28px; font-size:12px;">🔄</button>
-      </div>
-      <div class="song-list" id="historyList"></div>
-    </div>
-
-    <!-- SHARE -->
-    <div id="shareSection">
-      <div class="title">📤 Share this Party</div>
-      <div class="qr-container"><img id="shareQrImg" src="" alt="QR Code"></div>
-      <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">PARTY CODE</div>
-      <div class="code-value" id="shareCode">------</div>
-      <div class="share-btns">
-        <button class="copy" onclick="copyPartyLink()">📋 Copy Link</button>
-        <button class="share" onclick="sharePartyLink()">📤 Share</button>
-      </div>
-      <button class="yt-open-btn" onclick="viewHostScreen()" style="border-color:var(--primary); color:var(--primary);">📺 View TV Display</button>
-    </div>
-
-    <!-- FOOTER -->
-    <div style="text-align:center; padding:24px 0 12px; font-size:11px; color:var(--text-muted); line-height:1.6;">
-      🎤 <b>VIDEoke YT</b> · by <span style="color:var(--accent); font-weight:700;">Steve</span><br>
-      © <span id="remoteYear"></span>
-    </div>
-  </div>
-
-  <!-- MODALS -->
-  <div class="modal-bg" id="adminModal">
-    <div class="modal">
-      <h3>🔐 Admin Panel</h3>
-      <div id="adminLoginForm">
-        <input type="password" id="adminPw" placeholder="Admin password" style="margin-bottom:12px;">
-        <button class="primary" onclick="doLogin()" style="width:100%;">Login</button>
-      </div>
-      <div id="adminPanel" style="display:none">
-        <div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px;">
-          <b>Party Code: <span id="adminPartyCodeDisplay" style="color:var(--primary)">------</span></b>
-        </div>
-        <button class="primary" onclick="viewHostScreen()" style="width:100%; margin-bottom:8px; background:var(--primary);">📺 View TV Display</button>
-        <button class="primary" onclick="adminAction('end-party')" style="width:100%; margin-bottom:8px; background:var(--surface-hover); color:var(--text-main);">🚫 End Party</button>
-        <button class="primary" onclick="adminAction('stop')" style="width:100%; margin-bottom:8px; background:var(--surface-hover); color:var(--text-main);">⏹ Force Stop</button>
-        <button class="primary" onclick="adminAction('kick-all')" style="width:100%; margin-bottom:8px; background:var(--surface-hover); color:var(--text-main);">👢 Kick All</button>
-        <button class="primary" onclick="adminAction('clear-history')" style="width:100%; margin-bottom:8px; background:var(--surface-hover); color:var(--text-main);">🗑️ Clear History</button>
-        <button class="primary" onclick="lockControls()" style="width:100%; margin-bottom:8px; background:var(--danger);">🔒 Lock Controls</button>
-      </div>
-      <div class="row">
-        <button class="secondary" onclick="adminLogout()" id="logoutBtn" style="background:var(--danger); color:#fff; display:none;">🚪 Logout</button>
-        <button class="secondary" onclick="closeModal('adminModal')">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-bg" id="unlockModal">
-    <div class="modal">
-      <h3>🔒 Admin Access</h3>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Enter admin password to unlock playback controls.</p>
-      <input type="password" id="unlockPw" placeholder="Password">
-      <div class="row">
-        <button class="primary" onclick="tryUnlock()">Unlock</button>
-        <button class="secondary" onclick="closeModal('unlockModal')">Cancel</button>
-      </div>
-      <div id="unlockErr" style="color:var(--danger); font-size:12px; margin-top:12px; text-align:center;"></div>
-    </div>
-  </div>
-
-  <div class="modal-bg" id="duetModal">
-    <div class="modal">
-      <h3>👥 Duet Karaoke</h3>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">This is a duet track. Which part will you sing?</p>
-      <div id="duetSongTitle" style="font-weight:700; font-size:14px; color:var(--accent); margin-bottom:16px;"></div>
-      <div style="display:flex; gap:8px;">
-        <button onclick="pickDuetPart('boy')" style="flex:1; padding:16px; border:none; border-radius:var(--radius-md); background:var(--primary); color:#fff; font-weight:700; font-family:inherit; font-size:14px;">👦 Boy Part</button>
-        <button onclick="pickDuetPart('girl')" style="flex:1; padding:16px; border:none; border-radius:var(--radius-md); background:#ec4899; color:#fff; font-weight:700; font-family:inherit; font-size:14px;">👧 Girl Part</button>
-      </div>
-      <button onclick="closeModal('duetModal')" style="width:100%; margin-top:12px; padding:12px; background:var(--surface-hover); color:var(--text-main); border:none; border-radius:var(--radius-md); font-weight:700; font-family:inherit; cursor:pointer;">Cancel</button>
-    </div>
-  </div>
-
-  <div id="partyGate">
-    <div style="font-size:64px; margin-bottom:16px;">🎤</div>
-    <h2>Videoke Party</h2>
-    <p id="partyGateMsg">Scan the QR code on the host screen, or type the 6-character party code below.</p>
-    <input type="text" id="partyCodeInput" placeholder="ABC123" maxlength="6" autocomplete="off" autocapitalize="characters">
-    <button onclick="submitPartyCode()">Join Party</button>
-    <div class="err" id="partyGateErr"></div>
-    <button onclick="openAdminFromGate()" style="margin-top:24px; background:transparent; border:1px solid var(--border); color:var(--text-muted); font-size:12px;">⚙️ Admin Access</button>
-  </div>
-
-  <div id="toast"></div>
-
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script>
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js').catch(err => console.warn('SW failed:', err));
-      });
-    }
-
-    const BACKEND_URL = window.VIDEOKE_CONFIG?.BACKEND_URL || 'http://localhost:3000';
-    const API = BACKEND_URL;
-
-    const socket = io(BACKEND_URL, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000,
-    });
-
-    // Global State
-    let favorites = [];
-    let adminToken = localStorage.getItem('videoke:adminToken') || null;
-    let adminVerified = false;
-    let previewVideoId = null;
-    let previewTimer = null;
-    let lastState = null;
-    let currentTitle = '';
-    let currentAuthor = '';
-
-    let partyCode = null;
-    let partyVerified = false;
-
-    let controlsUnlocked = false;
-    const AUTO_LOCK_MS = 10 * 60 * 1000;
-    let autoLockTimer = null;
-
-    // ================= LOCKS & AUTH =================
-    function resetAutoLockTimer() {
-      if (autoLockTimer) clearTimeout(autoLockTimer);
-      if (!controlsUnlocked) return;
-      autoLockTimer = setTimeout(() => {
-        controlsUnlocked = false;
-        localStorage.removeItem('videoke:controlsUnlocked');
-        updateControlsLock();
-        toast('⏰ Auto-locked after inactivity', 'error');
-      }, AUTO_LOCK_MS);
-    }
-    
-    function stopAutoLockTimer() {
-      if (autoLockTimer) { clearTimeout(autoLockTimer); autoLockTimer = null; }
-    }
-
-    ['click','touchstart','keydown','scroll'].forEach(evt => {
-      document.addEventListener(evt, () => {
-        if (controlsUnlocked) resetAutoLockTimer();
-      }, { passive: true });
-    });
-
-    function updateControlsLock() {
-      document.querySelectorAll('[data-ctrl]').forEach(btn => btn.classList.toggle('locked', !controlsUnlocked));
-      document.getElementById('volumeRow').classList.toggle('locked', !controlsUnlocked);
-      document.getElementById('lockBanner').classList.toggle('show', !controlsUnlocked);
-      document.querySelectorAll('.q-act').forEach(btn => btn.classList.toggle('locked', !controlsUnlocked));
-      if (lastState) renderQueue(lastState);
-      if (controlsUnlocked) resetAutoLockTimer();
-      else stopAutoLockTimer();
-    }
-
-    function promptUnlock() {
-      openModal('unlockModal');
-      document.getElementById('unlockPw').value = '';
-      document.getElementById('unlockErr').textContent = '';
-      setTimeout(() => document.getElementById('unlockPw').focus(), 100);
-    }
-
-    async function tryUnlock() {
-      const pw = document.getElementById('unlockPw').value;
-      if (!pw) return document.getElementById('unlockErr').textContent = 'Enter password';
-      if (!partyCode) return toast('Join a party first', 'error');
-      document.getElementById('unlockErr').textContent = 'Checking...';
-      try {
-        const r = await fetch(API + '/api/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ party: partyCode, password: pw }),
-        });
-        if (!r.ok) throw new Error(r.status === 401 ? 'Wrong password' : 'Server error');
-        const { token } = await r.json();
-        adminToken = token;
-        localStorage.setItem('videoke:adminToken', token);
-        controlsUnlocked = true;
-        localStorage.setItem('videoke:controlsUnlocked', '1');
-        closeModal('unlockModal');
-        updateControlsLock();
-        resetAutoLockTimer();
-        toast('✓ Controls unlocked', 'success');
-      } catch (e) {
-        document.getElementById('unlockErr').textContent = '❌ ' + e.message;
-      }
-    }
-
-    function lockControls() {
-      controlsUnlocked = false;
-      localStorage.removeItem('videoke:controlsUnlocked');
-      updateControlsLock();
-      toast('🔒 Controls locked', 'success');
-    }
-
-    async function verifyAdminToken() {
-      if (!adminToken) return false;
-      try {
-        const r = await fetch(API + '/api/admin/ping', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
-          body: '{}',
-        });
-        return r.ok;
-      } catch { return false; }
-    }
-
-    (async function initControlsLock() {
-      const tok = localStorage.getItem('videoke:adminToken');
-      const unl = localStorage.getItem('videoke:controlsUnlocked') === '1';
-      if (tok && unl) {
-        adminToken = tok;
-        const ok = await verifyAdminToken();
-        if (ok) { controlsUnlocked = true; adminVerified = true; }
-        else {
-          localStorage.removeItem('videoke:adminToken');
-          localStorage.removeItem('videoke:controlsUnlocked');
-        }
-      }
-      updateControlsLock();
-      if (controlsUnlocked) resetAutoLockTimer();
-    })();
-
-    // ================= PARTY JOINING =================
-    function updateShareSection() {
-      const sec = document.getElementById('shareSection');
-      const hCode = document.getElementById('headerPartyCode');
-      if (!partyVerified || !partyCode) { 
-        sec.classList.remove('show'); 
-        hCode.style.display = 'none';
-        return; 
-      }
-      const url = window.location.origin + '/remote?party=' + partyCode;
-      document.getElementById('shareQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(url);
-      document.getElementById('shareCode').textContent = partyCode;
-      sec.classList.add('show');
-      hCode.textContent = '• ' + partyCode;
-      hCode.style.display = 'inline-block';
-    }
-
-    function copyPartyLink() {
-      if (!partyCode) return;
-      const url = window.location.origin + '/remote?party=' + partyCode;
-      navigator.clipboard.writeText(url).then(() => toast('✓ Link copied!', 'success')).catch(() => prompt('Copy link:', url));
-    }
-
-    async function sharePartyLink() {
-      if (!partyCode) return;
-      const url = window.location.origin + '/remote?party=' + partyCode;
-      if (navigator.share) {
-        try { await navigator.share({ title: 'Join Videoke!', text: 'Code: ' + partyCode, url }); } catch {}
-      } else {
-        copyPartyLink();
-      }
-    }
-
-    function viewHostScreen() {
-      if (!partyCode) return;
-      window.open('/host?party=' + partyCode, '_blank');
-    }
-
-    function showPartyGate(msg) {
-      document.getElementById('partyGate').classList.add('show');
-      if (msg) document.getElementById('partyGateMsg').textContent = msg;
-    }
-    function hidePartyGate() { document.getElementById('partyGate').classList.remove('show'); }
-
-    async function verifyPartyCode(code) {
-      try {
-        const r = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(code));
-        const data = await r.json();
-        return data.valid === true;
-      } catch { return false; }
-    }
-
-    async function submitPartyCode() {
-      const input = document.getElementById('partyCodeInput');
-      const code = input.value.trim().toUpperCase();
-      if (code.length !== 6) return document.getElementById('partyGateErr').textContent = 'Must be 6 characters.';
-      document.getElementById('partyGateErr').textContent = 'Checking...';
-      await joinWithCode(code);
-    }
-
-    async function joinWithCode(code) {
-      const valid = await verifyPartyCode(code);
-      if (!valid) return document.getElementById('partyGateErr').textContent = '❌ Invalid or expired code.';
-      partyCode = code;
-      partyVerified = true;
-      localStorage.setItem('videoke:partyCode', code);
-      socket.emit('joinParty', { code });
-      hidePartyGate();
-      updateShareSection();
-      toast('✓ Joined the party!', 'success');
-    }
-
-    (async function initPartyAccess() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlCode = urlParams.get('party');
-      const savedCode = localStorage.getItem('videoke:partyCode');
-      const codeToTry = ((urlCode || savedCode) || '').toUpperCase();
-      if (!codeToTry) return showPartyGate();
-      
-      const valid = await verifyPartyCode(codeToTry);
-      if (valid) {
-        partyCode = codeToTry;
-        partyVerified = true;
-        localStorage.setItem('videoke:partyCode', codeToTry);
-        if (urlCode) window.history.replaceState({}, '', window.location.pathname);
-        if (socket.connected) socket.emit('joinParty', { code: partyCode });
-        hidePartyGate();
-        updateShareSection();
-      } else {
-        localStorage.removeItem('videoke:partyCode');
-        showPartyGate('❌ Expired or invalid code. Please get a new one.');
-      }
-    })();
-
-    // ================= UI UTILS =================
-    let toastTimer;
-    function toast(msg, type = 'success') {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.className = 'show ' + type;
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.className = '', 3000);
-    }
-
-    function escapeHtml(s) {
-      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    function escapeAttr(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
-
-    // ================= SOCKET EVENTS =================
-    socket.on('connect', () => {
-      document.getElementById('statusDot').classList.remove('offline');
-      document.getElementById('statusText').textContent = 'Connected';
-      if (partyCode && partyVerified) socket.emit('joinParty', { code: partyCode });
-    });
-    
-    socket.on('disconnect', () => {
-      document.getElementById('statusDot').classList.add('offline');
-      document.getElementById('statusText').textContent = 'Disconnected';
-    });
-
-    socket.on('partyJoined', ({ ok, reason }) => {
-      if (!ok) {
-        partyVerified = false;
-        localStorage.removeItem('videoke:partyCode');
-        showPartyGate(reason === 'no_party' ? 'No active party. Wait for host.' : '❌ Invalid code.');
-        document.getElementById('shareSection').classList.remove('show');
-        document.getElementById('headerPartyCode').style.display = 'none';
-      }
-    });
-
-    socket.on('partyChanged', ({ active }) => {
-      if (!active) {
-        partyVerified = false;
-        localStorage.removeItem('videoke:partyCode');
-        showPartyGate('🎉 Party ended. Thanks for joining!');
-        document.getElementById('shareSection').classList.remove('show');
-        document.getElementById('headerPartyCode').style.display = 'none';
-      }
-    });
-
-    socket.on('error', msg => toast(msg, 'error'));
-    socket.on('historyCleared', () => { if (document.getElementById('tab-history').style.display !== 'none') loadHistory(); });
-    socket.on('kicked', msg => { alert(msg); location.reload(); });
-
-    // ================= SINGER NAME LOGIC =================
-    const singerInput = document.getElementById('singer');
-    const singerPill = document.getElementById('singerPill');
-    const singerPillName = document.getElementById('singerPillName');
-    const singerFieldWrap = document.getElementById('singerFieldWrap');
-    const guestHint = document.getElementById('guestHint');
-    let saveNameTimer;
-
-    function initSingerName() {
-      const saved = (localStorage.getItem('videoke:singerName') || '').trim();
-      if (saved) {
-        singerInput.value = saved;
-        collapseNameToPill(saved);
-      } else {
-        expandNameField();
-      }
-    }
-
-    function collapseNameToPill(name) {
-      singerFieldWrap.classList.add('collapsed');
-      singerPillName.textContent = name;
-      singerPill.classList.add('show');
-    }
-
-    function expandNameField() {
-      singerFieldWrap.classList.remove('collapsed');
-      singerPill.classList.remove('show');
-      setTimeout(() => singerInput.focus(), 100);
-    }
-
-    function editSingerName() { expandNameField(); }
-
-    singerInput.addEventListener('input', (e) => {
-      const v = e.target.value.trim();
-      guestHint.classList.toggle('show', v.length === 0);
-      clearTimeout(saveNameTimer);
-      saveNameTimer = setTimeout(() => {
-        localStorage.setItem('videoke:singerName', v);
-        if (lastState) renderQueue(lastState);
-      }, 300);
-    });
-
-    singerInput.addEventListener('blur', () => {
-      const v = singerInput.value.trim();
-      if (v) collapseNameToPill(v);
-    });
-
-    singerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
-
-    function getSingerName() {
-      const typed = singerInput.value.trim();
-      if (typed) return typed;
-      
-      // Generate Guest Name
-      let guestNum = 1;
-      if (lastState && lastState.queue) {
-        const existingGuests = lastState.queue
-          .filter(q => /^Guest\s*\d+/i.test(q.singer || ''))
-          .map(q => parseInt((q.singer.match(/\d+/) || [0])[0]) || 0);
-        guestNum = existingGuests.length ? Math.max(...existingGuests) + 1 : 1;
-      }
-      const guestName = `Guest ${guestNum}`;
-      localStorage.setItem('videoke:singerName', guestName);
-      singerInput.value = guestName;
-      collapseNameToPill(guestName);
-      return guestName;
-    }
-
-    initSingerName();
-
-    // ================= YOUTUBE URL & ADD SONG =================
-    function parseYouTubeUrl(input) {
-      if (!input) return null;
-      input = String(input).trim();
-      if (/^[\w-]{11}$/.test(input)) return input;
-      try {
-        const u = new URL(input.startsWith('http') ? input : 'https://' + input);
-        const host = u.hostname.toLowerCase();
-        const base = host.replace(/^www\./, '').replace(/^m\./, '').replace(/^music\./, '');
-        if (base === 'youtu.be') {
-          const id = u.pathname.slice(1).split('/')[0].split('?')[0];
-          if (/^[\w-]{11}$/.test(id)) return id;
-        }
-        if (base === 'youtube.com' || base === 'youtube-nocookie.com') {
-          const v = u.searchParams.get('v');
-          if (v && /^[\w-]{11}$/.test(v)) return v;
-          const m = u.pathname.match(/\/(?:embed|shorts|v|live|e)\/([\w-]{11})/);
-          if (m) return m[1];
-        }
-      } catch {}
-      const m = input.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?[^#]*?\bv=|embed\/|shorts\/|v\/|live\/|e\/|.*?[?&]v=))([\w-]{11})/);
-      return m ? m[1] : null;
-    }
-
-    async function fetchTitleClientSide(videoId) {
-      try {
-        const r = await fetch(`https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`, { signal: AbortSignal.timeout(8000) });
-        if (r.ok) {
-          const data = await r.json();
-          return { title: (data.title || '').trim(), author: (data.author_name || '').trim() };
-        }
-      } catch {}
-      return null;
-    }
-
-    async function fetchTitleViaBackend(videoId) {
-      try {
-        const r = await fetch(API + `/api/yt-info/${videoId}`, { signal: AbortSignal.timeout(12000) });
-        const data = await r.json();
-        return { title: data.title, author: data.author };
-      } catch {}
-      return null;
-    }
-
-    function openYouTubeApp() {
-      window.open('https://m.youtube.com', '_blank');
-      toast('▶ Opening YouTube...');
-    }
-
-    document.getElementById('ytUrl').addEventListener('input', (e) => {
-      clearTimeout(previewTimer);
-      const value = e.target.value.trim();
-      if (!value) {
-        document.getElementById('ytPreview').style.display = 'none';
-        previewVideoId = null; currentTitle = ''; currentAuthor = '';
-        return;
-      }
-      const videoId = parseYouTubeUrl(value);
-      if (!videoId) {
-        document.getElementById('ytPreview').style.display = 'none';
-        previewVideoId = null; currentTitle = ''; currentAuthor = '';
-        return;
-      }
-      previewVideoId = videoId;
-      currentTitle = ''; currentAuthor = '';
-      document.getElementById('ytThumb').src = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-      document.getElementById('ytTitle').textContent = 'Fetching title...';
-      document.getElementById('ytAuthor').textContent = videoId;
-      document.getElementById('ytPreview').style.display = 'flex';
-
-      previewTimer = setTimeout(async () => {
-        let result = await fetchTitleClientSide(videoId);
-        if (!result || !result.title) result = await fetchTitleViaBackend(videoId);
-        if (previewVideoId !== videoId) return;
-        if (result && result.title) {
-          currentTitle = result.title;
-          currentAuthor = result.author || '';
-          document.getElementById('ytTitle').textContent = currentTitle;
-          document.getElementById('ytAuthor').textContent = currentAuthor || videoId;
-        } else {
-          currentTitle = `YouTube Video (${videoId})`;
-          document.getElementById('ytTitle').textContent = currentTitle;
-          document.getElementById('ytAuthor').textContent = videoId;
-        }
-      }, 300);
-    });
-
-    document.getElementById('ytUrl').addEventListener('keydown', (e) => { if (e.key === 'Enter') addYouTube(); });
-
-    async function addYouTube() {
-      if (!partyVerified) return toast('🚫 Join the party first.', 'error');
-      const input = document.getElementById('ytUrl').value.trim();
-      const singer = getSingerName();
-      if (!input) return toast('Please paste a YouTube link', 'error');
-      const videoId = parseYouTubeUrl(input);
-      if (!videoId) return toast('Not a valid YouTube link', 'error');
-
-      const reserveBtn = document.getElementById('reserveBtn');
-      reserveBtn.disabled = true;
-      reserveBtn.textContent = '⏳ Fetching title...';
-
-      let title = currentTitle;
-      if (!title || title === 'Fetching title...') {
-        const clientResult = await fetchTitleClientSide(videoId);
-        if (clientResult && clientResult.title) title = clientResult.title;
-      }
-      if (!title) {
-        const backendResult = await fetchTitleViaBackend(videoId);
-        if (backendResult && backendResult.title) title = backendResult.title;
-      }
-      if (!title) title = `YouTube Video (${videoId})`;
-
-      reserveBtn.disabled = false;
-      reserveBtn.textContent = '➕ Reserve Song';
-
-      socket.emit('addSong', { videoId, title, singer });
-      document.getElementById('ytUrl').value = '';
-      document.getElementById('ytPreview').style.display = 'none';
-      previewVideoId = null; currentTitle = ''; currentAuthor = '';
-      if (navigator.vibrate) navigator.vibrate(20);
-      toast('✓ Reserved: ' + title.substring(0, 30), 'success');
-    }
-
-    // ================= SEARCH & RECOMMEND =================
-    let currentMode = 'link';
-    let currentFilter = 'karaoke';
-    let currentQuery = '';
-    let currentOffset = 0;
-    let currentItems = [];
-    let hasMoreResults = false;
-    let searchDebounce = null;
-    let searchRequestId = 0;
-
-    function setMode(mode) {
-      currentMode = mode;
-      document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
-      document.getElementById('panel-link').classList.toggle('active', mode === 'link');
-      document.getElementById('panel-search').classList.toggle('active', mode === 'search');
-      if (mode === 'search') {
-        const q = document.getElementById('searchQuery').value.trim();
-        if (!q) showRecommendMode();
-        setTimeout(() => document.getElementById('searchQuery').focus(), 120);
-      }
-    }
-
-    function showRecommendMode() {
-      document.getElementById('recommendSection').style.display = 'block';
-      document.getElementById('searchResults').style.display = 'none';
-      document.getElementById('loadMoreBtn').style.display = 'none';
-    }
-
-    function showSearchMode() {
-      document.getElementById('recommendSection').style.display = 'none';
-      document.getElementById('searchResults').style.display = 'flex';
-    }
-
-    async function loadRecommendations() {
-      try {
-        const r = await fetch(API + '/api/recommend', { signal: AbortSignal.timeout(15000) });
-        if (!r.ok) throw new Error();
-        const data = await r.json();
-        renderRecommendChips(data.chips || []);
-        renderRecommendItems(data.items || []);
-      } catch (e) {
-        document.getElementById('recommendResults').innerHTML = `<div class="empty-state">Popular karaoke loading failed. Try searching above.</div>`;
-        renderRecommendChips(RECOMMEND_CHIPS_FALLBACK);
-      }
-    }
-
-    const RECOMMEND_CHIPS_FALLBACK = [
-      { emoji: '🇵🇭', label: 'OPM Hits', query: 'OPM karaoke hits', filter: 'karaoke' },
-      { emoji: '💕', label: 'Love Songs', query: 'love songs karaoke', filter: 'karaoke' },
-      { emoji: '👥', label: 'Duet', query: 'duet karaoke', filter: 'duet' },
-      { emoji: '🎸', label: 'Rock Ballads', query: 'rock ballad karaoke', filter: 'karaoke' },
-      { emoji: '🌟', label: 'Pop Hits', query: 'pop hits karaoke', filter: 'karaoke' },
-    ];
-
-    function renderRecommendChips(chips) {
-      const el = document.getElementById('recommendChips');
-      el.innerHTML = chips.map((c, i) => `<button class="rec-chip" onclick="pickChip(${i})"><span>${c.emoji}</span>${escapeHtml(c.label)}</button>`).join('');
-      window._chips = chips;
-    }
-
-    function pickChip(idx) {
-      const chip = window._chips[idx];
-      if (!chip) return;
-      document.getElementById('searchQuery').value = chip.query;
-      currentFilter = chip.filter || 'karaoke';
-      runSearch(chip.query, currentFilter);
-    }
-
-    function renderRecommendItems(items) {
-      const el = document.getElementById('recommendResults');
-      if (!items.length) return el.innerHTML = `<div class="empty-state">No recommendations.</div>`;
-      el.innerHTML = items.map(buildCardHtml).join('');
-    }
-
-    document.getElementById('searchQuery').addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      clearTimeout(searchDebounce);
-      if (!q) { currentQuery = ''; showRecommendMode(); return; }
-      if (q.length < 2) return;
-      searchDebounce = setTimeout(() => runSearch(q, currentFilter), 500);
-    });
-
-    async function runSearch(q, filter) {
-      currentQuery = q;
-      currentFilter = filter || 'karaoke';
-      currentOffset = 0;
-      currentItems = [];
-      hasMoreResults = false;
-      showSearchMode();
-      
-      const el = document.getElementById('searchResults');
-      el.innerHTML = `<div class="empty-state">Searching...</div>`;
-      
-      const myReq = ++searchRequestId;
-      try {
-        const r = await fetch(API + `/api/search?q=${encodeURIComponent(q)}&filter=${encodeURIComponent(currentFilter)}&offset=0`, { signal: AbortSignal.timeout(15000) });
-        if (!r.ok) throw new Error();
-        const data = await r.json();
-        if (myReq !== searchRequestId) return;
-        
-        currentItems = data.items || [];
-        currentOffset = currentItems.length;
-        hasMoreResults = !!data.hasMore;
-        
-        if (!currentItems.length) {
-          el.innerHTML = `<div class="empty-state">No karaoke found for "<b>${escapeHtml(q)}</b>". Try another song.</div>`;
-          document.getElementById('loadMoreBtn').style.display = 'none';
-        } else {
-          el.innerHTML = currentItems.map(buildCardHtml).join('');
-          document.getElementById('loadMoreBtn').style.display = hasMoreResults ? 'block' : 'none';
-        }
-      } catch (e) {
-        if (myReq !== searchRequestId) return;
-        el.innerHTML = `<div class="empty-state" style="color:var(--danger)">Search failed. Check connection.</div>`;
-      }
-    }
-
-    async function loadMore() {
-      if (!currentQuery || !hasMoreResults) return;
-      const btn = document.getElementById('loadMoreBtn');
-      btn.disabled = true;
-      btn.textContent = '⏳ Loading...';
-      try {
-        const r = await fetch(API + `/api/search?q=${encodeURIComponent(currentQuery)}&filter=${encodeURIComponent(currentFilter)}&offset=${currentOffset}`, { signal: AbortSignal.timeout(15000) });
-        const data = await r.json();
-        const newItems = data.items || [];
-        currentItems = currentItems.concat(newItems);
-        currentOffset = currentItems.length;
-        hasMoreResults = !!data.hasMore;
-        
-        const el = document.getElementById('searchResults');
-        el.insertAdjacentHTML('beforeend', newItems.map(buildCardHtml).join(''));
-        btn.style.display = hasMoreResults ? 'block' : 'none';
-      } catch (e) {
-        toast('Load more failed.', 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '⬇ Load More';
-      }
-    }
-
-    function buildCardHtml(it) {
-      return `
-        <div class="sr-card">
-          <img class="sr-thumb" src="${escapeHtml(it.thumbnail || `https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg`)}" onerror="this.src='https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg'">
-          <div class="sr-info">
-            <div class="sr-title">${escapeHtml(it.title)}</div>
-            <div class="sr-meta">${escapeHtml(it.author || '')} ${it.isDuet ? '· 👥 DUET' : ''}</div>
-          </div>
-          <button class="sr-add-btn" onclick="reserveFromSearch('${escapeHtml(it.videoId)}', '${escapeAttr(it.title)}', ${it.isDuet})">➕</button>
-        </div>`;
-    }
-
-    let pendingDuet = null;
-    function reserveFromSearch(videoId, title, isDuet) {
-      if (!partyVerified) return toast('🚫 Join the party first.', 'error');
-      if (isDuet) {
-        pendingDuet = { videoId, title };
-        document.getElementById('duetSongTitle').textContent = title;
-        openModal('duetModal');
-        return;
-      }
-      addSongFromSearch(videoId, title, null);
-    }
-
-    function pickDuetPart(part) {
-      if (!pendingDuet) return;
-      const { videoId, title } = pendingDuet;
-      pendingDuet = null;
-      closeModal('duetModal');
-      addSongFromSearch(videoId, title, part);
-    }
-
-    function addSongFromSearch(videoId, title, part) {
-      const singer = getSingerName();
-      const displaySinger = part ? `${singer} (${part === 'boy' ? '👦 Boy' : '👧 Girl'})` : singer;
-      socket.emit('addSong', { videoId, title, singer: displaySinger });
-      if (navigator.vibrate) navigator.vibrate(20);
-      toast(`✓ Reserved${part ? ' ['+part+']' : ''}: ${title.substring(0, 20)}`, 'success');
-    }
-
-    // ================= VOICE SEARCH =================
-    let voiceRecognition = null;
-    let voiceRecording = false;
-
-    function initVoiceSearch() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const btn = document.getElementById('voiceSearchBtn');
-      if (!SR) {
-        btn.style.opacity = '0.3';
-        btn.onclick = () => toast('Voice search not supported.', 'error');
-        return;
-      }
-      voiceRecognition = new SR();
-      voiceRecognition.lang = navigator.language || 'en-US';
-      voiceRecognition.continuous = false;
-      voiceRecognition.interimResults = false;
-
-      voiceRecognition.onstart = () => { voiceRecording = true; btn.classList.add('recording'); };
-      voiceRecognition.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        document.getElementById('searchQuery').value = text;
-        if (text.length >= 2) runSearch(text, currentFilter);
-      };
-      voiceRecognition.onerror = () => { voiceRecording = false; btn.classList.remove('recording'); };
-      voiceRecognition.onend = () => { voiceRecording = false; btn.classList.remove('recording'); };
-    }
-
-    function toggleVoiceSearch() {
-      if (!voiceRecognition) return toast('Voice search not supported.', 'error');
-      if (voiceRecording) return voiceRecognition.stop();
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost') return toast('Voice needs HTTPS.', 'error');
-      try { voiceRecognition.start(); } catch(e) {}
-    }
-    initVoiceSearch();
-
-    // ================= QUEUE & TABS =================
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-content').forEach(el => el.style.display = el.id === 'tab-' + tab ? 'block' : 'none');
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
-      if (tab === 'history') loadHistory();
-      if (tab === 'favorites') renderFavorites();
-    }
-
-    async function refreshFavorites() {
-      try {
-        const data = await (await fetch(API + '/api/favorites?party=' + partyCode)).json();
-        favorites = data;
-        renderFavorites();
-      } catch {}
-    }
-
-    function renderFavorites() {
-      const el = document.getElementById('favList');
-      if (!favorites.length) return el.innerHTML = '<div class="empty-state">No favorites yet</div>';
-      el.innerHTML = favorites.map(f => `
-        <div class="sr-card" onclick="quickAdd('${f.videoId}', '${escapeAttr(f.title)}')" style="cursor:pointer;">
-          <img class="sr-thumb" src="https://i.ytimg.com/vi/${f.videoId}/mqdefault.jpg" onerror="this.style.display='none'">
-          <div class="sr-info"><div class="sr-title">${escapeHtml(f.title)}</div></div>
-          <span style="color:var(--accent); font-size:18px;">★</span>
-        </div>`).join('');
-    }
-
-    function quickAdd(videoId, title) {
-      if (!partyVerified) return toast('🚫 Join the party first.', 'error');
-      socket.emit('addSong', { videoId, title, singer: getSingerName() });
-      if (navigator.vibrate) navigator.vibrate(20);
-      toast('✓ ' + title.substring(0, 30));
-    }
-
-    async function loadHistory() {
-      try {
-        const data = await (await fetch(API + '/api/history?limit=50&party=' + partyCode)).json();
-        const el = document.getElementById('historyList');
-        if (!data.length) return el.innerHTML = '<div class="empty-state">No history yet</div>';
-        el.innerHTML = data.map(h => `
-          <div class="sr-card">
-            <div style="width:40px; height:40px; border-radius:8px; background:var(--surface-hover); display:flex; align-items:center; justify-content:center; font-size:18px;">🎤</div>
-            <div class="sr-info">
-              <div class="sr-title">${escapeHtml(h.singer)}</div>
-              <div class="sr-meta">${escapeHtml(h.title)}</div>
-            </div>
-          </div>`).join('');
-      } catch {}
-    }
-
-    function sendCmd(type) {
-      if (!partyVerified) return toast('🚫 Join the party first.', 'error');
-      if (!controlsUnlocked) return promptUnlock();
-      socket.emit(type, { adminToken });
-      if (navigator.vibrate) navigator.vibrate(15);
-    }
-
-    document.getElementById('volume').addEventListener('input', e => {
-      if (controlsUnlocked) socket.emit('volume', { value: e.target.value, adminToken });
-    });
-
-    socket.on('state', s => {
-      lastState = s;
-      if (typeof s.partyActive === 'boolean' && !s.partyActive && partyVerified) {
-        partyVerified = false;
-        localStorage.removeItem('videoke:partyCode');
-        showPartyGate('🎉 Party ended.');
-        document.getElementById('shareSection').classList.remove('show');
-        document.getElementById('headerPartyCode').style.display = 'none';
-      }
-      
-      const nowEl = document.getElementById('nowContent');
-      if (s.nowPlaying) {
-        nowEl.innerHTML = `
-          <div class="now-singer">${escapeHtml(s.nowPlaying.singer)}</div>
-          <div class="now-song">${escapeHtml(s.nowPlaying.title || s.nowPlaying.videoId)}</div>`;
-      } else {
-        nowEl.innerHTML = '<div class="now-song" style="font-style:italic;">Nothing playing</div>';
-      }
-      
-      document.getElementById('queueCount').textContent = s.queue.length;
-      document.getElementById('qTabBadge').textContent = s.queue.length;
-      renderQueue(s);
-    });
-
-    function renderQueue(s) {
-      const qEl = document.getElementById('queueList');
-      const myName = (localStorage.getItem('videoke:singerName') || '').toLowerCase();
-      if (!s.queue.length) return qEl.innerHTML = '<div class="empty-state">No reservations</div>';
-      
-      qEl.innerHTML = s.queue.map((q, i) => {
-        // Safer matching for "isMe"
-        const isMe = myName && q.singer.toLowerCase() === myName; 
-        const lockClass = controlsUnlocked ? '' : ' locked';
-        
-        return `
-          <div class="queue-item ${isMe ? 'is-me' : ''}">
-            <div class="pos">${i + 1}</div>
-            <div class="info">
-              <div class="singer">${isMe ? '<span class="me-badge">YOU</span>' : ''} ${escapeHtml(q.singer)}</div>
-              <div class="song">${escapeHtml(q.title || q.videoId || 'Unknown')}</div>
-            </div>
-            <div class="actions">
-              ${i > 0 ? `<button class="q-act${lockClass}" onclick="moveSong(${q.id}, 'up')">↑</button>` : ''}
-              ${i < s.queue.length - 1 ? `<button class="q-act${lockClass}" onclick="moveSong(${q.id}, 'down')">↓</button>` : ''}
-              <button class="q-act${lockClass}" onclick="removeSong(${q.id})" style="color:var(--danger)">✕</button>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    function removeSong(id) {
-      if (!controlsUnlocked) return promptUnlock();
-      if (confirm('Remove this song?')) socket.emit('removeSong', { id, adminToken });
-    }
-
-    function moveSong(id, dir) {
-      if (!controlsUnlocked) return promptUnlock();
-      socket.emit('moveSong', { id, direction: dir, adminToken });
-    }
-
-    // ================= ADMIN MODALS =================
-    function openModal(id) { document.getElementById(id).classList.add('show'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-    function openAdmin() { openModal('adminModal'); checkAdminAccess(); }
-    function openAdminFromGate() { document.getElementById('adminModal').style.zIndex = '9999'; openModal('adminModal'); checkAdminAccess(); }
-
-    async function checkAdminAccess() {
-      if (!adminToken) return showLoginForm();
-      document.getElementById('adminLoginForm').style.display = 'block';
-      document.getElementById('adminPanel').style.display = 'none';
-      document.getElementById('logoutBtn').style.display = 'none';
-      const valid = await verifyAdminToken();
-      if (valid) { adminVerified = true; showAdminPanel(); } 
-      else {
-        adminVerified = false; adminToken = null; localStorage.removeItem('videoke:adminToken'); showLoginForm();
-      }
-    }
-
-    function showLoginForm() {
-      document.getElementById('adminLoginForm').style.display = 'block';
-      document.getElementById('adminPanel').style.display = 'none';
-      document.getElementById('logoutBtn').style.display = 'none';
-      document.getElementById('adminPw').value = '';
-    }
-    
-    function showAdminPanel() {
-      document.getElementById('adminLoginForm').style.display = 'none';
-      document.getElementById('adminPanel').style.display = 'block';
-      document.getElementById('logoutBtn').style.display = 'block';
-      if (partyCode) document.getElementById('adminPartyCodeDisplay').textContent = partyCode;
-    }
-
-    async function doLogin() {
-      const pw = document.getElementById('adminPw').value;
-      if (!pw) return toast('Enter password', 'error');
-      if (!partyCode) return toast('Join a party first', 'error');
-      try {
-        const r = await fetch(API + '/api/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ party: partyCode, password: pw }),
-        });
-        if (!r.ok) throw new Error('Wrong password');
-        const { token } = await r.json();
-        adminToken = token; adminVerified = true;
-        localStorage.setItem('videoke:adminToken', token);
-        controlsUnlocked = true; localStorage.setItem('videoke:controlsUnlocked', '1');
-        updateControlsLock(); resetAutoLockTimer(); showAdminPanel();
-        toast('✓ Logged in', 'success');
-      } catch (e) {
-        toast('🔴 ' + e.message, 'error');
-      }
-    }
-
-    async function adminLogout() {
-      try { await fetch(API + '/api/admin/logout', { method: 'POST', headers: { 'X-Admin-Token': adminToken } }); } catch {}
-      adminToken = null; adminVerified = false;
-      localStorage.removeItem('videoke:adminToken'); localStorage.removeItem('videoke:controlsUnlocked');
-      stopAutoLockTimer(); updateControlsLock(); showLoginForm();
-      toast('🔒 Logged out', 'success');
-    }
-
-    async function adminAction(action) {
-      if (!adminToken) return toast('Login required', 'error');
-      if (!confirm(`Are you sure you want to ${action}?`)) return;
-      try {
-        const r = await fetch(API + '/api/admin/' + action, { method: 'POST', headers: { 'X-Admin-Token': adminToken } });
-        if (r.status === 401) { adminLogout(); throw new Error('Session expired'); }
-        if (!r.ok) throw new Error('Action failed');
-        toast('✓ ' + action, 'success');
-      } catch (e) { toast('❌ ' + e.message, 'error'); }
-    }
-
-    // ================= INIT =================
-    refreshFavorites();
-    loadRecommendations();
-    document.getElementById('remoteYear').textContent = new Date().getFullYear();
-    
-    // Party gate listeners
-    document.getElementById('partyCodeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPartyCode(); });
-    document.getElementById('partyCodeInput').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
-    document.getElementById('unlockPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
-
-  </script>
-</body>
-</html>
