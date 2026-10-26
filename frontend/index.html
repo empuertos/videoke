@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#0a0512">
   <title>VIDEoke — Start</title>
   <script src="/config.js"></script>
+  <!-- 🔥 IDINAGDAG: Socket.IO para sa Online Counter -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     :root { --gold: #ffd700; --red: #ff2e55; --bg: #0a0512; --card: #16101f; --dim: #8888a0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +15,29 @@
     .logo { font-size: 64px; margin-bottom: 10px; animation: float 2.4s ease-in-out infinite; }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
     h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, var(--gold), var(--red)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
-    .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 32px; max-width: 340px; line-height: 1.6; }
+    .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 24px; max-width: 340px; line-height: 1.6; }
+    
+    /* 🔥 CSS para sa Online Badge */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+    #onlineBadge {
+      display: none; /* Itatago muna, ipapakita pag may count */
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: #4ade80;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      transition: all 0.3s ease;
+    }
+
     .btn { padding: 16px 32px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; color: #fff; margin: 6px; transition: transform 0.15s, opacity 0.2s; width: 100%; max-width: 340px; -webkit-appearance: none; }
     .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -48,6 +72,12 @@
   <div class="logo">🎤</div>
   <h1>VIDEoke YT</h1>
   <div class="subtitle">Start your own karaoke party or join one</div>
+
+  <!-- 🔥 ONLINE COUNTER BADGE -->
+  <div id="onlineBadge">
+    <div style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80; animation: pulse 1.5s infinite;"></div>
+    <span id="onlineCountText">0</span> singers online
+  </div>
 
   <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
   <button class="btn btn-join" onclick="openJoinModal()">📱 Join a Party</button>
@@ -85,6 +115,30 @@
     const API = (window.VIDEOKE_CONFIG?.BACKEND_URL) || 'http://localhost:3000';
     let currentSession = null;
 
+    // 🔥 IDINAGDAG: Socket.IO Connection para sa Live Counter
+    const socket = io(API);
+    
+    socket.on('onlineCount', (count) => {
+      const badge = document.getElementById('onlineBadge');
+      const text = document.getElementById('onlineCountText');
+      if (badge && text) {
+        text.textContent = count;
+        // Ipakita ang badge kung may tao (kahit 1), itago kung 0
+        if (count > 0) {
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    });
+
+    socket.on('disconnect', () => {
+      // Itago ang badge kapag nawalan ng connection sa server
+      const badge = document.getElementById('onlineBadge');
+      if (badge) badge.style.display = 'none';
+    });
+
+    // --- EXISTING FUNCTIONS ---
     function guestLink() {
       if (!currentSession) return '';
       return window.location.origin + '/remote?party=' + encodeURIComponent(currentSession.partyCode);
@@ -116,7 +170,6 @@
       }
     }
 
-    // 🔧 FIX: use relative path so we never land on the API host by mistake
     function openHostScreen() {
       if (!currentSession?.hostCode) return;
       window.location.href = '/host?session=' + encodeURIComponent(currentSession.hostCode);
