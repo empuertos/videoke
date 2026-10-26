@@ -12,10 +12,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
-
-// BINAGO DITO: Ginawang 24 hours (1 day) ang validity ng party
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; 
-
 const TOKEN_TTL_MS  = 4 * 60 * 60 * 1000;
 const MAX_SESSIONS  = 300;
 const MAX_QUEUE     = 50;
@@ -562,9 +559,17 @@ io.on('connection', (socket) => {
   socket.data.sessionId = null;
   socket.data.role = null;
 
-  socket.on('registerHost', ({ hostCode } = {}) => {
-    const s = resolveSession({ host: String(hostCode || '').trim() });
+  // BINAGO DITO: Pwedeng hostCode o partyCode ang gamitin para maging Host
+  socket.on('registerHost', ({ hostCode, partyCode } = {}) => {
+    let s = null;
+    if (hostCode) {
+      s = resolveSession({ host: String(hostCode || '').trim() });
+    } else if (partyCode) {
+      s = resolveSession({ party: String(partyCode || '').toUpperCase().trim() });
+    }
+    
     if (!s) return socket.emit('hostRejected', { reason: 'invalid_host' });
+    
     socket.data.sessionId = s.id;
     socket.data.role = 'host';
     socket.join('sess:' + s.id);
