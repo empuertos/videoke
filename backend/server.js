@@ -24,7 +24,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 // ---------- UTILS ----------
 const now = () => Date.now();
 const genCode = (len, abc = PARTY_CHARS) => {
-  const b = crypto.randomBytes(len);
+  const b = crypto.randomBytes(len); 
   let s = '';
   for (let i = 0; i < len; i++) s += abc[b[i] % abc.length];
   return s;
