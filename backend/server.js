@@ -108,6 +108,56 @@ const partyIndex = new Map();
 const hostIndex  = new Map();
 const tokenIndex = new Map();
 
+// 🔥 NEW: GLOBAL ANALYTICS — powers /api/stats and the landing-page stats bar
+const analytics = {
+  startedAt: now(),
+  totalPartiesAllTime: 0,
+  totalPartiesToday: 0,
+  todayDate: new Date().toISOString().slice(0, 10),
+  peakOnlineToday: 0,
+  peakOnlineAllTime: 0,
+  uniqueVisitors: new Set(),
+};
+
+function rolloverDay() {
+  const t = new Date().toISOString().slice(0, 10);
+  if (analytics.todayDate !== t) {
+    analytics.todayDate = t;
+    analytics.totalPartiesToday = 0;
+    analytics.peakOnlineToday = 0;
+  }
+}
+
+function countOnlineInParties() {
+  let n = 0;
+  for (const [, sock] of io.of('/').sockets) {
+    if (sock.data.sessionId) n++;
+  }
+  return n;
+}
+
+function getGlobalStats() {
+  rolloverDay();
+  const onlineNow = countOnlineInParties();
+  if (onlineNow > analytics.peakOnlineToday) analytics.peakOnlineToday = onlineNow;
+  if (onlineNow > analytics.peakOnlineAllTime) analytics.peakOnlineAllTime = onlineNow;
+  return {
+    onlineNow,
+    activeParties: sessions.size,
+    partiesToday: analytics.totalPartiesToday,
+    partiesAllTime: analytics.totalPartiesAllTime,
+    uniqueVisitors: analytics.uniqueVisitors.size,
+    peakOnlineToday: analytics.peakOnlineToday,
+    peakOnlineAllTime: analytics.peakOnlineAllTime,
+    uptimeSeconds: Math.floor((now() - analytics.startedAt) / 1000),
+  };
+}
+
+function broadcastStats() {
+  try { io.emit('globalStats', getGlobalStats()); } catch (e) {}
+}
+// 🔥 END NEW
+
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 let saveTimer = null;
 function persistSoon() {
@@ -173,7 +223,15 @@ function newSession() {
   sessions.set(id, s);
   partyIndex.set(partyCode, id);
   hostIndex.set(hostCode, id);
+
+  // 🔥 NEW: bump all-time + today counters
+  rolloverDay();
+  analytics.totalPartiesAllTime++;
+  analytics.totalPartiesToday++;
+  // 🔥 END NEW
+
   persistSoon();
+  broadcastStats();
   return s;
 }
 
@@ -193,6 +251,7 @@ function endSession(s, reason = 'ended') {
   partyIndex.delete(s.partyCode);
   hostIndex.delete(s.hostCode);
   persistSoon();
+  broadcastStats(); // 🔥 NEW
 }
 
 function resolveSession({ host, party }) {
@@ -223,6 +282,10 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 loadSessions();
+
+// 🔥 NEW: broadcast stats every 10s so all connected clients see live numbers
+setInterval(broadcastStats, 10_000);
+// 🔥 END NEW
 
 // ---------- RATE LIMIT ----------
 const rl = new Map();
@@ -352,8 +415,19 @@ async function searchYT(query, maxResults = 25) {
 app.get('/', (req, res) => res.json({ ok: true, sessions: sessions.size }));
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
+// 🔥 NEW: public stats endpoint
+app.get('/api/stats', (req, res) => res.json(getGlobalStats()));
+// 🔥 END NEW
+
 app.post('/api/session/create', (req, res) => {
   const ip = req.ip || 'anon';
+
+  // 🔥 NEW: track unique visitors
+  if (req.ip && analytics.uniqueVisitors.size < 100_000) {
+    analytics.uniqueVisitors.add(req.ip);
+  }
+  // 🔥 END NEW
+
   if (!limit('create:' + ip, 5, 60_000))
     return res.status(429).json({ error: 'Too many sessions from your IP. Wait a minute.' });
   try {
@@ -578,6 +652,15 @@ function buildState(s) {
     queue: s.queue,
     nowPlaying: s.nowPlaying,
     favorites: s.favorites,
+
+    // 🔥 NEW: per-party online counts
+    onlineNow: {
+      hosts: s.connectedHosts,
+      guests: s.connectedGuests,
+      total: s.connectedHosts + s.connectedGuests,
+    },
+    // 🔥 END NEW
+
     stats: {
       queueLength: s.queue.length,
       singerCount: new Set(s.queue.map(q => q.singer)).size,
@@ -632,7 +715,12 @@ io.on('connection', (socket) => {
     socket.join('host:' + s.id);
     s.connectedHosts++;
     touch(s);
-    socket.emit('state', buildState(s));
+
+    // 🔥 NEW: broadcast full state (with onlineNow) + refresh site-wide stats
+    broadcast(s);
+    broadcastStats();
+    // 🔥 END NEW
+
     socket.emit('partyStatus', { active: true, code: s.partyCode });
     console.log(`[${role}] joined ${s.partyCode}`);
   });
@@ -645,8 +733,10 @@ io.on('connection', (socket) => {
     socket.join('sess:' + s.id);
     s.connectedGuests++;
     touch(s);
+
     socket.emit('partyJoined', { ok: true });
-    socket.emit('state', buildState(s));
+    broadcast(s);        // 🔥 NEW
+    broadcastStats();    // 🔥 NEW
   });
 
   const withSession = (fn) => (payload) => {
@@ -774,6 +864,11 @@ io.on('connection', (socket) => {
       s.connectedHosts = Math.max(0, s.connectedHosts - 1);
     else
       s.connectedGuests = Math.max(0, s.connectedGuests - 1);
+
+    // 🔥 NEW: reflect departure to other clients immediately
+    broadcast(s);
+    broadcastStats();
+    // 🔥 END NEW
   });
 });
 
