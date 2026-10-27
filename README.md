@@ -31,14 +31,29 @@ Created with ❤️ by **Steve**
 - ✅ **Open source (MIT)** — fork it, self-host it, do whatever you want
 - ✅ **Any device** — phone, tablet, laptop, smart TV
 
-If this app made your karaoke night better and you'd like to say thank you, you're welcome to send a small tip. **It's totally optional** — VIDEoke YT will always be free.
+If this app made your karaoke night better and you'd like to say thank you, you're welcome to send a small tip via **GCash**, **Maya**, or **PalawanPay**. **It's totally optional** — VIDEoke YT will always be free.
 
 <div align="center">
 
-<!-- 📸 REPLACE with your own QR code — save as ./support-qr.jpg in the repo root -->
-<img src="./support-qr.jpg" alt="Tip QR code — GCash / Maya / Palawanpay" width="200" />
+<!-- 📸 Inayos ang path para hanapin sa frontend folder -->
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="./frontend/support-qr-gcash.png" alt="GCash QR" width="180" /><br>
+      <b>💙 GCash</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="./frontend/support-qr-maya.png" alt="Maya QR" width="180" /><br>
+      <b>💚 Maya</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="./frontend/support-qr-palawanpay.png" alt="PalawanPay QR" width="180" /><br>
+      <b>💜 PalawanPay</b>
+    </td>
+  </tr>
+</table>
 
-**📱 Scan to send a tip via GCash · Maya · Palawanpay · any e-wallet**
+**📱 Scan any QR with your phone camera**
 
 💝 *Every tip keeps the servers running. Thank you!* 🙏
 
@@ -90,17 +105,16 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **100% free** — no fees, no ads, no paywall, no subscriptions
 - **No signup, no login** — scan a QR, pick a song, sing
 - **Anyone can use it** — any phone, any TV, anywhere
-- **Optional tips** — if you enjoy it, you can send a thank-you via the QR on the landing page
+- **Optional tips** — GCash, Maya, and PalawanPay QR codes on the landing page
 - **Open source** — MIT licensed, self-host or fork freely
 - **No data collection** — no analytics trackers, no cookies, no user profiles
 
 ### 📖 FAQ Page
 
 - **Dedicated `/faq` page** — clean, styled, mobile-friendly
-- **Accessible from** — landing page footer, remote header (❓ icon), host idle screen
-- **Also reachable at** — `/help` and `/about`
-- **Native `<details>` accordion** — instant expand/collapse, no JS needed
-- **Covers** — getting started, privacy, troubleshooting, advanced tips
+- **Bilingual** — English and Tagalog toggle for better understanding
+- **Accessible from** — landing page footer, remote header (❓ Help button), host idle screen
+- **Covers** — getting started, remote controls, privacy, troubleshooting, advanced tips
 
 ### 🏢 Multi-Tenant Architecture
 
@@ -115,7 +129,6 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Landing-page stats bar** — shows 🟢 online · 🎉 active parties · 👥 unique visitors
 - **Auto-refreshes every 15 seconds**
 - **`/api/stats` endpoint** — public JSON with `onlineVisitors`, `totalVisitors`, `activeParties`, `peakOnlineAllTime`, etc.
-- **5-minute online window** — "online now" = unique IPs hitting the site in the last 5 minutes
 
 ### 🎵 Host Screen (TV / PC / Laptop)
 
@@ -123,30 +136,23 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Auto-skip** — deleted, blocked, or non-embeddable YouTube videos are skipped instantly
 - **AI Voice Announcer** — TTS announces "Next up, Juan, singing Tadhana by Moira"
 - **Smart HUD fade** — "Now Singing" and "Reserved" boxes fade to 55% after 5 seconds so lyrics stay visible
-- **Always-visible mini QR** — small QR + party code at the bottom-left, guests scan anytime
+- **Always-visible mini QR** — small QR + party code at the bottom-left
 - **Reservation popups** — sleek slide-in notification when a new song is added
-- **Hidden YouTube UI** — custom click-blocker hides all YouTube controls; only your host screen remains
+- **Hidden YouTube UI** — custom click-blocker hides all YouTube controls
 - **Custom fullscreen** — fullscreen button with auto-attempt on first play
 - **Duet support** — announces "singing the boy part" / "girl part"
-- **Reserved queue** — horizontal scroll strip showing next 5 singers at the top
-- **Keyboard shortcuts** — `P` pause/play, `S` skip, `F` fullscreen
-- **Help/FAQ link** on the idle screen
 
 ### 📱 Remote Controller (Mobile)
 
 - **Search or paste** — two modes: paste a YouTube link, or search our karaoke-only catalog
+- **Dynamic Recommendations** — refreshes every 15 minutes with fresh, trending karaoke searches
 - **Karaoke-only search** — strict filtering: rejects official music videos, concerts, live performances
 - **Voice search** — speak a song title to search hands-free
 - **Duet detection** — automatically detects duets and asks "Boy Part or Girl Part?"
-- **Category chips** — OPM, Love Songs, Duets, Rock Ballads, Power Ballads, and more
-- **Recommendations** — trending karaoke plays instantly, no typing needed
 - **Native YouTube app** — deep-link button opens the app directly on Android/iOS
-- **Load more** — paginated results; endless karaoke scrolling
-- **Favorites** — one-tap save of favorite songs for later
-- **History** — see what played earlier
-- **Share party** — QR + link + native share sheet
+- **Favorites & History** — save songs and see what played earlier
 - **Guest auto-naming** — no name? Automatically "Guest 123" (stable per device)
-- **❓ help icon** in the header — opens the FAQ anytime
+- **Prominent Help Button** — blue ❓ Help button in header and under name input
 
 ### 🔒 Security
 
@@ -156,18 +162,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Per-party tokens** — an admin token from party A cannot control party B
 - **Encrypted at rest** — admin passwords stored with AES-256-GCM
 - **Rate limits** — session creation, search, yt-info, admin login, host-verify, party-verify all rate-limited
-- **Per-user add limit** — max 5 songs/minute, max 5 songs in queue at once per singer
 - **XSS-safe rendering** — all user content rendered with `textContent`-safe patterns and `data-*` attributes
-- **Token cleanup** — expired admin tokens evicted every hour (no memory leak)
-
-### 🎨 UX Polish
-
-- **Progress-aware queue** — each entry shows estimated wait time
-- **Connection status** — connected/disconnected dot in the header
-- **Offline resilience** — socket auto-reconnects; state resyncs automatically
-- **PWA-ready** — installable to home screen on Android and iOS
-- **English-only UI** — clean, consistent interface
-- **Duplicate-tap guard** — prevents accidental double-click actions on mobile
 
 ---
 
