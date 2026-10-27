@@ -1,11 +1,9 @@
 // =====================================================
-// VIDEOKE YT — Multi-tenant backend (hardened v3.2)
-// Changes from v3.1:
-//   • FIX #3 — keep adminPasswordEnc across restarts
-//   • FIX #4 — rate limits on /api/host/verify,
-//              /api/verify-party, /api/party
-//   • FIX #5 — proactive tokenIndex eviction
-//   • FIX #6 — persistSoon() in startNext()
+// VIDEOKE YT — Multi-tenant backend (hardened v3.3)
+// Changes from v3.2:
+//   • NEW — /api/stats tracks landing-page visits and
+//           returns onlineVisitors + totalVisitors
+//           (was collected but never exposed)
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -124,6 +122,11 @@ const analytics = {
   peakOnlineAllTime: 0,
   uniqueVisitors: new Set(),
 };
+
+// NEW (v3.3): track recent visitors (last 5 min) so /api/stats
+// can return a real "online now" number without needing
+// Socket.IO on the landing page.
+const recentVisitors = new Map();
 
 function rolloverDay() {
   const t = new Date().toISOString().slice(0, 10);
@@ -425,7 +428,26 @@ async function searchYT(query, maxResults = 25) {
 // =====================================================
 app.get('/', (req, res) => res.json({ ok: true, sessions: sessions.size }));
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
-app.get('/api/stats', (req, res) => res.json(getGlobalStats()));
+
+// NEW (v3.3): /api/stats tracks landing-page visits and returns
+// onlineVisitors + totalVisitors for the landing page stats bar.
+app.get('/api/stats', (req, res) => {
+  const t = now();
+  if (req.ip) {
+    if (analytics.uniqueVisitors.size < 100_000) {
+      analytics.uniqueVisitors.add(req.ip);
+    }
+    recentVisitors.set(req.ip, t);
+  }
+  // Cleanup expired (last 5 min window)
+  const cutoff = t - 5 * 60 * 1000;
+  for (const [ip, ts] of recentVisitors) if (ts < cutoff) recentVisitors.delete(ip);
+
+  const stats = getGlobalStats();
+  stats.onlineVisitors = recentVisitors.size;            // NEW
+  stats.totalVisitors  = analytics.uniqueVisitors.size;  // NEW
+  res.json(stats);
+});
 
 app.post('/api/session/create', (req, res) => {
   const ip = req.ip || 'anon';
