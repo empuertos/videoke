@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0a0512">
   <title>VIDEoke — Start</title>
+  <meta name="description" content="Free multi-tenant YouTube karaoke. No ads, no fees, forever.">
   <script src="/config.js"></script>
   <style>
     :root { --gold: #ffd700; --red: #ff2e55; --green: #4ade80; --bg: #0a0512; --card: #16101f; --dim: #8888a0; }
@@ -15,7 +16,12 @@
     h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, var(--gold), var(--red)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
     .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 16px; max-width: 340px; line-height: 1.6; }
 
-    /* NEW: STATS BAR */
+    /* FREE FOREVER BADGE */
+    .free-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; margin-bottom: 24px; background: linear-gradient(135deg, rgba(74,222,128,0.12), rgba(255,215,0,0.08)); border: 1.5px solid rgba(74,222,128,0.4); border-radius: 24px; font-size: 12px; font-weight: 800; color: #fff; letter-spacing: 0.3px; box-shadow: 0 4px 20px rgba(74,222,128,0.15); }
+    .free-badge .pill-icon { font-size: 15px; }
+    .free-badge .pill-tag { color: var(--green); text-transform: uppercase; font-size: 10px; letter-spacing: 1.5px; padding: 2px 8px; background: rgba(74,222,128,0.15); border-radius: 10px; }
+
+    /* STATS BAR */
     .stats-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
     .stat-chip { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff; transition: all 0.3s; }
     .stat-chip.highlight { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
@@ -24,7 +30,6 @@
     .stat-chip .stat-icon { font-size: 14px; }
     .stat-chip .stat-label { color: var(--dim); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
     .stat-chip .stat-num { font-variant-numeric: tabular-nums; min-width: 12px; display: inline-block; }
-    /* END STATS BAR */
 
     .btn { padding: 16px 32px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; color: #fff; margin: 6px; transition: transform 0.15s, opacity 0.2s; width: 100%; max-width: 340px; -webkit-appearance: none; }
     .btn:active { transform: scale(0.97); }
@@ -43,8 +48,21 @@
     .result-card button:active { transform: scale(0.98); }
     .btn-open-host { background: linear-gradient(135deg, #22c55e, #16a34a); }
     .btn-copy { background: #2a1a1a; border: 1px solid #444; margin-top: 8px; }
-    .footer { margin-top: 50px; padding: 24px 20px 20px; border-top: 1px solid rgba(255, 255, 255, 0.06); text-align: center; font-size: 12px; color: #666; letter-spacing: 0.5px; line-height: 1.9; max-width: 420px; width: 100%; }
+
+    /* SUPPORT THE DEVELOPER */
+    .support-card { margin-top: 40px; padding: 24px 20px; background: linear-gradient(180deg, rgba(255,215,0,0.06) 0%, rgba(10,5,18,0.4) 100%); border: 1px solid rgba(255,215,0,0.22); border-radius: 20px; max-width: 420px; width: 100%; text-align: center; }
+    .support-title { font-size: 15px; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; margin-bottom: 10px; }
+    .support-text { font-size: 12px; line-height: 1.7; color: #c0c0d0; margin-bottom: 18px; }
+    .support-text b { color: #fff; }
+    .support-qr-wrap { display: inline-block; padding: 10px; background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); margin-bottom: 12px; }
+    .support-qr { display: block; width: 180px; height: 180px; border-radius: 8px; object-fit: contain; }
+    .support-hint { font-size: 11px; color: var(--dim); font-style: italic; line-height: 1.5; }
+    .support-thanks { margin-top: 14px; font-size: 11px; color: #a0a0b0; letter-spacing: 0.3px; }
+    .support-thanks b { color: var(--gold); }
+
+    .footer { margin-top: 36px; padding: 24px 20px 20px; border-top: 1px solid rgba(255, 255, 255, 0.06); text-align: center; font-size: 12px; color: #666; letter-spacing: 0.5px; line-height: 1.9; max-width: 420px; width: 100%; }
     .footer b { color: var(--gold); font-weight: 800; }
+    .footer .no-ads { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 12px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3); border-radius: 20px; font-size: 10px; font-weight: 700; color: var(--green); letter-spacing: 0.5px; text-transform: uppercase; }
     .modal-bg { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-bg.show { display: flex; }
     .modal { background: var(--card); padding: 24px; border-radius: 20px; max-width: 360px; width: 100%; border: 1px solid #333; }
@@ -61,7 +79,14 @@
   <h1>VIDEoke YT</h1>
   <div class="subtitle">Start your own karaoke party or join one</div>
 
-  <!-- NEW: STATS BAR -->
+  <!-- FREE FOREVER BADGE -->
+  <div class="free-badge">
+    <span class="pill-icon">🎉</span>
+    <span class="pill-tag">FREE</span>
+    <span>No fees · No ads · No signup · Anyone can use it</span>
+  </div>
+
+  <!-- STATS BAR -->
   <div class="stats-bar" id="statsBar">
     <div class="stat-chip" id="chipOnline">
       <span class="stat-dot"></span>
@@ -79,7 +104,6 @@
       <span class="stat-label">visitors</span>
     </div>
   </div>
-  <!-- END STATS BAR -->
 
   <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
   <button class="btn btn-join" onclick="openJoinModal()">📱 Join a Party</button>
@@ -98,9 +122,30 @@
     <button class="btn-copy" onclick="copyToClipboard(guestLink())">🔗 Copy Guest Link</button>
   </div>
 
+  <!-- SUPPORT THE DEVELOPER -->
+  <div class="support-card">
+    <div class="support-title">💝 Support the Developer</div>
+    <div class="support-text">
+      VIDEoke YT is <b>100% free forever</b> — no fees, no ads, no paywalls, no signup. Anyone can start a party in seconds.
+      <br><br>
+      If this app made your karaoke night better, you're welcome to send a small thank-you tip. <b>Totally optional</b> — you can keep using it for free, always. 🙏
+    </div>
+    <div class="support-qr-wrap">
+      <!-- 📸 REPLACE THIS IMAGE: save your GCash / Maya / PayPal QR as "support-qr.png" in the project root -->
+      <img
+        src="/support-qr.png"
+        alt="Scan to send a tip — GCash / Maya / PayPal"
+        class="support-qr"
+        onerror="this.parentElement.style.display='none'">
+    </div>
+    <div class="support-hint">📱 Scan with your phone camera — GCash · Maya · PayPal · any e-wallet</div>
+    <div class="support-thanks">Every tip keeps the servers running. <b>Thank you! 🎤</b></div>
+  </div>
+
   <div class="footer">
     <div style="font-size:14px; color:#8888a0; font-weight:700; letter-spacing:1px; margin-bottom:8px;">🎤 VIDEoke YT</div>
     <div>Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
+    <div class="no-ads">✅ 0 ads · 0 trackers · Always free</div>
     <div style="margin-top:8px; font-size:10px; opacity:0.55; letter-spacing:1px; text-transform:uppercase;">© <span id="copyrightYear"></span> · All rights reserved</div>
   </div>
 
@@ -122,7 +167,6 @@
       return window.location.origin + '/remote?party=' + encodeURIComponent(currentSession.partyCode);
     }
 
-    // NEW: Load site-wide stats from backend
     async function loadStats() {
       try {
         const r = await fetch(API + '/api/stats', { signal: AbortSignal.timeout(8000) });
@@ -215,7 +259,6 @@
       } catch {}
     })();
 
-    // NEW: initial load + poll every 15s
     loadStats();
     setInterval(loadStats, 15000);
 
