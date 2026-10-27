@@ -107,7 +107,6 @@
     <div class="section">
       <div class="section-title" data-i18n="sec2_title">📱 How to Use the Remote</div>
       
-      <!-- BAGONG DAGDAG: SINGER NAME INSTRUCTIONS -->
       <details>
         <summary data-i18n="sec2_q_name">How do I set my name as a singer?</summary>
         <div class="answer" data-i18n="sec2_a_name">At the top of the Remote page, type your name in the <b>"🎤 Your Name (Singer)"</b> box before reserving a song. This way, the TV screen will announce your name properly (e.g., "Next up, Juan!").<br><br>If you leave it blank, the system will automatically assign you a <b>Guest name</b> (like "Guest 123") so you can still sing and track your turn!</div>
@@ -129,10 +128,28 @@
         <summary data-i18n="sec2_q3">What does the 👥 DUET badge mean?</summary>
         <div class="answer" data-i18n="sec2_a3">Some karaoke tracks have both male and female parts. If you pick a duet, the app will ask if you want to sing the <b>👦 Boy Part</b> or <b>👧 Girl Part</b>. The TV screen will automatically announce which part you are singing so the crowd knows!</div>
       </details>
+
+      <!-- BAGONG DAGDAG: WALANG PASSWORD PARA MAKA-REQUEST -->
       <details>
-        <summary data-i18n="sec2_q4">How do I unlock the playback controls?</summary>
-        <div class="answer" data-i18n="sec2_a4">By default, the <b>Pause, Skip, Stop, and Volume</b> buttons are locked (🔒) so guests don't accidentally stop the music.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the controls will unlock for 10 minutes.</div>
+        <summary data-i18n="sec2_q_req">Do I need an Admin Password to request a song?</summary>
+        <div class="answer" data-i18n="sec2_a_req"><b>No, you don't!</b> Anyone who joins the party can search or paste a YouTube link and tap <b>➕ Reserve</b> without entering any password. The Admin Password is only needed for controlling the playback (Pause, Play, Skip) and managing the queue (moving/deleting songs). So go ahead and request your songs freely!</div>
       </details>
+
+      <details>
+        <summary data-i18n="sec2_q4">Can I control the music (Pause, Play, Skip, Stop)?</summary>
+        <div class="answer" data-i18n="sec2_a4">Only the Host or someone with the <b>Admin Password</b> can control the music. The <b>Pause, Play, Skip, and Stop</b> buttons are locked (🔒) by default so guests don't accidentally stop the party.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the buttons will be active for 10 minutes.</div>
+      </details>
+
+      <details>
+        <summary data-i18n="sec2_q_move">Can I move my reserved song to the top of the queue?</summary>
+        <div class="answer" data-i18n="sec2_a_move">Yes! But you need the <b>Admin Password</b> to do this. Once you unlock the controls using the Admin Password, go to the <b>📋 Queue</b> tab. You will see <b>up (⬆️)</b> and <b>down (⬇️)</b> arrows next to the songs. Tap the up arrow to move your song to the top or any other slot you want.<br><br>💡 <b>Note:</b> Guests cannot reorder the queue without the password to keep the party fair and organized.</div>
+      </details>
+
+      <details>
+        <summary data-i18n="sec2_q_delete">Can I delete a reserved song?</summary>
+        <div class="answer" data-i18n="sec2_a_delete">Yes, you can delete a reserved song, but you need <b>Admin Access</b> (Admin Password). Once you unlock the controls, go to the <b>📋 Queue</b> tab and tap the <b>✕ (remove)</b> button next to the song you want to delete.<br><br>💡 <b>Note:</b> This is useful for removing duplicate requests or songs added by mistake.</div>
+      </details>
+
       <details>
         <summary data-i18n="sec2_q5">Why do I get an "Admin only" error?</summary>
         <div class="answer" data-i18n="sec2_a5">Only the host device should control playback. If you tap Skip or Stop without logging in as Admin, the app will block you. This keeps the karaoke party running smoothly without interruptions!</div>
@@ -215,7 +232,7 @@
       <div data-i18n="footer_created">Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
       <div class="no-ads" data-i18n="footer_no_ads">✅ 0 ads · 0 trackers · Always free</div>
       <div style="margin-top:14px;">
-        <a class="github-btn" href="https://github.com/empuertos/videoke" target="_blank" rel="noopener">
+        <a class="github-btn" href="https://github.com/your-username/videoke" target="_blank" rel="noopener">
           📖 View full README on GitHub
         </a>
       </div>
@@ -251,8 +268,19 @@
         sec2_a2: "This is a shortcut! Tapping it will open the native YouTube app on your phone so you can search for a karaoke video faster. Once you find one, just copy the link and paste it back into VIDEoke.",
         sec2_q3: "What does the 👥 DUET badge mean?",
         sec2_a3: "Some karaoke tracks have both male and female parts. If you pick a duet, the app will ask if you want to sing the <b>👦 Boy Part</b> or <b>👧 Girl Part</b>. The TV screen will automatically announce which part you are singing so the crowd knows!",
-        sec2_q4: "How do I unlock the playback controls?",
-        sec2_a4: "By default, the <b>Pause, Skip, Stop, and Volume</b> buttons are locked (🔒) so guests don't accidentally stop the music.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the controls will unlock for 10 minutes.",
+        
+        sec2_q_req: "Do I need an Admin Password to request a song?",
+        sec2_a_req: "<b>No, you don't!</b> Anyone who joins the party can search or paste a YouTube link and tap <b>➕ Reserve</b> without entering any password. The Admin Password is only needed for controlling the playback (Pause, Play, Skip) and managing the queue (moving/deleting songs). So go ahead and request your songs freely!",
+        
+        sec2_q4: "Can I control the music (Pause, Play, Skip, Stop)?",
+        sec2_a4: "Only the Host or someone with the <b>Admin Password</b> can control the music. The <b>Pause, Play, Skip, and Stop</b> buttons are locked (🔒) by default so guests don't accidentally stop the party.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the buttons will be active for 10 minutes.",
+        
+        sec2_q_move: "Can I move my reserved song to the top of the queue?",
+        sec2_a_move: "Yes! But you need the <b>Admin Password</b> to do this. Once you unlock the controls using the Admin Password, go to the <b>📋 Queue</b> tab. You will see <b>up (⬆️)</b> and <b>down (⬇️)</b> arrows next to the songs. Tap the up arrow to move your song to the top or any other slot you want.<br><br>💡 <b>Note:</b> Guests cannot reorder the queue without the password to keep the party fair and organized.",
+        
+        sec2_q_delete: "Can I delete a reserved song?",
+        sec2_a_delete: "Yes, you can delete a reserved song, but you need <b>Admin Access</b> (Admin Password). Once you unlock the controls, go to the <b>📋 Queue</b> tab and tap the <b>✕ (remove)</b> button next to the song you want to delete.<br><br>💡 <b>Note:</b> This is useful for removing duplicate requests or songs added by mistake.",
+        
         sec2_q5: 'Why do I get an "Admin only" error?',
         sec2_a5: "Only the host device should control playback. If you tap Skip or Stop without logging in as Admin, the app will block you. This keeps the karaoke party running smoothly without interruptions!",
 
@@ -306,8 +334,19 @@
         sec2_a2: "Ito ay shortcut! Pag ito ay tinap, bubukas ang YouTube app sa phone mo para mas mabilis maghanap ng karaoke video. Kapag nakahanap ka na, i-copy ang link at i-paste pabalik sa VIDEoke.",
         sec2_q3: "Ano ang ibig sabihin ng 👥 DUET badge?",
         sec2_a3: "Ang ibang karaoke tracks ay may parteng lalaki at babae. Kapag duet ang pinili mo, tatanungin ka ng app kung <b>👦 Boy Part</b> o <b>👧 Girl Part</b> ang kakantahin mo. Awtomatikong iaanunsyo ng TV screen kung anong part ang kinakanta mo para alam ng mga tao!",
-        sec2_q4: "Paano i-unlock ang playback controls?",
-        sec2_a4: "Bilang default, naka-lock (🔒) ang <b>Pause, Skip, Stop, at Volume</b> buttons para hindi aksidenteng mapatigil ng bisita ang musika.<br><br>Para i-unlock, i-tap ang <b>⚙️ (Admin)</b> icon sa kanang taas, mag-log in gamit ang Admin Password, at mag-a-unlock ang controls ng 10 minuto.",
+        
+        sec2_q_req: "Kailangan ko ba ng Admin Password para makapag-request ng kanta?",
+        sec2_a_req: "<b>Hindi, hindi kailangan!</b> Kahit sino na sumali sa party ay pwedeng maghanap o mag-paste ng YouTube link at i-tap ang <b>➕ Reserve</b> nang walang password. Ang Admin Password ay para lang sa pag-control ng playback (Pause, Play, Skip) at pag-manage ng queue (paglipat o pag-delete ng kanta). Kaya mag-request lang kayo nang mag-request!",
+        
+        sec2_q4: "Pwede ko bang i-control ang musika (Pause, Play, Skip, Stop)?",
+        sec2_a4: "Ang Host o ang may alam ng <b>Admin Password</b> lamang ang pwedeng mag-control ng musika. Naka-lock (🔒) bilang default ang <b>Pause, Play, Skip, at Stop</b> buttons para hindi aksidenteng mapatigil ng bisita ang party.<br><br>Para i-unlock, i-tap ang <b>⚙️ (Admin)</b> icon sa kanang taas, mag-log in gamit ang Admin Password, at magiging aktibo ang mga button ng 10 minuto.",
+        
+        sec2_q_move: "Pwede ko bang ilagay sa unahan (top) ang naka-reserve kong kanta?",
+        sec2_a_move: "Oo! Pero kailangan mo ang <b>Admin Password</b> para magawa ito. Kapag na-unlock mo na ang controls gamit ang Admin Password, pumunta sa <b>📋 Queue</b> tab. Makikita mo ang <b>pataas (⬆️)</b> at <b>pababa (⬇️)</b> na arrow sa tabi ng mga kanta. I-tap ang pataas na arrow para mailipat ang kanta mo sa unahan o kahit saang slot na gusto mo.<br><br>💡 <b>Paalala:</b> Hindi pwedeng i-reorder ng mga bisita ang queue nang walang password para manatiling patas at maayos ang party.",
+        
+        sec2_q_delete: "Pwede ko bang i-delete ang isang naka-reserve na kanta?",
+        sec2_a_delete: "Oo, pwede mong i-delete ang isang naka-reserve na kanta, pero kailangan mo ng <b>Admin Access</b> (Admin Password). Kapag na-unlock mo na ang controls, pumunta sa <b>📋 Queue</b> tab at i-tap ang <b>✕ (remove)</b> button sa tabi ng kantang gusto mong tanggalin.<br><br>💡 <b>Paalala:</b> Ito ay kapaki-pakinabang para mag-alis ng mga doble o mga kantang naidagdag nang mali.",
+        
         sec2_q5: 'Bakit may "Admin only" error?',
         sec2_a5: "Ang host device lamang ang dapat may control sa playback. Kapag nag-tap ka ng Skip o Stop nang hindi naka-log in bilang Admin, haharangin ka ng app. Ginagawa ito para tuloy-tuloy at walang abala ang karaoke party!",
 
