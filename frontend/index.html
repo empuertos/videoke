@@ -7,14 +7,12 @@
   <title>VIDEoke YT — Free Karaoke</title>
   <meta name="description" content="Free multi-tenant YouTube karaoke. No ads, no fees, forever.">
   
-  <!-- OPEN GRAPH META TAGS (For Messenger/Facebook Link Preview) -->
   <meta property="og:title" content="🎤 VIDEoke YT — Free Karaoke">
   <meta property="og:description" content="Start a free karaoke party! Scan the QR, pick a song, and sing. 100% free, no ads, no signup.">
   <meta property="og:image" content="https://videoke-frontend.vercel.app/preview.jpg">
   <meta property="og:url" content="https://videoke-frontend.vercel.app/">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-  <!-- END OF OPEN GRAPH META TAGS -->
 
   <script src="/config.js"></script>
   <style>
@@ -25,6 +23,11 @@
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
     h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, var(--gold), var(--red)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
     .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 16px; max-width: 340px; line-height: 1.6; }
+    
+    /* MGA BAGONG DESIGN PARA SA HELP BUTTON */
+    .help-float-btn { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; align-items: center; gap: 6px; padding: 12px 18px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border-radius: 30px; text-decoration: none; font-size: 14px; font-weight: 800; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5); transition: transform 0.2s; }
+    .help-float-btn:hover { transform: scale(1.05); }
+    
     .free-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; margin-bottom: 24px; background: linear-gradient(135deg, rgba(74,222,128,0.12), rgba(255,215,0,0.08)); border: 1.5px solid rgba(74,222,128,0.4); border-radius: 24px; font-size: 12px; font-weight: 800; color: #fff; letter-spacing: 0.3px; box-shadow: 0 4px 20px rgba(74,222,128,0.15); }
     .free-badge .pill-icon { font-size: 15px; }
     .free-badge .pill-tag { color: var(--green); text-transform: uppercase; font-size: 10px; letter-spacing: 1.5px; padding: 2px 8px; background: rgba(74,222,128,0.15); border-radius: 10px; }
@@ -86,6 +89,9 @@
   </style>
 </head>
 <body>
+  <!-- ITO YUNG FLOATING HELP BUTTON NA LAGING NAKIKITA -->
+  <a href="/faq" class="help-float-btn">❓ Need Help?</a>
+
   <div class="logo">🎤</div>
   <h1>VIDEoke YT</h1>
   <div class="subtitle">Start your own karaoke party or join one</div>
@@ -169,7 +175,8 @@
     <div>Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
     <div class="no-ads">✅ 0 ads · 0 trackers · Always free</div>
     <div>
-      <a class="faq-btn" href="/faq">❓ FAQ &amp; About</a>
+      <!-- BINAGO NATIN ANG TEXT DITO -->
+      <a class="faq-btn" href="/faq">❓ Help / Guide</a>
     </div>
     <div style="margin-top:8px; font-size:10px; opacity:0.55; letter-spacing:1px; text-transform:uppercase;">© <span id="copyrightYear"></span> · All rights reserved</div>
   </div>
