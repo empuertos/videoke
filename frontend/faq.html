@@ -77,8 +77,37 @@
       </div>
     </div>
 
+    <!-- BAGONG SECTION PARA SA REMOTE -->
     <div class="section">
-      <div class="section-title">🚀 Getting Started</div>
+      <div class="section-title">📱 How to Use the Remote</div>
+      <details>
+        <summary>How do I reserve a song?</summary>
+        <div class="answer">
+          On your phone, you have two easy ways to add a song to the queue:<br><br>
+          <b>1. Paste Link:</b> Go to YouTube, search for the karaoke video you want, tap <b>Share → Copy Link</b>. Go back to VIDEoke, paste the link, and tap <b>➕ Reserve</b>.<br><br>
+          <b>2. Search Song:</b> Type the song name directly in the app. We filter out non-karaoke videos so you only get the best backing tracks. Tap <b>➕ Reserve</b>.
+        </div>
+      </details>
+      <details>
+        <summary>What is the "Open YouTube App" button?</summary>
+        <div class="answer">This is a shortcut! Tapping it will open the native YouTube app on your phone so you can search for a karaoke video faster. Once you find one, just copy the link and paste it back into VIDEoke.</div>
+      </details>
+      <details>
+        <summary>What does the 👥 DUET badge mean?</summary>
+        <div class="answer">Some karaoke tracks have both male and female parts. If you pick a duet, the app will ask if you want to sing the <b>👦 Boy Part</b> or <b>👧 Girl Part</b>. The TV screen will automatically announce which part you are singing so the crowd knows!</div>
+      </details>
+      <details>
+        <summary>How do I unlock the playback controls?</summary>
+        <div class="answer">By default, the <b>Pause, Skip, Stop, and Volume</b> buttons are locked (🔒) so guests don't accidentally stop the music.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the controls will unlock for 10 minutes.</div>
+      </details>
+      <details>
+        <summary>Why do I get an "Admin only" error?</summary>
+        <div class="answer">Only the host device should control playback. If you tap Skip or Stop without logging in as Admin, the app will block you. This keeps the karaoke party running smoothly without interruptions!</div>
+      </details>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🚀 Getting Started (Host)</div>
       <details>
         <summary>What is VIDEoke YT?</summary>
         <div class="answer">VIDEoke YT turns any TV or laptop into a karaoke machine powered entirely by YouTube. Guests join with a 6-character party code or QR scan, browse the karaoke catalog, and reserve songs from their phones. The host screen plays them back-to-back, auto-skips broken videos, and announces each singer with an AI voice.</div>
@@ -90,25 +119,12 @@
           <b>2.</b> Note your <b>Party Code</b> and <b>Admin Password</b><br>
           <b>3.</b> Tap <b>📺 Open Host Screen</b> — this shows the QR code for guests<br>
           <b>4.</b> Tap the screen once to enable auto-play<br>
-          <b>5.</b> Share the QR code or party code with friends<br>
-          <b>6.</b> Friends scan the QR or go to <code>/remote?party=XXXXXX</code> on their phone
-        </div>
-      </details>
-      <details>
-        <summary>How do guests join?</summary>
-        <div class="answer">Scan the QR code shown on the host screen with your phone camera. Or open the site and tap <b>📱 Join a Party</b>, then type the 6-character party code.</div>
-      </details>
-      <details>
-        <summary>How do I reserve a song?</summary>
-        <div class="answer">
-          On the remote page, there are two ways:<br><br>
-          <b>🔗 Paste Link:</b> Copy a YouTube link from anywhere (or use the <b>▶ Open YouTube App</b> button), paste it, then tap <b>➕ Reserve</b><br><br>
-          <b>🔍 Search Song:</b> Type a song name, tap <b>➕ Reserve</b> on any karaoke result. Or use 🎤 voice search. Or tap a category chip.
+          <b>5.</b> Share the QR code or party code with friends
         </div>
       </details>
       <details>
         <summary>What is the Admin Password for?</summary>
-        <div class="answer">The admin password unlocks host controls: <b>pause, skip, stop, volume, remove songs, reorder queue</b>. Without the password, guests can only add songs — they can't change playback. This prevents guests from accidentally stopping the music.<br><br><b>Keep it private</b> — only share with co-hosts you trust. The password is case-sensitive and 8 characters long.</div>
+        <div class="answer">The admin password unlocks host controls: <b>pause, skip, stop, volume, remove songs, reorder queue</b>. Without the password, guests can only add songs. Keep it private — only share it with co-hosts you trust.</div>
       </details>
     </div>
 
@@ -124,11 +140,7 @@
       </details>
       <details>
         <summary>Do you collect my data?</summary>
-        <div class="answer"><b>No.</b> There's no analytics, no tracking pixels, no cookies. Only <code>localStorage</code> is used to remember your singer name and admin token on your own device. Nothing is sent anywhere except your own party's backend.</div>
-      </details>
-      <details>
-        <summary>Do I need to create an account?</summary>
-        <div class="answer">No. There's no signup, no login, no email required. Every party is anonymous and self-contained.</div>
+        <div class="answer"><b>No.</b> There's no analytics, no tracking pixels, no cookies. Only <code>localStorage</code> is used to remember your singer name and admin token on your own device.</div>
       </details>
     </div>
 
@@ -136,34 +148,11 @@
       <div class="section-title">🔧 Troubleshooting</div>
       <details>
         <summary>A video won't play / "This video is unavailable"</summary>
-        <div class="answer">YouTube blocks some videos from being embedded on other sites. The system auto-skips these and moves to the next song in the queue.<br><br><b>To fix:</b> Pick a different video — search for "&lt;song name&gt; karaoke" on the Search tab. Karaoke channels usually allow embedding.</div>
+        <div class="answer">YouTube blocks some videos from being embedded on other sites. The system auto-skips these and moves to the next song in the queue.<br><br><b>To fix:</b> Pick a different video — search for "&lt;song name&gt; karaoke" on the Search tab.</div>
       </details>
       <details>
         <summary>Autoplay is blocked</summary>
         <div class="answer">Browsers require one user interaction before playing sound. When you open the host screen, a yellow overlay says <b>"Tap Anywhere to Start"</b> — tap it once, and from then on every song auto-plays.</div>
-      </details>
-      <details>
-        <summary>Nothing plays after the first tap</summary>
-        <div class="answer">
-          Check:
-          <ul style="margin:8px 0 0 20px; padding:0;">
-            <li>Host screen shows <b>"Connected"</b> (green dot)</li>
-            <li>Party code on host matches what guests are using</li>
-            <li>Open DevTools console (F12) — YouTube IFrame API should have loaded</li>
-            <li>Refresh the host page if the YouTube player failed to initialize</li>
-          </ul>
-        </div>
-      </details>
-      <details>
-        <summary>Search returns nothing / "No karaoke version found"</summary>
-        <div class="answer">
-          Search uses free public Piped instances. If they're down, try:
-          <ul style="margin:8px 0 0 20px; padding:0;">
-            <li>Try a simpler search term (<code>tadhana</code> instead of <code>Tadhana by Moira</code>)</li>
-            <li>Wait a minute and retry — results are cached for 5 minutes</li>
-            <li>The site admin can set <code>YOUTUBE_API_KEY</code> for a fallback source</li>
-          </ul>
-        </div>
       </details>
       <details>
         <summary>Admin password doesn't work</summary>
@@ -171,35 +160,7 @@
       </details>
       <details>
         <summary>The party disappeared after a while</summary>
-        <div class="answer">Parties auto-expire after <b>24 hours</b> of inactivity — this is by design. On Render's free tier, sessions also reset when the backend sleeps/restarts. Upgrade to a paid plan with persistent disk to keep parties across restarts.</div>
-      </details>
-    </div>
-
-    <div class="section">
-      <div class="section-title">🎬 How It Works</div>
-      <details>
-        <summary>Can multiple TVs show the same party?</summary>
-        <div class="answer">Yes. Open <code>/host?session=&lt;hostCode&gt;</code> on multiple devices with the same host code. They'll all receive playback commands and mirror the state — perfect for large venues with multiple screens.</div>
-      </details>
-      <details>
-        <summary>Can guests see each other's songs?</summary>
-        <div class="answer">Yes — the entire queue is visible to all guests in the party. This is intentional (karaoke is social!). Everyone can see who's singing what and how many are waiting.</div>
-      </details>
-      <details>
-        <summary>How many people can join one party?</summary>
-        <div class="answer">There's no hard limit on guest count — the backend supports hundreds per party. But the <b>queue is capped at 50 songs</b>, and each singer can have up to <b>5 songs in the queue</b> simultaneously.</div>
-      </details>
-      <details>
-        <summary>How many parties can run at once?</summary>
-        <div class="answer">Each backend instance supports up to <b>300 simultaneous parties</b>, each fully isolated with its own queue, history, and admin controls.</div>
-      </details>
-      <details>
-        <summary>Does it work offline?</summary>
-        <div class="answer">No — playback requires internet because videos stream from YouTube. The site can be installed as a PWA (Add to Home Screen) but won't play anything without a connection.</div>
-      </details>
-      <details>
-        <summary>What is the "DUET" badge?</summary>
-        <div class="answer">The search detects duet karaoke tracks (karaoke videos with both male and female parts on the audio). When you tap Reserve on a duet, it asks whether you'll sing the <b>👦 Boy Part</b> or <b>👧 Girl Part</b>. The AI announcer will then say <i>"singing the boy part of..."</i> so guests know what to expect.</div>
+        <div class="answer">Parties auto-expire after <b>24 hours</b> of inactivity — this is by design. On Render's free tier, sessions also reset when the backend sleeps/restarts.</div>
       </details>
     </div>
 
@@ -241,7 +202,7 @@
       <div>Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
       <div class="no-ads">✅ 0 ads · 0 trackers · Always free</div>
       <div style="margin-top:14px;">
-        <a class="github-btn" href="https://github.com/empuertos/videoke" target="_blank" rel="noopener">
+        <a class="github-btn" href="https://github.com/your-username/videoke" target="_blank" rel="noopener">
           📖 View full README on GitHub
         </a>
       </div>
