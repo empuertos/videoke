@@ -40,8 +40,16 @@
     .support-card { margin-top:40px; padding:24px 20px; background:linear-gradient(180deg, rgba(255,215,0,0.06) 0%, rgba(10,5,18,0.4) 100%); border:1px solid rgba(255,215,0,0.22); border-radius:20px; text-align:center; }
     .support-title { font-size:15px; font-weight:800; color:var(--gold); margin-bottom:10px; }
     .support-text { font-size:12px; line-height:1.7; color:#c0c0d0; margin-bottom:16px; }
-    .support-qr-wrap { display:inline-block; padding:10px; background:#fff; border-radius:14px; box-shadow:0 6px 24px rgba(0,0,0,0.4); margin-bottom:12px; }
-    .support-qr { display:block; width:160px; height:160px; border-radius:8px; object-fit:contain; }
+    /* 3-QR GRID */
+    .support-qr-grid { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+    .support-qr-item { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .support-qr-wrap { display:inline-block; padding:8px; background:#fff; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.4); }
+    .support-qr { display:block; width:110px; height:110px; border-radius:6px; object-fit:contain; }
+    .support-qr-label { font-size:10px; font-weight:800; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; }
+    @media (max-width: 420px) {
+      .support-qr { width:92px; height:92px; }
+      .support-qr-grid { gap:8px; }
+    }
     .support-hint { font-size:11px; color:var(--dim); font-style:italic; }
     .support-thanks { margin-top:12px; font-size:11px; color:#a0a0b0; }
     .support-thanks b { color:var(--gold); }
@@ -109,7 +117,7 @@
       <div class="section-title">💝 Free &amp; Privacy</div>
       <details>
         <summary>Is VIDEoke YT really free?</summary>
-        <div class="answer"><b>Yes — 100% free, forever.</b> No fees, no ads, no signup, no paywall. You can optionally tip the developer via the QR code on the home page, but it's completely optional and the app will always work without it.</div>
+        <div class="answer"><b>Yes — 100% free, forever.</b> No fees, no ads, no signup, no paywall. You can optionally tip the developer via the QR codes on the home page, but it's completely optional and the app will always work without it.</div>
       </details>
       <details>
         <summary>Are there ads?</summary>
@@ -203,14 +211,30 @@
         <br><br>
         If this app made your karaoke night better, you're welcome to send a small thank-you tip. <b>Totally optional</b> — you can keep using it for free, always. 🙏
       </div>
-      <div class="support-qr-wrap">
-        <img
-          src="/support-qr.png"
-          alt="Scan to send a tip — GCash / Maya / PayPal"
-          class="support-qr"
-          onerror="this.parentElement.style.display='none'">
+
+      <!-- 3 QR CODES -->
+      <div class="support-qr-grid">
+        <div class="support-qr-item">
+          <div class="support-qr-wrap">
+            <img src="/support-qr-gcash.png" alt="GCash QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
+          </div>
+          <div class="support-qr-label">💙 GCash</div>
+        </div>
+        <div class="support-qr-item">
+          <div class="support-qr-wrap">
+            <img src="/support-qr-maya.png" alt="Maya QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
+          </div>
+          <div class="support-qr-label">💚 Maya</div>
+        </div>
+        <div class="support-qr-item">
+          <div class="support-qr-wrap">
+            <img src="/support-qr-paypal.png" alt="PayPal QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
+          </div>
+          <div class="support-qr-label">🌐 PayPal</div>
+        </div>
       </div>
-      <div class="support-hint">📱 Scan with your phone camera — GCash · Maya · PayPal · any e-wallet</div>
+
+      <div class="support-hint">📱 Scan any QR with your phone camera</div>
       <div class="support-thanks">Every tip keeps the servers running. <b>Thank you! 🎤</b></div>
     </div>
 
@@ -219,7 +243,7 @@
       <div>Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
       <div class="no-ads">✅ 0 ads · 0 trackers · Always free</div>
       <div style="margin-top:14px;">
-        <a class="github-btn" href="https://github.com/empuertos/videoke" target="_blank" rel="noopener">
+        <a class="github-btn" href="https://github.com/your-username/videoke" target="_blank" rel="noopener">
           📖 View full README on GitHub
         </a>
       </div>
