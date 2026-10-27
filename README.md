@@ -38,7 +38,7 @@ If this app made your karaoke night better and you'd like to say thank you, you'
 <!-- 📸 REPLACE with your own QR code — save as ./support-qr.jpg in the repo root -->
 <img src="./support-qr.jpg" alt="Tip QR code — GCash / Maya / Palawanpay" width="200" />
 
-**📱 Scan to send a tip via GCash · Maya · PayPal · any e-wallet**
+**📱 Scan to send a tip via GCash · Maya · Palawanpay · any e-wallet**
 
 💝 *Every tip keeps the servers running. Thank you!* 🙏
 
