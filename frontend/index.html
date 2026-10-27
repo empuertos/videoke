@@ -7,13 +7,25 @@
   <title>VIDEoke — Start</title>
   <script src="/config.js"></script>
   <style>
-    :root { --gold: #ffd700; --red: #ff2e55; --bg: #0a0512; --card: #16101f; --dim: #8888a0; }
+    :root { --gold: #ffd700; --red: #ff2e55; --green: #4ade80; --bg: #0a0512; --card: #16101f; --dim: #8888a0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
     .logo { font-size: 64px; margin-bottom: 10px; animation: float 2.4s ease-in-out infinite; }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
     h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, var(--gold), var(--red)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
-    .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 32px; max-width: 340px; line-height: 1.6; }
+    .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 16px; max-width: 340px; line-height: 1.6; }
+
+    /* NEW: STATS BAR */
+    .stats-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+    .stat-chip { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff; transition: all 0.3s; }
+    .stat-chip.highlight { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
+    .stat-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1; box-shadow:0 0 8px var(--green);} 50%{opacity:0.4; box-shadow:0 0 4px var(--green);} }
+    .stat-chip .stat-icon { font-size: 14px; }
+    .stat-chip .stat-label { color: var(--dim); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-chip .stat-num { font-variant-numeric: tabular-nums; min-width: 12px; display: inline-block; }
+    /* END STATS BAR */
+
     .btn { padding: 16px 32px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; color: #fff; margin: 6px; transition: transform 0.15s, opacity 0.2s; width: 100%; max-width: 340px; -webkit-appearance: none; }
     .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -48,6 +60,26 @@
   <div class="logo">🎤</div>
   <h1>VIDEoke YT</h1>
   <div class="subtitle">Start your own karaoke party or join one</div>
+
+  <!-- NEW: STATS BAR -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-chip" id="chipOnline">
+      <span class="stat-dot"></span>
+      <span class="stat-num" id="statOnline">—</span>
+      <span class="stat-label">online</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-icon">🎉</span>
+      <span class="stat-num" id="statParties">—</span>
+      <span class="stat-label">parties</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-icon">👥</span>
+      <span class="stat-num" id="statVisitors">—</span>
+      <span class="stat-label">visitors</span>
+    </div>
+  </div>
+  <!-- END STATS BAR -->
 
   <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
   <button class="btn btn-join" onclick="openJoinModal()">📱 Join a Party</button>
@@ -90,6 +122,20 @@
       return window.location.origin + '/remote?party=' + encodeURIComponent(currentSession.partyCode);
     }
 
+    // NEW: Load site-wide stats from backend
+    async function loadStats() {
+      try {
+        const r = await fetch(API + '/api/stats', { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) return;
+        const data = await r.json();
+        const online = data.onlineVisitors ?? data.onlineNow ?? 0;
+        document.getElementById('statOnline').textContent   = online;
+        document.getElementById('statParties').textContent  = data.activeParties ?? 0;
+        document.getElementById('statVisitors').textContent = data.totalVisitors ?? data.uniqueVisitors ?? 0;
+        document.getElementById('chipOnline').classList.toggle('highlight', online > 0);
+      } catch (e) {}
+    }
+
     async function createSession() {
       const btn = document.getElementById('startBtn');
       btn.disabled = true;
@@ -109,6 +155,7 @@
         btn.disabled = false;
         btn.onclick = openHostScreen;
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        loadStats();
       } catch (e) {
         alert('❌ ' + e.message);
         btn.disabled = false;
@@ -116,7 +163,6 @@
       }
     }
 
-    // 🔧 FIX: use relative path so we never land on the API host by mistake
     function openHostScreen() {
       if (!currentSession?.hostCode) return;
       window.location.href = '/host?session=' + encodeURIComponent(currentSession.hostCode);
@@ -168,6 +214,10 @@
         }
       } catch {}
     })();
+
+    // NEW: initial load + poll every 15s
+    loadStats();
+    setInterval(loadStats, 15000);
 
     document.getElementById('copyrightYear').textContent = new Date().getFullYear();
   </script>
