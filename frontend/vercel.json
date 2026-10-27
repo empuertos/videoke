@@ -5,6 +5,9 @@
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
     { "source": "/host", "destination": "/host.html" },
-    { "source": "/remote", "destination": "/remote.html" }
+    { "source": "/remote", "destination": "/remote.html" },
+    { "source": "/faq", "destination": "/faq.html" },
+    { "source": "/help", "destination": "/faq.html" },
+    { "source": "/about", "destination": "/faq.html" }
   ]
 }
