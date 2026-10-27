@@ -35,7 +35,6 @@ If this app made your karaoke night better and you'd like to say thank you, you'
 
 <div align="center">
 
-<!-- 📸 Inayos ang path para hanapin sa frontend folder -->
 <table>
   <tr>
     <td align="center" width="33%">
@@ -63,27 +62,28 @@ If this app made your karaoke night better and you'd like to say thank you, you'
 
 ## 📖 Table of Contents
 
-- [Overview](#-overview)
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Prerequisites](#-prerequisites)
-- [Local Development](#-local-development)
-- [Deployment](#-deployment)
-- [Environment Variables](#-environment-variables)
-- [Project Structure](#-project-structure)
-- [API Reference](#-api-reference)
-- [Security](#-security)
-- [Changelog](#-changelog)
-- [Troubleshooting](#-troubleshooting)
-- [FAQ](#-faq)
-- [Contributing](#-contributing)
-- [Support the Developer](#-support-the-developer)
-- [License](#-license)
-- [Credits](#-credits)
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Local Development](#local-development)
+- [Deployment](#deployment)
+- [Environment Variables](#environment-variables)
+- [Project Structure](#project-structure)
+- [API Reference](#api-reference)
+- [Security](#security)
+- [Changelog](#changelog)
+- [Troubleshooting](#troubleshooting)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [Support the Developer](#support-the-developer)
+- [License](#license)
+- [Credits](#credits)
 
 ---
 
+<a id="overview"></a>
 ## 🎯 Overview
 
 **VIDEoke YT** turns any TV or laptop into a full karaoke machine powered entirely by YouTube. Guests join with a 6-character party code or QR scan, browse the karaoke catalog, and reserve songs from their phones. The host screen plays them back-to-back, auto-skips broken videos, and announces each singer with an AI voice.
@@ -98,6 +98,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 
 ---
 
+<a id="features"></a>
 ## ✨ Features
 
 ### 💝 Free Forever
@@ -166,4 +167,5 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 
 ---
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
