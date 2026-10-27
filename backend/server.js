@@ -1,9 +1,5 @@
 // =====================================================
 // VIDEOKE YT — Multi-tenant backend (hardened v3.3)
-// Changes from v3.2:
-//   • NEW — /api/stats tracks landing-page visits and
-//           returns onlineVisitors + totalVisitors
-//           (was collected but never exposed)
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -14,7 +10,6 @@ const path       = require('path');
 const helmet     = require('helmet');
 const compression= require('compression');
 
-// ---------- CONFIG ----------
 const PORT           = process.env.PORT || 3000;
 const DATA_DIR       = process.env.DATA_DIR || path.join(__dirname, 'data');
 const FRONTEND_URL   = process.env.FRONTEND_URL || '*';
@@ -27,7 +22,6 @@ const PARTY_CHARS    = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-// ---------- UTILS ----------
 const now     = () => Date.now();
 const genCode = (len, abc = PARTY_CHARS) => {
   const b = crypto.randomBytes(len);
@@ -43,7 +37,6 @@ const safeEq   = (a, b) => {
 const clamp    = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const cleanStr = (s, max) => String(s ?? '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, max);
 
-// ---------- ADMIN PASSWORD ENCRYPTION (at rest) ----------
 const SECRET_FILE = path.join(DATA_DIR, '.secret');
 let ENC_KEY;
 try {
@@ -74,7 +67,6 @@ function decryptPw(b64) {
   } catch { return null; }
 }
 
-// ---------- EXPRESS + SOCKET.IO ----------
 const app    = express();
 const server = http.createServer(app);
 
@@ -106,13 +98,11 @@ const io = new Server(server, {
   transports: ['polling', 'websocket'],
 });
 
-// ---------- SESSION STORE ----------
 const sessions   = new Map();
 const partyIndex = new Map();
 const hostIndex  = new Map();
 const tokenIndex = new Map();
 
-// GLOBAL ANALYTICS
 const analytics = {
   startedAt: now(),
   totalPartiesAllTime: 0,
@@ -123,9 +113,6 @@ const analytics = {
   uniqueVisitors: new Set(),
 };
 
-// NEW (v3.3): track recent visitors (last 5 min) so /api/stats
-// can return a real "online now" number without needing
-// Socket.IO on the landing page.
 const recentVisitors = new Map();
 
 function rolloverDay() {
@@ -198,8 +185,6 @@ function loadSessions() {
       const plain = r.adminPasswordEnc ? decryptPw(r.adminPasswordEnc) : null;
       const s = {
         ...r,
-        // FIX #3: keep adminPasswordEnc so the next persistNow() doesn't
-        // write `undefined`. If missing (older data), re-encrypt.
         adminPasswordEnc: r.adminPasswordEnc || (plain ? encryptPw(plain) : null),
         adminPasswordPlain: plain,
         connectedHosts: 0,
@@ -233,11 +218,9 @@ function newSession() {
   sessions.set(id, s);
   partyIndex.set(partyCode, id);
   hostIndex.set(hostCode, id);
-
   rolloverDay();
   analytics.totalPartiesAllTime++;
   analytics.totalPartiesToday++;
-
   persistSoon();
   broadcastStats();
   return s;
@@ -289,7 +272,6 @@ setInterval(() => {
     if (s.lastActivity < cutoff) endSession(s, 'expired');
 }, 5 * 60 * 1000);
 
-// FIX #5: proactively evict expired admin tokens (was only on lookup)
 setInterval(() => {
   const t = now();
   for (const [tok, meta] of tokenIndex) {
@@ -298,10 +280,8 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 
 loadSessions();
-
 setInterval(broadcastStats, 10_000);
 
-// ---------- RATE LIMIT ----------
 const rl = new Map();
 function limit(key, max, win) {
   const t = now();
@@ -315,7 +295,6 @@ setInterval(() => {
   for (const [k, b] of rl) if (b.start < cutoff) rl.delete(k);
 }, 60 * 1000);
 
-// ---------- YOUTUBE ----------
 async function ytInfo(id) {
   try {
     const r = await fetch(
@@ -423,14 +402,9 @@ async function searchYT(query, maxResults = 25) {
   return [];
 }
 
-// =====================================================
-// REST — PUBLIC
-// =====================================================
 app.get('/', (req, res) => res.json({ ok: true, sessions: sessions.size }));
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
-// NEW (v3.3): /api/stats tracks landing-page visits and returns
-// onlineVisitors + totalVisitors for the landing page stats bar.
 app.get('/api/stats', (req, res) => {
   const t = now();
   if (req.ip) {
@@ -439,23 +413,20 @@ app.get('/api/stats', (req, res) => {
     }
     recentVisitors.set(req.ip, t);
   }
-  // Cleanup expired (last 5 min window)
   const cutoff = t - 5 * 60 * 1000;
   for (const [ip, ts] of recentVisitors) if (ts < cutoff) recentVisitors.delete(ip);
 
   const stats = getGlobalStats();
-  stats.onlineVisitors = recentVisitors.size;            // NEW
-  stats.totalVisitors  = analytics.uniqueVisitors.size;  // NEW
+  stats.onlineVisitors = recentVisitors.size;
+  stats.totalVisitors  = analytics.uniqueVisitors.size;
   res.json(stats);
 });
 
 app.post('/api/session/create', (req, res) => {
   const ip = req.ip || 'anon';
-
   if (req.ip && analytics.uniqueVisitors.size < 100_000) {
     analytics.uniqueVisitors.add(req.ip);
   }
-
   if (!limit('create:' + ip, 5, 60_000))
     return res.status(429).json({ error: 'Too many sessions from your IP. Wait a minute.' });
   try {
@@ -475,7 +446,6 @@ app.post('/api/session/create', (req, res) => {
   } catch (e) { res.status(503).json({ error: e.message }); }
 });
 
-// FIX #4a: rate-limit /api/host/verify (was unlimited → code enumeration)
 app.get('/api/host/verify', (req, res) => {
   if (!limit('hostverify:' + (req.ip || 'anon'), 30, 60_000))
     return res.status(429).json({ valid: false, error: 'Too many requests' });
@@ -492,7 +462,6 @@ app.get('/api/host/verify', (req, res) => {
   });
 });
 
-// FIX #4b: rate-limit /api/verify-party (was unlimited → code brute force)
 app.get('/api/verify-party', (req, res) => {
   if (!limit('verifyparty:' + (req.ip || 'anon'), 60, 60_000))
     return res.status(429).json({ valid: false, error: 'Too many requests' });
@@ -502,7 +471,6 @@ app.get('/api/verify-party', (req, res) => {
   res.json({ valid: !!s, partyCode: s?.partyCode });
 });
 
-// FIX #4c: rate-limit /api/party
 app.get('/api/party', (req, res) => {
   if (!limit('partystatus:' + (req.ip || 'anon'), 60, 60_000))
     return res.status(429).json({ active: false });
@@ -605,9 +573,6 @@ app.get('/api/failed-videos', (req, res) => {
   res.json(s ? s.failedVideos : []);
 });
 
-// =====================================================
-// ADMIN AUTH
-// =====================================================
 app.post('/api/admin/login', (req, res) => {
   if (!limit('adminlogin:' + (req.ip || 'anon'), 10, 60_000))
     return res.status(429).json({ error: 'Too many attempts' });
@@ -682,9 +647,6 @@ app.post('/api/admin/clear-failed', adminAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// =====================================================
-// STATE HELPERS
-// =====================================================
 function buildState(s) {
   return {
     sessionId: s.id,
@@ -715,26 +677,21 @@ function addHistory(s, item) {
   persistSoon();
 }
 
-// FIX #6: persist queue state after shift so crash between shift
-// and periodic save can't replay a song
 function startNext(s) {
   if (s.nowPlaying) return;
   if (!s.queue.length) {
     io.to('host:' + s.id).emit('command', { type: 'stop' });
     broadcast(s);
-    persistSoon();          // FIX #6a
+    persistSoon();
     return;
   }
   const next = s.queue.shift();
   s.nowPlaying = next;
   io.to('host:' + s.id).emit('command', { type: 'play', song: next });
   broadcast(s);
-  persistSoon();            // FIX #6b
+  persistSoon();
 }
 
-// =====================================================
-// SOCKET.IO — SESSION-SCOPED
-// =====================================================
 io.on('connection', (socket) => {
   socket.data.sessionId = null;
   socket.data.role      = null;
@@ -904,13 +861,11 @@ io.on('connection', (socket) => {
       s.connectedHosts = Math.max(0, s.connectedHosts - 1);
     else
       s.connectedGuests = Math.max(0, s.connectedGuests - 1);
-
     broadcast(s);
     broadcastStats();
   });
 });
 
-// ---------- GRACEFUL SHUTDOWN ----------
 function shutdown(sig) {
   console.log(`${sig} received — flushing and exiting`);
   try { persistNow(); } catch {}
