@@ -106,6 +106,13 @@
     <!-- SECTION 2: HOW TO USE THE REMOTE -->
     <div class="section">
       <div class="section-title" data-i18n="sec2_title">📱 How to Use the Remote</div>
+      
+      <!-- BAGONG DAGDAG: SINGER NAME INSTRUCTIONS -->
+      <details>
+        <summary data-i18n="sec2_q_name">How do I set my name as a singer?</summary>
+        <div class="answer" data-i18n="sec2_a_name">At the top of the Remote page, type your name in the <b>"🎤 Your Name (Singer)"</b> box before reserving a song. This way, the TV screen will announce your name properly (e.g., "Next up, Juan!").<br><br>If you leave it blank, the system will automatically assign you a <b>Guest name</b> (like "Guest 123") so you can still sing and track your turn!</div>
+      </details>
+
       <details>
         <summary data-i18n="sec2_q1">How do I reserve a song?</summary>
         <div class="answer" data-i18n="sec2_a1">
@@ -236,6 +243,8 @@
         sec1_a3: "The admin password unlocks host controls: <b>pause, skip, stop, volume, remove songs, reorder queue</b>. Without the password, guests can only add songs. Keep it private — only share it with co-hosts you trust.",
 
         sec2_title: "📱 How to Use the Remote",
+        sec2_q_name: "How do I set my name as a singer?",
+        sec2_a_name: "At the top of the Remote page, type your name in the <b>\"🎤 Your Name (Singer)\"</b> box before reserving a song. This way, the TV screen will announce your name properly (e.g., \"Next up, Juan!\").<br><br>If you leave it blank, the system will automatically assign you a <b>Guest name</b> (like \"Guest 123\") so you can still sing and track your turn!",
         sec2_q1: "How do I reserve a song?",
         sec2_a1: "On your phone, you have two easy ways to add a song to the queue:<br><br><b>1. Paste Link:</b> Go to YouTube, search for the karaoke video you want, tap <b>Share → Copy Link</b>. Go back to VIDEoke, paste the link, and tap <b>➕ Reserve</b>.<br><br><b>2. Search Song:</b> Type the song name directly in the app. We filter out non-karaoke videos so you only get the best backing tracks. Tap <b>➕ Reserve</b>.",
         sec2_q2: 'What is the "Open YouTube App" button?',
@@ -289,6 +298,8 @@
         sec1_a3: "Binubuksan ng admin password ang mga host controls: <b>pause, skip, stop, volume, mag-alis ng kanta, mag-reorder ng queue</b>. Kung walang password, pwede lang magdagdag ng kanta ang mga bisita. Itago ito — ibahagi lamang sa mga pinagkakatiwalaang co-host.",
 
         sec2_title: "📱 Paano Gamitin ang Remote",
+        sec2_q_name: "Paano ko ilalagay ang pangalan ko bilang kumakanta?",
+        sec2_a_name: "Sa pinaka-itaas ng Remote page, i-type ang pangalan mo sa <b>\"🎤 Your Name (Singer)\"</b> box bago mag-reserve ng kanta. Sa ganitong paraan, maayos na iaanunsyo ng TV screen ang pangalan mo (halimbawa: \"Next up, Juan!\").<br><br>Kung iiwan mong blangko, awtomatikong bibigyan ka ng system ng <b>Guest name</b> (tulad ng \"Guest 123\") para makakanta ka pa rin at masubaybayan ang turn mo!",
         sec2_q1: "Paano mag-reserve ng kanta?",
         sec2_a1: "Sa iyong phone, may dalawang madaling paraan para magdagdag ng kanta sa queue:<br><br><b>1. Paste Link:</b> Pumunta sa YouTube, hanapin ang karaoke video, i-tap ang <b>Share → Copy Link</b>. Bumalik sa VIDEoke, i-paste ang link, at i-tap ang <b>➕ Reserve</b>.<br><br><b>2. Search Song:</b> I-type ang pangalan ng kanta sa app. Sinesala namin ang mga hindi karaoke na video para siguradong backing track ang makukuha mo. I-tap ang <b>➕ Reserve</b>.",
         sec2_q2: 'Ano ang "Open YouTube App" button?',
@@ -352,7 +363,6 @@
       applyLang();
     }
 
-    // Initialize language on load
     applyLang();
   </script>
 </body>
