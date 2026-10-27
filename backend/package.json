@@ -1,9 +1,9 @@
 {
   "name": "videoke-backend",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Multi-tenant YouTube karaoke backend",
   "main": "server.js",
-  "engines": { "node": ">=18" },
+  "engines": { "node": ">=18.17.0" },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
