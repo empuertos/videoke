@@ -12,8 +12,36 @@ No downloads. No local files. 100% YouTube streaming.
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-010101?logo=socket.io)](https://socket.io)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](#-license)
 [![Version](https://img.shields.io/badge/version-3.3-brightgreen)](#)
+[![Free](https://img.shields.io/badge/100%25-Free%20Forever-success)](#-100-free--no-fees-no-ads-forever)
 
 Created with ❤️ by **Steve**
+
+</div>
+
+---
+
+## 🎁 100% Free — No Fees, No Ads, Forever
+
+**VIDEoke YT is completely free for everyone.** No signup, no subscription, no paywall, **no ads**, no hidden fees, no trackers. Anyone can start a karaoke party in 5 seconds — scan a QR, pick a song, sing. That's it.
+
+- ✅ **No account required**
+- ✅ **No credit card**
+- ✅ **No ads** — zero ad networks, zero sponsored content, zero popups
+- ✅ **No tracking** — no Google Analytics, no Facebook Pixel, no cookies
+- ✅ **No limits on parties**
+- ✅ **Open source (MIT)** — fork it, self-host it, do whatever you want
+- ✅ **Any device** — phone, tablet, laptop, smart TV
+
+If this app made your karaoke night better and you'd like to say thank you, you're welcome to send a small tip. **It's totally optional** — VIDEoke YT will always be free.
+
+<div align="center">
+
+<!-- 📸 REPLACE with your own QR code — save as ./support-qr.png in the repo root -->
+<img src="./support-qr.png" alt="Tip QR code — GCash / Maya / PayPal" width="200" />
+
+**📱 Scan to send a tip via GCash · Maya · PayPal · any e-wallet**
+
+💝 *Every tip keeps the servers running. Thank you!* 🙏
 
 </div>
 
@@ -36,6 +64,7 @@ Created with ❤️ by **Steve**
 - [Troubleshooting](#-troubleshooting)
 - [FAQ](#-faq)
 - [Contributing](#-contributing)
+- [Support the Developer](#-support-the-developer)
 - [License](#-license)
 - [Credits](#-credits)
 
@@ -57,6 +86,15 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 
 ## ✨ Features
 
+### 💝 Free Forever
+
+- **100% free** — no fees, no ads, no paywall, no subscriptions
+- **No signup, no login** — scan a QR, pick a song, sing
+- **Anyone can use it** — any phone, any TV, anywhere
+- **Optional tips** — if you enjoy it, you can send a thank-you via the QR on the landing page
+- **Open source** — MIT licensed, self-host or fork freely
+- **No data collection** — no analytics trackers, no cookies, no user profiles
+
 ### 🏢 Multi-Tenant Architecture
 
 - **300 concurrent parties** per backend instance
@@ -65,7 +103,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Session recovery** — queue and history persist to disk; survives server restarts (with persistent storage)
 - **Isolated state** — one party's queue can never leak into another's
 
-### 📊 Live Stats (New in v3.3)
+### 📊 Live Stats
 
 - **Landing-page stats bar** — shows 🟢 online · 🎉 active parties · 👥 unique visitors
 - **Auto-refreshes every 15 seconds**
@@ -119,7 +157,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Connection status** — connected/disconnected dot in the header
 - **Offline resilience** — socket auto-reconnects; state resyncs automatically
 - **PWA-ready** — installable to home screen on Android and iOS
-- **Bilingual** — English and Filipino UI (via the language toggle)
+- **English-only UI** — clean, consistent interface
 - **Duplicate-tap guard** — prevents accidental double-click actions on mobile
 
 ---
