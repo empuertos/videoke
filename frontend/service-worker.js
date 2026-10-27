@@ -1,22 +1,21 @@
 // =====================================================
-// SELF-DESTRUCTING SERVICE WORKER
-// Force kill ang lumang SW at reload lahat ng tabs
+// VIDEOKE SERVICE WORKER
+// Cleans stale caches on activate, stays registered.
+// Network-only — no caching (avoids stale-version hell).
 // =====================================================
 
-self.addEventListener('install', e => {
-  self.skipWaiting();
+self.addEventListener('install', () => self.skipWaiting());
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    } catch {}
+    await self.clients.claim();
+  })());
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    self.registration.unregister().then(() => {
-      return self.clients.matchAll();
-    }).then(clients => {
-      clients.forEach(client => client.navigate(client.url));
-    })
-  );
-});
-
-self.addEventListener('fetch', e => {
-  return;
+self.addEventListener('fetch', () => {
+  // Network-only. Do NOT return a cached response.
 });
