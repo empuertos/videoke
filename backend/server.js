@@ -1,5 +1,11 @@
 // =====================================================
-// VIDEOKE YT — Multi-tenant backend (hardened v3.1)
+// VIDEOKE YT — Multi-tenant backend (hardened v3.2)
+// Changes from v3.1:
+//   • FIX #3 — keep adminPasswordEnc across restarts
+//   • FIX #4 — rate limits on /api/host/verify,
+//              /api/verify-party, /api/party
+//   • FIX #5 — proactive tokenIndex eviction
+//   • FIX #6 — persistSoon() in startNext()
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -108,7 +114,7 @@ const partyIndex = new Map();
 const hostIndex  = new Map();
 const tokenIndex = new Map();
 
-// 🔥 NEW: GLOBAL ANALYTICS — powers /api/stats and the landing-page stats bar
+// GLOBAL ANALYTICS
 const analytics = {
   startedAt: now(),
   totalPartiesAllTime: 0,
@@ -156,7 +162,6 @@ function getGlobalStats() {
 function broadcastStats() {
   try { io.emit('globalStats', getGlobalStats()); } catch (e) {}
 }
-// 🔥 END NEW
 
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 let saveTimer = null;
@@ -190,7 +195,9 @@ function loadSessions() {
       const plain = r.adminPasswordEnc ? decryptPw(r.adminPasswordEnc) : null;
       const s = {
         ...r,
-        adminPasswordEnc: undefined,
+        // FIX #3: keep adminPasswordEnc so the next persistNow() doesn't
+        // write `undefined`. If missing (older data), re-encrypt.
+        adminPasswordEnc: r.adminPasswordEnc || (plain ? encryptPw(plain) : null),
         adminPasswordPlain: plain,
         connectedHosts: 0,
         connectedGuests: 0,
@@ -224,11 +231,9 @@ function newSession() {
   partyIndex.set(partyCode, id);
   hostIndex.set(hostCode, id);
 
-  // 🔥 NEW: bump all-time + today counters
   rolloverDay();
   analytics.totalPartiesAllTime++;
   analytics.totalPartiesToday++;
-  // 🔥 END NEW
 
   persistSoon();
   broadcastStats();
@@ -251,7 +256,7 @@ function endSession(s, reason = 'ended') {
   partyIndex.delete(s.partyCode);
   hostIndex.delete(s.hostCode);
   persistSoon();
-  broadcastStats(); // 🔥 NEW
+  broadcastStats();
 }
 
 function resolveSession({ host, party }) {
@@ -281,11 +286,17 @@ setInterval(() => {
     if (s.lastActivity < cutoff) endSession(s, 'expired');
 }, 5 * 60 * 1000);
 
+// FIX #5: proactively evict expired admin tokens (was only on lookup)
+setInterval(() => {
+  const t = now();
+  for (const [tok, meta] of tokenIndex) {
+    if (meta.expiry < t) tokenIndex.delete(tok);
+  }
+}, 60 * 60 * 1000);
+
 loadSessions();
 
-// 🔥 NEW: broadcast stats every 10s so all connected clients see live numbers
 setInterval(broadcastStats, 10_000);
-// 🔥 END NEW
 
 // ---------- RATE LIMIT ----------
 const rl = new Map();
@@ -414,19 +425,14 @@ async function searchYT(query, maxResults = 25) {
 // =====================================================
 app.get('/', (req, res) => res.json({ ok: true, sessions: sessions.size }));
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
-
-// 🔥 NEW: public stats endpoint
 app.get('/api/stats', (req, res) => res.json(getGlobalStats()));
-// 🔥 END NEW
 
 app.post('/api/session/create', (req, res) => {
   const ip = req.ip || 'anon';
 
-  // 🔥 NEW: track unique visitors
   if (req.ip && analytics.uniqueVisitors.size < 100_000) {
     analytics.uniqueVisitors.add(req.ip);
   }
-  // 🔥 END NEW
 
   if (!limit('create:' + ip, 5, 60_000))
     return res.status(429).json({ error: 'Too many sessions from your IP. Wait a minute.' });
@@ -447,7 +453,11 @@ app.post('/api/session/create', (req, res) => {
   } catch (e) { res.status(503).json({ error: e.message }); }
 });
 
+// FIX #4a: rate-limit /api/host/verify (was unlimited → code enumeration)
 app.get('/api/host/verify', (req, res) => {
+  if (!limit('hostverify:' + (req.ip || 'anon'), 30, 60_000))
+    return res.status(429).json({ valid: false, error: 'Too many requests' });
+
   const s = resolveSession({ host: String(req.query.host || '').trim() });
   if (!s) return res.json({ valid: false });
   res.json({
@@ -460,13 +470,21 @@ app.get('/api/host/verify', (req, res) => {
   });
 });
 
+// FIX #4b: rate-limit /api/verify-party (was unlimited → code brute force)
 app.get('/api/verify-party', (req, res) => {
+  if (!limit('verifyparty:' + (req.ip || 'anon'), 60, 60_000))
+    return res.status(429).json({ valid: false, error: 'Too many requests' });
+
   const code = String(req.query.code || '').toUpperCase().trim();
   const s = resolveSession({ party: code });
   res.json({ valid: !!s, partyCode: s?.partyCode });
 });
 
+// FIX #4c: rate-limit /api/party
 app.get('/api/party', (req, res) => {
+  if (!limit('partystatus:' + (req.ip || 'anon'), 60, 60_000))
+    return res.status(429).json({ active: false });
+
   const s = resolveSession({
     host:  String(req.query.host  || '').trim(),
     party: String(req.query.party || '').toUpperCase().trim(),
@@ -617,6 +635,7 @@ app.post('/api/admin/stop', adminAuth, (req, res) => {
   s.queue = [];
   io.to('host:' + s.id).emit('command', { type: 'stop' });
   broadcast(s);
+  persistSoon();
   res.json({ ok: true });
 });
 
@@ -652,15 +671,11 @@ function buildState(s) {
     queue: s.queue,
     nowPlaying: s.nowPlaying,
     favorites: s.favorites,
-
-    // 🔥 NEW: per-party online counts
     onlineNow: {
       hosts: s.connectedHosts,
       guests: s.connectedGuests,
       total: s.connectedHosts + s.connectedGuests,
     },
-    // 🔥 END NEW
-
     stats: {
       queueLength: s.queue.length,
       singerCount: new Set(s.queue.map(q => q.singer)).size,
@@ -678,17 +693,21 @@ function addHistory(s, item) {
   persistSoon();
 }
 
+// FIX #6: persist queue state after shift so crash between shift
+// and periodic save can't replay a song
 function startNext(s) {
   if (s.nowPlaying) return;
   if (!s.queue.length) {
     io.to('host:' + s.id).emit('command', { type: 'stop' });
     broadcast(s);
+    persistSoon();          // FIX #6a
     return;
   }
   const next = s.queue.shift();
   s.nowPlaying = next;
   io.to('host:' + s.id).emit('command', { type: 'play', song: next });
   broadcast(s);
+  persistSoon();            // FIX #6b
 }
 
 // =====================================================
@@ -716,10 +735,8 @@ io.on('connection', (socket) => {
     s.connectedHosts++;
     touch(s);
 
-    // 🔥 NEW: broadcast full state (with onlineNow) + refresh site-wide stats
     broadcast(s);
     broadcastStats();
-    // 🔥 END NEW
 
     socket.emit('partyStatus', { active: true, code: s.partyCode });
     console.log(`[${role}] joined ${s.partyCode}`);
@@ -735,8 +752,8 @@ io.on('connection', (socket) => {
     touch(s);
 
     socket.emit('partyJoined', { ok: true });
-    broadcast(s);        // 🔥 NEW
-    broadcastStats();    // 🔥 NEW
+    broadcast(s);
+    broadcastStats();
   });
 
   const withSession = (fn) => (payload) => {
@@ -817,6 +834,7 @@ io.on('connection', (socket) => {
     s.queue = [];
     io.to('host:' + s.id).emit('command', { type: 'stop' });
     broadcast(s);
+    persistSoon();
   }));
 
   socket.on('volume', withSession((s, d) => {
@@ -865,10 +883,8 @@ io.on('connection', (socket) => {
     else
       s.connectedGuests = Math.max(0, s.connectedGuests - 1);
 
-    // 🔥 NEW: reflect departure to other clients immediately
     broadcast(s);
     broadcastStats();
-    // 🔥 END NEW
   });
 });
 
