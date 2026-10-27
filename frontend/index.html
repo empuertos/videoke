@@ -47,8 +47,16 @@
     .support-title { font-size: 15px; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; margin-bottom: 10px; }
     .support-text { font-size: 12px; line-height: 1.7; color: #c0c0d0; margin-bottom: 18px; }
     .support-text b { color: #fff; }
-    .support-qr-wrap { display: inline-block; padding: 10px; background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); margin-bottom: 12px; }
-    .support-qr { display: block; width: 180px; height: 180px; border-radius: 8px; object-fit: contain; }
+    /* 3-QR GRID */
+    .support-qr-grid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .support-qr-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .support-qr-wrap { display: inline-block; padding: 8px; background: #fff; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+    .support-qr { display: block; width: 110px; height: 110px; border-radius: 6px; object-fit: contain; }
+    .support-qr-label { font-size: 10px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 0.5px; }
+    @media (max-width: 420px) {
+      .support-qr { width: 92px; height: 92px; }
+      .support-qr-grid { gap: 8px; }
+    }
     .support-hint { font-size: 11px; color: var(--dim); font-style: italic; line-height: 1.5; }
     .support-thanks { margin-top: 14px; font-size: 11px; color: #a0a0b0; letter-spacing: 0.3px; }
     .support-thanks b { color: var(--gold); }
@@ -121,14 +129,30 @@
       <br><br>
       If this app made your karaoke night better, you're welcome to send a small thank-you tip. <b>Totally optional</b> — you can keep using it for free, always. 🙏
     </div>
-    <div class="support-qr-wrap">
-      <img
-        src="/support-qr.png"
-        alt="Scan to send a tip — GCash / Maya / PayPal"
-        class="support-qr"
-        onerror="this.parentElement.style.display='none'">
+
+    <!-- 3 QR CODES -->
+    <div class="support-qr-grid">
+      <div class="support-qr-item">
+        <div class="support-qr-wrap">
+          <img src="/support-qr-gcash.png" alt="GCash QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
+        </div>
+        <div class="support-qr-label">💙 GCash</div>
+      </div>
+      <div class="support-qr-item">
+        <div class="support-qr-wrap">
+          <img src="/support-qr-maya.png" alt="Maya QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
+        </div>
+        <div class="support-qr-label">💚 Maya</div>
+      </div>
+      <div class="support-qr-item">
+        <div class="support-qr-wrap">
+          <img src="/support-qr-paypal.png" alt="PayPal QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
+        </div>
+        <div class="support-qr-label">🌐 PayPal</div>
+      </div>
     </div>
-    <div class="support-hint">📱 Scan with your phone camera — GCash · Maya · any e-wallet</div>
+
+    <div class="support-hint">📱 Scan any QR with your phone camera</div>
     <div class="support-thanks">Every tip keeps the servers running. <b>Thank you! 🎤</b></div>
   </div>
 
