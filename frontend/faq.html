@@ -14,7 +14,9 @@
     .header { position:sticky; top:0; z-index:100; padding:14px 18px; padding-top:max(14px,env(safe-area-inset-top)); background:rgba(10,5,18,0.94); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
     .back-btn { background:var(--card); border:1px solid var(--border); color:#fff; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; -webkit-appearance:none; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
     .back-btn:hover { background:var(--card2); border-color:var(--gold); }
-    .header h1 { font-size:16px; font-weight:800; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+    .header h1 { font-size:16px; font-weight:800; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; flex:1; }
+    .lang-toggle { background:var(--card); border:1px solid var(--gold); color:var(--gold); padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:6px; transition:all 0.2s; }
+    .lang-toggle:hover { background:rgba(255,215,0,0.1); }
     .container { max-width:720px; margin:0 auto; padding:28px 18px; }
     .hero { text-align:center; margin-bottom:32px; }
     .hero .logo { font-size:56px; margin-bottom:10px; }
@@ -61,32 +63,33 @@
 </head>
 <body>
   <div class="header">
-    <a class="back-btn" href="/">← Back</a>
-    <h1>❓ Help & Guide</h1>
+    <a class="back-btn" href="/" data-i18n="back_btn">← Back</a>
+    <h1 data-i18n="header_title">❓ Help & Guide</h1>
+    <button class="lang-toggle" onclick="toggleLang()" id="langToggleBtn">🇵🇭 Tagalog</button>
   </div>
 
   <div class="container">
     <div class="hero">
       <div class="logo">🎤</div>
       <h2>VIDEoke YT</h2>
-      <div class="tag">Free multi-tenant YouTube karaoke. Scan a QR, pick a song, sing — no fees, no ads, forever.</div>
+      <div class="tag" data-i18n="hero_tag">Free multi-tenant YouTube karaoke. Scan a QR, pick a song, sing — no fees, no ads, forever.</div>
       <div class="free-pill">
         <span class="dot"></span>
-        <span class="tag-text">FREE</span>
-        <span>No fees · No ads · No signup</span>
+        <span class="tag-text" data-i18n="pill_free">FREE</span>
+        <span data-i18n="pill_desc">No fees · No ads · No signup</span>
       </div>
     </div>
 
     <!-- SECTION 1: GETTING STARTED (HOST) -->
     <div class="section">
-      <div class="section-title">🚀 Getting Started (Host)</div>
+      <div class="section-title" data-i18n="sec1_title">🚀 Getting Started (Host)</div>
       <details>
-        <summary>What is VIDEoke YT?</summary>
-        <div class="answer">VIDEoke YT turns any TV or laptop into a karaoke machine powered entirely by YouTube. Guests join with a 6-character party code or QR scan, browse the karaoke catalog, and reserve songs from their phones. The host screen plays them back-to-back, auto-skips broken videos, and announces each singer with an AI voice.</div>
+        <summary data-i18n="sec1_q1">What is VIDEoke YT?</summary>
+        <div class="answer" data-i18n="sec1_a1">VIDEoke YT turns any TV or laptop into a karaoke machine powered entirely by YouTube. Guests join with a 6-character party code or QR scan, browse the karaoke catalog, and reserve songs from their phones. The host screen plays them back-to-back, auto-skips broken videos, and announces each singer with an AI voice.</div>
       </details>
       <details>
-        <summary>How do I start a party?</summary>
-        <div class="answer">
+        <summary data-i18n="sec1_q2">How do I start a party?</summary>
+        <div class="answer" data-i18n="sec1_a2">
           <b>1.</b> Tap <b>🎉 Start New Karaoke</b> on the home page<br>
           <b>2.</b> Note your <b>Party Code</b> and <b>Admin Password</b><br>
           <b>3.</b> Tap <b>📺 Open Host Screen</b> — this shows the QR code for guests<br>
@@ -95,81 +98,81 @@
         </div>
       </details>
       <details>
-        <summary>What is the Admin Password for?</summary>
-        <div class="answer">The admin password unlocks host controls: <b>pause, skip, stop, volume, remove songs, reorder queue</b>. Without the password, guests can only add songs. Keep it private — only share it with co-hosts you trust.</div>
+        <summary data-i18n="sec1_q3">What is the Admin Password for?</summary>
+        <div class="answer" data-i18n="sec1_a3">The admin password unlocks host controls: <b>pause, skip, stop, volume, remove songs, reorder queue</b>. Without the password, guests can only add songs. Keep it private — only share it with co-hosts you trust.</div>
       </details>
     </div>
 
     <!-- SECTION 2: HOW TO USE THE REMOTE -->
     <div class="section">
-      <div class="section-title">📱 How to Use the Remote</div>
+      <div class="section-title" data-i18n="sec2_title">📱 How to Use the Remote</div>
       <details>
-        <summary>How do I reserve a song?</summary>
-        <div class="answer">
+        <summary data-i18n="sec2_q1">How do I reserve a song?</summary>
+        <div class="answer" data-i18n="sec2_a1">
           On your phone, you have two easy ways to add a song to the queue:<br><br>
           <b>1. Paste Link:</b> Go to YouTube, search for the karaoke video you want, tap <b>Share → Copy Link</b>. Go back to VIDEoke, paste the link, and tap <b>➕ Reserve</b>.<br><br>
           <b>2. Search Song:</b> Type the song name directly in the app. We filter out non-karaoke videos so you only get the best backing tracks. Tap <b>➕ Reserve</b>.
         </div>
       </details>
       <details>
-        <summary>What is the "Open YouTube App" button?</summary>
-        <div class="answer">This is a shortcut! Tapping it will open the native YouTube app on your phone so you can search for a karaoke video faster. Once you find one, just copy the link and paste it back into VIDEoke.</div>
+        <summary data-i18n="sec2_q2">What is the "Open YouTube App" button?</summary>
+        <div class="answer" data-i18n="sec2_a2">This is a shortcut! Tapping it will open the native YouTube app on your phone so you can search for a karaoke video faster. Once you find one, just copy the link and paste it back into VIDEoke.</div>
       </details>
       <details>
-        <summary>What does the 👥 DUET badge mean?</summary>
-        <div class="answer">Some karaoke tracks have both male and female parts. If you pick a duet, the app will ask if you want to sing the <b>👦 Boy Part</b> or <b>👧 Girl Part</b>. The TV screen will automatically announce which part you are singing so the crowd knows!</div>
+        <summary data-i18n="sec2_q3">What does the 👥 DUET badge mean?</summary>
+        <div class="answer" data-i18n="sec2_a3">Some karaoke tracks have both male and female parts. If you pick a duet, the app will ask if you want to sing the <b>👦 Boy Part</b> or <b>👧 Girl Part</b>. The TV screen will automatically announce which part you are singing so the crowd knows!</div>
       </details>
       <details>
-        <summary>How do I unlock the playback controls?</summary>
-        <div class="answer">By default, the <b>Pause, Skip, Stop, and Volume</b> buttons are locked (🔒) so guests don't accidentally stop the music.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the controls will unlock for 10 minutes.</div>
+        <summary data-i18n="sec2_q4">How do I unlock the playback controls?</summary>
+        <div class="answer" data-i18n="sec2_a4">By default, the <b>Pause, Skip, Stop, and Volume</b> buttons are locked (🔒) so guests don't accidentally stop the music.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the controls will unlock for 10 minutes.</div>
       </details>
       <details>
-        <summary>Why do I get an "Admin only" error?</summary>
-        <div class="answer">Only the host device should control playback. If you tap Skip or Stop without logging in as Admin, the app will block you. This keeps the karaoke party running smoothly without interruptions!</div>
+        <summary data-i18n="sec2_q5">Why do I get an "Admin only" error?</summary>
+        <div class="answer" data-i18n="sec2_a5">Only the host device should control playback. If you tap Skip or Stop without logging in as Admin, the app will block you. This keeps the karaoke party running smoothly without interruptions!</div>
       </details>
     </div>
 
     <!-- SECTION 3: FREE & PRIVACY -->
     <div class="section">
-      <div class="section-title">💝 Free &amp; Privacy</div>
+      <div class="section-title" data-i18n="sec3_title">💝 Free & Privacy</div>
       <details>
-        <summary>Is VIDEoke YT really free?</summary>
-        <div class="answer"><b>Yes — 100% free, forever.</b> No fees, no ads, no signup, no paywall. You can optionally tip the developer via the QR codes on the home page, but it's completely optional and the app will always work without it.</div>
+        <summary data-i18n="sec3_q1">Is VIDEoke YT really free?</summary>
+        <div class="answer" data-i18n="sec3_a1"><b>Yes — 100% free, forever.</b> No fees, no ads, no signup, no paywall. You can optionally tip the developer via the QR codes on the home page, but it's completely optional and the app will always work without it.</div>
       </details>
       <details>
-        <summary>Are there ads?</summary>
-        <div class="answer"><b>No.</b> Zero ad networks, zero sponsored content, zero popups, zero trackers.<br><br>⚠️ One honest caveat: the YouTube player itself may show ads <b>if a specific video's uploader enabled ads on their video</b>. This is YouTube's behavior, not the site. Pick videos from karaoke channels like <b>Sing King</b>, <b>Stingray Karaoke</b>, or most Filipino karaoke channels — those are ad-free.</div>
+        <summary data-i18n="sec3_q2">Are there ads?</summary>
+        <div class="answer" data-i18n="sec3_a2"><b>No.</b> Zero ad networks, zero sponsored content, zero popups, zero trackers.<br><br>⚠️ One honest caveat: the YouTube player itself may show ads <b>if a specific video's uploader enabled ads on their video</b>. This is YouTube's behavior, not the site. Pick videos from karaoke channels like <b>Sing King</b>, <b>Stingray Karaoke</b>, or most Filipino karaoke channels — those are ad-free.</div>
       </details>
       <details>
-        <summary>Do you collect my data?</summary>
-        <div class="answer"><b>No.</b> There's no analytics, no tracking pixels, no cookies. Only <code>localStorage</code> is used to remember your singer name and admin token on your own device.</div>
+        <summary data-i18n="sec3_q3">Do you collect my data?</summary>
+        <div class="answer" data-i18n="sec3_a3"><b>No.</b> There's no analytics, no tracking pixels, no cookies. Only <code>localStorage</code> is used to remember your singer name and admin token on your own device.</div>
       </details>
     </div>
 
     <!-- SECTION 4: TROUBLESHOOTING -->
     <div class="section">
-      <div class="section-title">🔧 Troubleshooting</div>
+      <div class="section-title" data-i18n="sec4_title">🔧 Troubleshooting</div>
       <details>
-        <summary>A video won't play / "This video is unavailable"</summary>
-        <div class="answer">YouTube blocks some videos from being embedded on other sites. The system auto-skips these and moves to the next song in the queue.<br><br><b>To fix:</b> Pick a different video — search for "&lt;song name&gt; karaoke" on the Search tab.</div>
+        <summary data-i18n="sec4_q1">A video won't play / "This video is unavailable"</summary>
+        <div class="answer" data-i18n="sec4_a1">YouTube blocks some videos from being embedded on other sites. The system auto-skips these and moves to the next song in the queue.<br><br><b>To fix:</b> Pick a different video — search for "&lt;song name&gt; karaoke" on the Search tab.</div>
       </details>
       <details>
-        <summary>Autoplay is blocked</summary>
-        <div class="answer">Browsers require one user interaction before playing sound. When you open the host screen, a yellow overlay says <b>"Tap Anywhere to Start"</b> — tap it once, and from then on every song auto-plays.</div>
+        <summary data-i18n="sec4_q2">Autoplay is blocked</summary>
+        <div class="answer" data-i18n="sec4_a2">Browsers require one user interaction before playing sound. When you open the host screen, a yellow overlay says <b>"Tap Anywhere to Start"</b> — tap it once, and from then on every song auto-plays.</div>
       </details>
       <details>
-        <summary>Admin password doesn't work</summary>
-        <div class="answer">Passwords are <b>case-sensitive</b>. Copy-paste directly from the home page or from the host screen — don't retype.</div>
+        <summary data-i18n="sec4_q3">Admin password doesn't work</summary>
+        <div class="answer" data-i18n="sec4_a3">Passwords are <b>case-sensitive</b>. Copy-paste directly from the home page or from the host screen — don't retype.</div>
       </details>
       <details>
-        <summary>The party disappeared after a while</summary>
-        <div class="answer">Parties auto-expire after <b>24 hours</b> of inactivity — this is by design. On Render's free tier, sessions also reset when the backend sleeps/restarts.</div>
+        <summary data-i18n="sec4_q4">The party disappeared after a while</summary>
+        <div class="answer" data-i18n="sec4_a4">Parties auto-expire after <b>24 hours</b> of inactivity — this is by design. On Render's free tier, sessions also reset when the backend sleeps/restarts.</div>
       </details>
     </div>
 
     <div class="support-card">
-      <div class="support-title">💝 Support the Developer</div>
-      <div class="support-text">
+      <div class="support-title" data-i18n="support_title">💝 Support the Developer</div>
+      <div class="support-text" data-i18n="support_text">
         VIDEoke YT is <b>100% free forever</b> — no fees, no ads, no paywalls, no signup. Anyone can start a party in seconds.
         <br><br>
         If this app made your karaoke night better, you're welcome to send a small thank-you tip. <b>Totally optional</b> — you can keep using it for free, always. 🙏
@@ -196,16 +199,16 @@
         </div>
       </div>
 
-      <div class="support-hint">📱 Scan any QR with your phone camera</div>
-      <div class="support-thanks">Every tip keeps the servers running. <b>Thank you! 🎤</b></div>
+      <div class="support-hint" data-i18n="support_hint">📱 Scan any QR with your phone camera</div>
+      <div class="support-thanks" data-i18n="support_thanks">Every tip keeps the servers running. <b>Thank you! 🎤</b></div>
     </div>
 
     <div class="footer">
       <div style="font-size:13px; font-weight:700; letter-spacing:1px; margin-bottom:8px; color:#8888a0;">🎤 VIDEoke YT</div>
-      <div>Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
-      <div class="no-ads">✅ 0 ads · 0 trackers · Always free</div>
+      <div data-i18n="footer_created">Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
+      <div class="no-ads" data-i18n="footer_no_ads">✅ 0 ads · 0 trackers · Always free</div>
       <div style="margin-top:14px;">
-        <a class="github-btn" href="https://github.com/empuertos/videoke" target="_blank" rel="noopener">
+        <a class="github-btn" href="https://github.com/your-username/videoke" target="_blank" rel="noopener">
           📖 View full README on GitHub
         </a>
       </div>
@@ -215,6 +218,142 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    const translations = {
+      en: {
+        back_btn: "← Back",
+        header_title: "❓ Help & Guide",
+        hero_tag: "Free multi-tenant YouTube karaoke. Scan a QR, pick a song, sing — no fees, no ads, forever.",
+        pill_free: "FREE",
+        pill_desc: "No fees · No ads · No signup",
+        
+        sec1_title: "🚀 Getting Started (Host)",
+        sec1_q1: "What is VIDEoke YT?",
+        sec1_a1: "VIDEoke YT turns any TV or laptop into a karaoke machine powered entirely by YouTube. Guests join with a 6-character party code or QR scan, browse the karaoke catalog, and reserve songs from their phones. The host screen plays them back-to-back, auto-skips broken videos, and announces each singer with an AI voice.",
+        sec1_q2: "How do I start a party?",
+        sec1_a2: "<b>1.</b> Tap <b>🎉 Start New Karaoke</b> on the home page<br><b>2.</b> Note your <b>Party Code</b> and <b>Admin Password</b><br><b>3.</b> Tap <b>📺 Open Host Screen</b> — this shows the QR code for guests<br><b>4.</b> Tap the screen once to enable auto-play<br><b>5.</b> Share the QR code or party code with friends",
+        sec1_q3: "What is the Admin Password for?",
+        sec1_a3: "The admin password unlocks host controls: <b>pause, skip, stop, volume, remove songs, reorder queue</b>. Without the password, guests can only add songs. Keep it private — only share it with co-hosts you trust.",
+
+        sec2_title: "📱 How to Use the Remote",
+        sec2_q1: "How do I reserve a song?",
+        sec2_a1: "On your phone, you have two easy ways to add a song to the queue:<br><br><b>1. Paste Link:</b> Go to YouTube, search for the karaoke video you want, tap <b>Share → Copy Link</b>. Go back to VIDEoke, paste the link, and tap <b>➕ Reserve</b>.<br><br><b>2. Search Song:</b> Type the song name directly in the app. We filter out non-karaoke videos so you only get the best backing tracks. Tap <b>➕ Reserve</b>.",
+        sec2_q2: 'What is the "Open YouTube App" button?',
+        sec2_a2: "This is a shortcut! Tapping it will open the native YouTube app on your phone so you can search for a karaoke video faster. Once you find one, just copy the link and paste it back into VIDEoke.",
+        sec2_q3: "What does the 👥 DUET badge mean?",
+        sec2_a3: "Some karaoke tracks have both male and female parts. If you pick a duet, the app will ask if you want to sing the <b>👦 Boy Part</b> or <b>👧 Girl Part</b>. The TV screen will automatically announce which part you are singing so the crowd knows!",
+        sec2_q4: "How do I unlock the playback controls?",
+        sec2_a4: "By default, the <b>Pause, Skip, Stop, and Volume</b> buttons are locked (🔒) so guests don't accidentally stop the music.<br><br>To unlock them, tap the <b>⚙️ (Admin)</b> icon in the top right, log in with the Admin Password, and the controls will unlock for 10 minutes.",
+        sec2_q5: 'Why do I get an "Admin only" error?',
+        sec2_a5: "Only the host device should control playback. If you tap Skip or Stop without logging in as Admin, the app will block you. This keeps the karaoke party running smoothly without interruptions!",
+
+        sec3_title: "💝 Free & Privacy",
+        sec3_q1: "Is VIDEoke YT really free?",
+        sec3_a1: "<b>Yes — 100% free, forever.</b> No fees, no ads, no signup, no paywall. You can optionally tip the developer via the QR codes on the home page, but it's completely optional and the app will always work without it.",
+        sec3_q2: "Are there ads?",
+        sec3_a2: "<b>No.</b> Zero ad networks, zero sponsored content, zero popups, zero trackers.<br><br>⚠️ One honest caveat: the YouTube player itself may show ads <b>if a specific video's uploader enabled ads on their video</b>. This is YouTube's behavior, not the site. Pick videos from karaoke channels like <b>Sing King</b>, <b>Stingray Karaoke</b>, or most Filipino karaoke channels — those are ad-free.",
+        sec3_q3: "Do you collect my data?",
+        sec3_a3: "<b>No.</b> There's no analytics, no tracking pixels, no cookies. Only <code>localStorage</code> is used to remember your singer name and admin token on your own device.",
+
+        sec4_title: "🔧 Troubleshooting",
+        sec4_q1: 'A video won\'t play / "This video is unavailable"',
+        sec4_a1: "YouTube blocks some videos from being embedded on other sites. The system auto-skips these and moves to the next song in the queue.<br><br><b>To fix:</b> Pick a different video — search for \"&lt;song name&gt; karaoke\" on the Search tab.",
+        sec4_q2: "Autoplay is blocked",
+        sec4_a2: "Browsers require one user interaction before playing sound. When you open the host screen, a yellow overlay says <b>\"Tap Anywhere to Start\"</b> — tap it once, and from then on every song auto-plays.",
+        sec4_q3: "Admin password doesn't work",
+        sec4_a3: "Passwords are <b>case-sensitive</b>. Copy-paste directly from the home page or from the host screen — don't retype.",
+        sec4_q4: "The party disappeared after a while",
+        sec4_a4: "Parties auto-expire after <b>24 hours</b> of inactivity — this is by design. On Render's free tier, sessions also reset when the backend sleeps/restarts.",
+
+        support_title: "💝 Support the Developer",
+        support_text: "VIDEoke YT is <b>100% free forever</b> — no fees, no ads, no paywalls, no signup. Anyone can start a party in seconds.<br><br>If this app made your karaoke night better, you're welcome to send a small thank-you tip. <b>Totally optional</b> — you can keep using it for free, always. 🙏",
+        support_hint: "📱 Scan any QR with your phone camera",
+        support_thanks: "Every tip keeps the servers running. <b>Thank you! 🎤</b>",
+        
+        footer_created: "Created with <span style=\"color:var(--red)\">❤️</span> by <b>Steve</b>",
+        footer_no_ads: "✅ 0 ads · 0 trackers · Always free"
+      },
+      fil: {
+        back_btn: "← Bumalik",
+        header_title: "❓ Tulong at Gabay",
+        hero_tag: "Libreng YouTube karaoke. I-scan ang QR, pumili ng kanta, kumanta — walang bayad, walang ads, habang buhay.",
+        pill_free: "LIBRE",
+        pill_desc: "Walang bayad · Walang ads · Walang signup",
+        
+        sec1_title: "🚀 Pagsisimula (Host)",
+        sec1_q1: "Ano ang VIDEoke YT?",
+        sec1_a1: "Ginagawang karaoke machine ng VIDEoke YT ang anumang TV o laptop na pinapagana ng YouTube. Sumasali ang mga bisita gamit ang 6-char party code o QR scan, naghahanap ng kanta, at nagre-reserve gamit ang kanilang phone. Awtomatikong nagpe-play ang host screen, nilalaktawan ang mga sirang video, at inaanunsyo ang bawat kumakanta gamit ang AI voice.",
+        sec1_q2: "Paano magsimula ng party?",
+        sec1_a2: "<b>1.</b> I-tap ang <b>🎉 Start New Karaoke</b> sa home page<br><b>2.</b> Tandaan ang <b>Party Code</b> at <b>Admin Password</b><br><b>3.</b> I-tap ang <b>📺 Open Host Screen</b> — dito lalabas ang QR code para sa mga bisita<br><b>4.</b> I-tap ang screen isang beses para mag-auto-play<br><b>5.</b> I-share ang QR code o party code sa mga kaibigan",
+        sec1_q3: "Para saan ang Admin Password?",
+        sec1_a3: "Binubuksan ng admin password ang mga host controls: <b>pause, skip, stop, volume, mag-alis ng kanta, mag-reorder ng queue</b>. Kung walang password, pwede lang magdagdag ng kanta ang mga bisita. Itago ito — ibahagi lamang sa mga pinagkakatiwalaang co-host.",
+
+        sec2_title: "📱 Paano Gamitin ang Remote",
+        sec2_q1: "Paano mag-reserve ng kanta?",
+        sec2_a1: "Sa iyong phone, may dalawang madaling paraan para magdagdag ng kanta sa queue:<br><br><b>1. Paste Link:</b> Pumunta sa YouTube, hanapin ang karaoke video, i-tap ang <b>Share → Copy Link</b>. Bumalik sa VIDEoke, i-paste ang link, at i-tap ang <b>➕ Reserve</b>.<br><br><b>2. Search Song:</b> I-type ang pangalan ng kanta sa app. Sinesala namin ang mga hindi karaoke na video para siguradong backing track ang makukuha mo. I-tap ang <b>➕ Reserve</b>.",
+        sec2_q2: 'Ano ang "Open YouTube App" button?',
+        sec2_a2: "Ito ay shortcut! Pag ito ay tinap, bubukas ang YouTube app sa phone mo para mas mabilis maghanap ng karaoke video. Kapag nakahanap ka na, i-copy ang link at i-paste pabalik sa VIDEoke.",
+        sec2_q3: "Ano ang ibig sabihin ng 👥 DUET badge?",
+        sec2_a3: "Ang ibang karaoke tracks ay may parteng lalaki at babae. Kapag duet ang pinili mo, tatanungin ka ng app kung <b>👦 Boy Part</b> o <b>👧 Girl Part</b> ang kakantahin mo. Awtomatikong iaanunsyo ng TV screen kung anong part ang kinakanta mo para alam ng mga tao!",
+        sec2_q4: "Paano i-unlock ang playback controls?",
+        sec2_a4: "Bilang default, naka-lock (🔒) ang <b>Pause, Skip, Stop, at Volume</b> buttons para hindi aksidenteng mapatigil ng bisita ang musika.<br><br>Para i-unlock, i-tap ang <b>⚙️ (Admin)</b> icon sa kanang taas, mag-log in gamit ang Admin Password, at mag-a-unlock ang controls ng 10 minuto.",
+        sec2_q5: 'Bakit may "Admin only" error?',
+        sec2_a5: "Ang host device lamang ang dapat may control sa playback. Kapag nag-tap ka ng Skip o Stop nang hindi naka-log in bilang Admin, haharangin ka ng app. Ginagawa ito para tuloy-tuloy at walang abala ang karaoke party!",
+
+        sec3_title: "💝 Libre at Privacy",
+        sec3_q1: "Libre ba talaga ang VIDEoke YT?",
+        sec3_a1: "<b>Oo — 100% libre, habang buhay.</b> Walang bayad, walang ads, walang signup, walang paywall. Pwede kang magbigay ng tip sa developer gamit ang QR codes sa home page, pero ito ay opsyonal lamang at palaging gagana ang app kahit wala ito.",
+        sec3_q2: "May mga ads ba?",
+        sec3_a2: "<b>Wala.</b> Walang ad networks, walang sponsored content, walang popups, walang trackers.<br><br>⚠️ Isang paalala: ang YouTube player mismo ay pwedeng magpakita ng ads <b>kung ang nag-upload ng video ay may naka-enable na ads sa kanilang video</b>. Gawi ito ng YouTube, hindi ng site. Pumili ng videos mula sa karaoke channels tulad ng <b>Sing King</b>, <b>Stingray Karaoke</b>, o karamihan sa mga Filipino karaoke channels — walang ads ang mga ito.",
+        sec3_q3: "Kinokolekta ba ninyo ang data ko?",
+        sec3_a3: "<b>Hindi.</b> Walang analytics, walang tracking pixels, walang cookies. Ang <code>localStorage</code> lamang ang ginagamit para matandaan ang iyong pangalan at admin token sa iyong sariling device.",
+
+        sec4_title: "🔧 Pag-aayos ng Problema",
+        sec4_q1: 'Hindi nagpe-play ang video / "This video is unavailable"',
+        sec4_a1: "Hinaharangan ng YouTube ang ibang videos na i-embed sa ibang sites. Awtomatikong nilalaktawan ito ng system at dumadaan sa susunod na kanta sa queue.<br><br><b>Para ayusin:</b> Pumili ng ibang video — hanapin ang \"&lt;song name&gt; karaoke\" sa Search tab.",
+        sec4_q2: "Naka-block ang Autoplay",
+        sec4_a2: "Kinakailangan ng browsers ang isang interaction mula sa user bago magpatugtog ng tunog. Pagbukas ng host screen, may dilaw na overlay na nagsasabing <b>\"Tap Anywhere to Start\"</b> — i-tap ito isang beses, at mula noon, awtomatikong magpe-play ang lahat ng kanta.",
+        sec4_q3: "Hindi gumagana ang admin password",
+        sec4_a3: "Ang mga password ay <b>case-sensitive</b> (sensitive sa malaking maliit na letra). I-copy-paste diretso mula sa home page o host screen — huwag i-type muli.",
+        sec4_q4: "Nawala ang party pagkatapos ng ilang oras",
+        sec4_a4: "Awtomatikong nag-e-expire ang party pagkalipas ng <b>24 oras</b> na walang aktibidad — ito ay disenyo. Sa free tier ng Render, nagre-reset din ang sessions kapag natutulog o nagre-restart ang backend.",
+
+        support_title: "💝 Suportahan ang Developer",
+        support_text: "Ang VIDEoke YT ay <b>100% libre magpakailanman</b> — walang bayad, walang ads, walang paywalls, walang signup. Kahit sino ay pwedeng magsimula ng party sa ilang segundo.<br><br>Kung napaganda ng app na ito ang karaoke night mo, welcome kang magpadala ng maliit na thank-you tip. <b>Ganap na opsyonal</b> — pwede mong gamitin ito nang libre, palagi. 🙏",
+        support_hint: "📱 I-scan ang kahit anong QR gamit ang camera ng iyong phone",
+        support_thanks: "Bawat tip ay nagpapagana sa servers. <b>Salamat! 🎤</b>",
+        
+        footer_created: "Ginawa nang may <span style=\"color:var(--red)\">❤️</span> ni <b>Steve</b>",
+        footer_no_ads: "✅ 0 ads · 0 trackers · Laging libre"
+      }
+    };
+
+    let currentLang = localStorage.getItem('videoke:helpLang') || 'en';
+
+    function applyLang() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (translations[currentLang] && translations[currentLang][key]) {
+          el.innerHTML = translations[currentLang][key];
+        }
+      });
+      
+      const btn = document.getElementById('langToggleBtn');
+      if (currentLang === 'en') {
+        btn.innerHTML = '🇵🇭 Tagalog';
+      } else {
+        btn.innerHTML = '🇺🇸 English';
+      }
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'en' ? 'fil' : 'en';
+      localStorage.setItem('videoke:helpLang', currentLang);
+      applyLang();
+    }
+
+    // Initialize language on load
+    applyLang();
   </script>
 </body>
 </html>
