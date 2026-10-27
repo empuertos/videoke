@@ -21,7 +21,7 @@
     .dot { width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green); }
     .dot.offline { background:var(--red);box-shadow:0 0 10px var(--red); }
     .header-actions { display:flex; gap:8px; }
-    .icon-btn { background:var(--card);border:1px solid var(--border);color:#fff;width:38px;height:38px;border-radius:10px;font-size:16px;cursor:pointer;-webkit-appearance:none; }
+    .icon-btn { background:var(--card);border:1px solid var(--border);color:#fff;width:38px;height:38px;border-radius:10px;font-size:16px;cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;text-decoration:none; }
     .container { padding:18px; max-width:560px; margin:0 auto; }
     #singerInputGroup { margin-bottom:14px; transition:all 0.25s; }
     .input-group.collapsed { display:none; }
@@ -242,6 +242,7 @@
       </div>
     </div>
     <div class="header-actions">
+      <a class="icon-btn" href="/faq" title="Help / FAQ">❓</a>
       <button class="icon-btn" onclick="openAdmin()" title="Admin">⚙️</button>
     </div>
   </div>
