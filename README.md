@@ -11,7 +11,6 @@ No downloads. No local files. 100% YouTube streaming.
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express)](https://expressjs.com)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-010101?logo=socket.io)](https://socket.io)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](#-license)
-[![Version](https://img.shields.io/badge/version-3.3-brightgreen)](#)
 [![Free](https://img.shields.io/badge/100%25-Free%20Forever-success)](#-100-free--no-fees-no-ads-forever)
 
 Created with ❤️ by **Steve**
@@ -95,6 +94,14 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Open source** — MIT licensed, self-host or fork freely
 - **No data collection** — no analytics trackers, no cookies, no user profiles
 
+### 📖 FAQ Page
+
+- **Dedicated `/faq` page** — clean, styled, mobile-friendly
+- **Accessible from** — landing page footer, remote header (❓ icon), host idle screen
+- **Also reachable at** — `/help` and `/about`
+- **Native `<details>` accordion** — instant expand/collapse, no JS needed
+- **Covers** — getting started, privacy, troubleshooting, advanced tips
+
 ### 🏢 Multi-Tenant Architecture
 
 - **300 concurrent parties** per backend instance
@@ -123,6 +130,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Duet support** — announces "singing the boy part" / "girl part"
 - **Reserved queue** — horizontal scroll strip showing next 5 singers at the top
 - **Keyboard shortcuts** — `P` pause/play, `S` skip, `F` fullscreen
+- **Help/FAQ link** on the idle screen
 
 ### 📱 Remote Controller (Mobile)
 
@@ -138,6 +146,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **History** — see what played earlier
 - **Share party** — QR + link + native share sheet
 - **Guest auto-naming** — no name? Automatically "Guest 123" (stable per device)
+- **❓ help icon** in the header — opens the FAQ anytime
 
 ### 🔒 Security
 
