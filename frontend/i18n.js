@@ -1,8 +1,6 @@
 // ============================================================
 // i18n — English only (v3.4)
-// The app is English-only. This file is kept so existing
-// `data-i18n` attributes still work if loaded elsewhere.
-// No Filipino translations — both keys mirror English.
+// English-only build. Kept so existing data-i18n attributes work.
 // ============================================================
 window.I18N = {
   en: {
@@ -32,17 +30,13 @@ window.I18N = {
     disconnected: 'Disconnected',
     voted: 'You voted'
   },
-  // Alias — same English, prevents anything breaking if `fil` key is requested
   get fil() { return this.en; }
 };
 
-// Default language: English
 window.t = function(k) {
   return window.I18N.en[k] || k;
 };
-
-window.setLang = function() {};   // no-op
+window.setLang = function() {};
 window.getLang = function() { return 'en'; };
 
-// Ensure localStorage is clean
 localStorage.setItem('videoke:lang', 'en');
