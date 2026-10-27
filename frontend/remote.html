@@ -10,7 +10,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Videoke">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <script src="/i18n.js"></script>
   <script src="/config.js"></script>
   <style>
     :root { --gold:#ffd700; --red:#ff2e55; --bg:#0a0512; --card:#16101f; --card2:#1e1630; --border:rgba(255,255,255,0.08); --dim:#8888a0; --green:#4ade80; }
@@ -243,7 +242,6 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" onclick="toggleLang()" id="langIcon">🌐</button>
       <button class="icon-btn" onclick="openAdmin()" title="Admin">⚙️</button>
     </div>
   </div>
@@ -251,7 +249,7 @@
   <div class="container">
     <div id="singerInputGroup">
       <div class="input-group" id="singerFieldWrap">
-        <label class="input-group-label" data-i18n="yourName">Your Name</label>
+        <label class="input-group-label">Your Name</label>
         <input type="text" id="singer" placeholder="Your name (or leave blank for Guest)" maxlength="30" autocomplete="off">
         <div id="guestHint">💡 Leave blank — we'll assign you a guest number.</div>
       </div>
@@ -330,8 +328,8 @@
 
     <div class="singer-stats" id="singerStats"></div>
     <div class="now-card">
-      <div class="label" data-i18n="nowSinging">🎤 NOW SINGING</div>
-      <div id="nowContent"><div class="empty" data-i18n="noQueue">Nothing playing</div></div>
+      <div class="label">🎤 NOW SINGING</div>
+      <div id="nowContent"><div class="empty">Nothing playing</div></div>
     </div>
 
     <div id="lockBanner">
@@ -387,7 +385,7 @@
 
     <div style="text-align:center;padding:26px 20px 10px; font-size:10px;color:#555;letter-spacing:0.3px;line-height:1.7">
       🎤 <b style="color:#777">VIDEoke YT</b> · by <span style="color:#ffd700;font-weight:700">Steve</span>
-      <div style="margin-top:4px;opacity:0.7">© <span id="remoteYear"></span></div>
+      <div style="margin-top:4px;opacity:0.7">© <span id="remoteYear"></span> · No ads · Always free</div>
     </div>
   </div>
 
@@ -1742,28 +1740,10 @@
     }
     function hideAdminQR() { document.getElementById('adminPartyQR').style.display = 'none'; }
 
-    function applyLang() {
-      const lang = localStorage.getItem('videoke:lang') || 'en';
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.dataset.i18n;
-        const val = window.I18N && window.I18N[lang] && window.I18N[lang][key];
-        if (val) el.textContent = val;
-      });
-      document.getElementById('langIcon').textContent = (lang === 'en') ? '🇵🇭' : '🇺🇸';
-    }
-    function toggleLang() {
-      const current = localStorage.getItem('videoke:lang') || 'en';
-      localStorage.setItem('videoke:lang', current === 'en' ? 'fil' : 'en');
-      applyLang();
-      toast(current === 'en' ? 'Language: Filipino' : 'Language: English');
-    }
-
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-
-    applyLang();
 
     let lastTouch = 0;
     document.addEventListener('touchend', e => {
