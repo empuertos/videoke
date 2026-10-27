@@ -1,7 +1,10 @@
 // =====================================================
-// VIDEOKE SERVICE WORKER
-// Cleans stale caches on activate, stays registered.
-// Network-only — no caching (avoids stale-version hell).
+// VIDEOKE SERVICE WORKER  (v3.2)
+// FIX #1: Was causing an infinite reload loop on every
+//         page load. Now: clean no-op SW that flushes
+//         stale caches on activate and stays registered.
+// Network-only — no caching, so config/version changes
+// ship instantly.
 // =====================================================
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -16,6 +19,5 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-self.addEventListener('fetch', () => {
-  // Network-only. Do NOT return a cached response.
-});
+// Network-only. Do NOT return a cached response.
+self.addEventListener('fetch', () => {});
