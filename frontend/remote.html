@@ -367,7 +367,7 @@
 
     <div class="controls" id="controlsGrid">
       <button class="ctrl-btn locked" onclick="sendCmd('pause')" data-ctrl>⏸ <span class="lbl">Pause</span></button>
-      <button class="ctrl-btn locked" onclick="sendCmd('resume')" data-ctrl>▶ <span class="lbl">Play</span></button>
+      <button class="ctrl-btn locked" onclick="sendCmd('resume')" data-ctrl>▶ <span class="lbl">Resume</span></button>
       <button class="ctrl-btn locked" onclick="sendCmd('skip')" data-ctrl>⏭ <span class="lbl">Skip</span></button>
       <button class="ctrl-btn locked" onclick="sendCmd('stop')" data-ctrl>⏹ <span class="lbl">Stop</span></button>
     </div>
@@ -786,7 +786,6 @@
       localStorage.removeItem('videoke:partyCode');
       clearStaleAdmin(true);
       
-      // Tell socket to leave the room cleanly
       socket.emit('leaveParty');
       socket.disconnect();
       socket.connect();
