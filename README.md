@@ -1,4 +1,3 @@
-```markdown
 # 🎤 VIDEoke YT
 
 <div align="center">
