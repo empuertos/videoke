@@ -7,8 +7,8 @@
   <title>VIDEoke YT — Free Karaoke</title>
   <meta name="description" content="Free multi-tenant YouTube karaoke. No ads, no fees, forever.">
   
-  <!-- PWA MANIFEST & ICONS -->
-  <link rel="manifest" href="/manifest.json">
+  <!-- PWA MANIFEST & ICONS (HOME) -->
+  <link rel="manifest" href="/manifest-home.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -51,7 +51,6 @@
     .btn-start { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35); }
     .btn-join { background: linear-gradient(135deg, var(--red), #ff0044); box-shadow: 0 6px 24px rgba(255, 46, 85, 0.35); }
     
-    /* NEW: PWA INSTALL & APK BUTTONS */
     .btn-pwa { background: linear-gradient(135deg, var(--purple), #7e22ce); box-shadow: 0 6px 24px rgba(168, 85, 247, 0.35); margin-top: 10px; display: none; }
     .btn-pwa.show { display: inline-flex; }
     .btn-download { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35); margin-top: 10px; border: 1px solid rgba(255,255,255,0.2); font-size: 14px; }
@@ -135,7 +134,7 @@
     </div>
   </div>
 
-  <!-- BAGONG PWA INSTALL BUTTON -->
+  <!-- PWA INSTALL BUTTON -->
   <button id="installBtn" class="btn btn-pwa" style="display: none;">📲 Install App (PWA)</button>
 
   <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
@@ -227,12 +226,10 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Ipakita ang button kapag pwede nang i-install
       if (installBtn) installBtn.style.display = 'inline-flex';
     });
 
     if (installBtn) {
-      // Ipakita rin sa iOS kahit walang beforeinstallprompt
       if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
         installBtn.style.display = 'inline-flex';
       }
@@ -244,7 +241,6 @@
           if (outcome === 'accepted') installBtn.style.display = 'none';
           deferredPrompt = null;
         } else {
-          // Fallback instruction para sa iOS at iba pang browser
           if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
             alert("📱 To install this app on your iPhone:\n1. Tap the 'Share' button (square with an arrow) at the bottom of Safari.\n2. Scroll down and tap 'Add to Home Screen'.");
           } else {
