@@ -134,26 +134,25 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 ### 🎵 Host Screen (TV / PC / Laptop)
 
 - **Auto-play** — as soon as a song is added, it starts
-- **Auto-skip** — deleted, blocked, or non-embeddable YouTube videos are skipped instantly
+- **Auto-skip (Watchdog)** — deleted, blocked, or restricted videos are skipped automatically within 6 seconds
+- **Floating Mini-Player** — tap the minimize button to keep the video playing in the corner while showing the QR code and queue behind it
 - **AI Voice Announcer** — TTS announces "Next up, Juan, singing Tadhana by Moira"
 - **Smart HUD fade** — "Now Singing" and "Reserved" boxes fade to 55% after 5 seconds so lyrics stay visible
 - **Always-visible mini QR** — small QR + party code at the bottom-left
-- **Reservation popups** — sleek slide-in notification when a new song is added
-- **Hidden YouTube UI** — custom click-blocker hides all YouTube controls
-- **Custom fullscreen** — fullscreen button with auto-attempt on first play
 - **Duet support** — announces "singing the boy part" / "girl part"
+- **Keyboard shortcuts** — `P` pause/play, `S` skip, `F` fullscreen, `M` minimize
 
 ### 📱 Remote Controller (Mobile)
 
-- **Search or paste** — two modes: paste a YouTube link, or search our karaoke-only catalog
-- **Dynamic Recommendations** — refreshes every 15 minutes with fresh, trending karaoke searches
-- **Karaoke-only search** — strict filtering: rejects official music videos, concerts, live performances
-- **Voice search** — speak a song title to search hands-free
+- **Prominent Help Button** — Blue ❓ Help button on Remote header + inline link under the name.
+- **Change Party Code** — Easily switch to a different party via the header or the red button in the share section.
+- **Search or paste** — paste a YouTube link, or use our ultra-fast parallel search.
+- **Lightning-fast Search** — `Promise.any` fetches from multiple Piped instances simultaneously and returns the first successful result.
+- **Dynamic Recommendations** — refreshes every 15 minutes with fresh, trending karaoke searches.
+- **Karaoke-only search** — strict filtering: rejects official music videos, concerts, live performances.
+- **Voice search** — speak a song title to search hands-free.
 - **Duet detection** — automatically detects duets and asks "Boy Part or Girl Part?"
-- **Native YouTube app** — deep-link button opens the app directly on Android/iOS
-- **Favorites & History** — save songs and see what played earlier
-- **Guest auto-naming** — no name? Automatically "Guest 123" (stable per device)
-- **Prominent Help Button** — blue ❓ Help button in header and under name input
+- **Guest auto-naming** — no name? Automatically "Guest 123" (stable per device).
 
 ### 🔒 Security
 
@@ -194,7 +193,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 2. Guests join `remote.html` with party code → register as `guest` role
 3. Guest reserves a song → Socket.IO event → backend adds to queue → broadcasts state
 4. Host receives `command: play` → loads video in YouTube iframe
-5. Video ends → host emits `songEnded` → backend pops next from queue → broadcasts
+5. Video ends or fails → host emits `songEnded` / `videoFailed` → backend pops next from queue
 6. Admin unlocks controls with password → receives token → can now skip/stop/manage
 7. Landing page polls `/api/stats` every 15s → shows live online/party/visitor counts
 8. Any page → click ❓ or FAQ link → opens `/faq` page
@@ -210,7 +209,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 | **Web Framework** | Express 4 | REST API |
 | **Realtime** | Socket.IO 4 | Bidirectional events |
 | **Video Embed** | YouTube IFrame API | Video playback |
-| **Search** | Piped API + YouTube Data API | Karaoke catalog |
+| **Search** | Piped API (Parallel) + YouTube Data API | Karaoke catalog |
 | **Frontend** | Vanilla HTML/CSS/JS | Zero build step |
 | **PWA** | Service Worker + Manifest | Installable app |
 | **Auth** | Custom token + SHA-256 + AES-256-GCM | Admin security |
@@ -239,7 +238,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 
 ```bash
 git clone https://github.com/your-username/videoke.git
-cd videoke
+cd videoke/backend
 npm install
 ```
 
@@ -260,12 +259,13 @@ You should see:
 The frontend files must be served over HTTP (not file://). The simplest option:
 
 ```bash
+cd ../frontend
 npx serve . -p 5173
 ```
 
 4. Update config.js
 
-Edit config.js to point at your local backend:
+Edit frontend/config.js to point at your local backend:
 
 ```js
 window.VIDEOKE_CONFIG = {
@@ -283,15 +283,6 @@ http://localhost:5173/ Start / join party + live stats + FAQ button
 http://localhost:5173/faq FAQ & About page (English / Tagalog)
 http://localhost:5173/host Host display
 http://localhost:5173/remote?party=XXXXXX Guest remote
-
-6. Test locally
-
-1. Open http://localhost:5173/ → check FREE badge + stats bar + FAQ button in footer
-2. Click Start New Karaoke → note the party code and admin password
-3. Click Open Host Screen → tap anywhere to enable autoplay
-4. On a second tab (or phone): http://localhost:5173/remote?party=XXXXXX
-5. Search "adele karaoke" → reserve a song → it should play on the host tab
-6. Click ❓ Help in the remote header or footer → verify the FAQ opens
 
 ---
 
@@ -314,10 +305,10 @@ Backend → Render
    Build Command npm install
    Start Command npm start
    Plan Free
-5. Environment variables (scroll down → Add Environment Variable):
+5. Environment variables:
    Key Value
    FRONTEND_URL https://your-vercel-app.vercel.app
-   YOUTUBE_API_KEY (optional)
+   YOUTUBE_API_KEY (optional, recommended for search fallback)
    ADMIN_SECRET (optional, recommended)
 6. Click Create Web Service. Wait ~2 minutes for the first deploy.
 7. Copy the deployed URL — e.g. https://videoke-backend.onrender.com.
@@ -341,7 +332,6 @@ Connect the two
    ```js
    window.VIDEOKE_CONFIG = {
      BACKEND_URL: 'https://videoke-backend.onrender.com',
-     // ...
    };
    ```
 2. Commit and push — Vercel auto-redeploys.
@@ -354,14 +344,14 @@ Connect the two
    https://your-vercel-app.vercel.app/remote?party=XXXXXX  → guest remote
    ```
 
-Support QR images
+Support QR images (optional)
 
 To display tip QR codes on the landing page and FAQ:
 
 1. Save your GCash receive QR screenshot as frontend/support-qr-gcash.png
 2. Save your Maya receive QR screenshot as frontend/support-qr-maya.png
 3. Save your PalawanPay QR screenshot as frontend/support-qr-palawanpay.png
-4. Any missing file hides gracefully — you can include just 1, 2, or all 3
+4. Any missing file hides gracefully — you can include just 1, 2, or all 3.
 
 ---
 
@@ -376,18 +366,6 @@ FRONTEND_URL Yes (prod) * Frontend origin(s) for CORS
 YOUTUBE_API_KEY No — YouTube Data API fallback
 ADMIN_SECRET No — Key for encrypting stored admin passwords
 
-Example .env (local only)
-
-```env
-PORT=3000
-DATA_DIR=./data
-FRONTEND_URL=http://localhost:5173
-YOUTUBE_API_KEY=
-ADMIN_SECRET=
-```
-
-⚠️ Never commit .env to git. It's already in .gitignore.
-
 ---
 
 <a id="project-structure"></a>
@@ -396,10 +374,10 @@ ADMIN_SECRET=
 
 ```
 videoke/
-├── backend/                  # 🆕 Backend folder
+├── backend/                  # Backend folder
 │   ├── server.js             # Node.js backend (Express + Socket.IO)
 │   └── package.json          # Backend dependencies
-├── frontend/                 # 🆕 Frontend folder
+├── frontend/                 # Frontend folder
 │   ├── index.html            # Landing page — start / join + stats + FAQ button
 │   ├── faq.html              # FAQ & About page (English / Tagalog)
 │   ├── host.html             # TV/laptop display
@@ -443,7 +421,7 @@ GET /api/party?party=CODE Party status
 Search & Content
 
 Method Path Description
-GET /api/search?q=QUERY&filter=karaoke Search karaoke catalog
+GET /api/search?q=QUERY&filter=karaoke Ultra-fast parallel search
 GET /api/recommend Dynamic trending karaoke
 GET /api/yt-info/:videoId Fetch YouTube title/author
 GET /api/history?party=CODE Party's play history
@@ -460,7 +438,6 @@ POST /api/admin/logout Invalidate token
 POST /api/admin/stop Stop current song
 POST /api/admin/end-party End the party
 POST /api/admin/kick-all Disconnect all guests
-POST /api/admin/clear-history Wipe history
 
 ---
 
@@ -505,16 +482,17 @@ What's NOT in the code (privacy)
 
 📝 Changelog
 
-v3.5 — Dynamic Recommendations & 3 QR Codes
+v3.7 — Speed & Polish
 
-· 🆕 3 tip QR codes — GCash · Maya · PalawanPay side by side
-· 🆕 Dynamic Search Pool — server.js now shuffles 16 search queries (TikTok viral, trending, etc.) and refreshes every 15 minutes.
-· 🆕 Prominent Help Button — Blue ❓ Help button on Remote header + inline link under the name.
-· 🆕 FAQ Page — English / Tagalog toggle.
-· 🐛 FIX #1 — service-worker.js reload loop fixed.
-· 🐛 FIX #2 — host.html #focusTrap blocking UI fixed.
-· 🐛 FIX #3 — admin passwords survive server restarts.
-· 🔧 English-only UI.
+· 🚀 Ultra-fast Search — Parallel API fetching (Promise.any), drops search time from 30s to ~2s.
+· 🆕 Floating Mini-Player — Host screen can minimize video to a corner overlay while keeping audio playing.
+· 🆕 3 tip QR codes — GCash · Maya · PalawanPay side by side.
+· 🆕 Prominent Help Button — Blue ❓ Help button on Remote header + inline link.
+· 🆕 Change Party Code — Easily switch to a different party via the header or share section.
+· 🆕 Bilingual FAQ — English / Tagalog toggle.
+· 🐛 FIX — Auto-skip watchdog timer ensures broken/restricted videos never stall the queue.
+· 🐛 FIX — service-worker.js reload loop fixed.
+· 🐛 FIX — Admin passwords survive server restarts.
 · 📄 License year updated to 2026.
 
 ---
@@ -526,7 +504,7 @@ v3.5 — Dynamic Recommendations & 3 QR Codes
 Backend won't start
 
 Error: Cannot find module 'express'
-→ Run npm install.
+→ Run npm install inside the backend folder.
 
 Frontend can't reach backend
 
@@ -543,26 +521,19 @@ FAQ page shows blank / 404
 
 Support QR not showing
 
-One or more QR cards missing
 → Check the filenames in your frontend folder. They must be exactly:
 
 · support-qr-gcash.png
 · support-qr-maya.png
 · support-qr-palawanpay.png
 
-Files must be lowercase, hyphen-separated, .png extension.
+Videos won't play or stuck on "Video Unavailable"
 
-Videos won't play
-
-"This video is unavailable" — YouTube blocks some videos from embedding. The system auto-skips.
-
-Autoplay blocked — Browsers require one user interaction. Tap the host screen once.
+→ The watchdog timer will auto-skip restricted videos within 6 seconds. Ensure your backend is updated to v3.7.
 
 Admin login fails
 
-"Invalid or expired token" — 24h TTL; log out and back in.
-
-"Wrong password" — Case-sensitive; copy-paste.
+"Wrong password" — Case-sensitive; copy-paste directly.
 
 ---
 
@@ -580,10 +551,10 @@ Q: Do you collect my data?
 A: No. Only localStorage for singer name and admin token on your device.
 
 Q: Do I need an Admin Password to request a song?
-A: No. Anyone can reserve a song. The Admin Password is only needed to Pause, Skip, Stop, or move/delete songs in the queue.
+A: No. Anyone can reserve a song. The Admin Password is only needed to Pause, Skip, Stop, or move/delete songs.
 
-Q: Can I use different payment methods?
-A: Yes — rename the files and edit the labels in index.html and faq.html.
+Q: Can I use the app in the background (e.g., while on Messenger)?
+A: Browsers automatically pause video playback when you switch apps to save battery. You can use Android's Split Screen feature to keep the video playing while chatting. True background play requires an APK built with Android Studio.
 
 ---
 
@@ -599,17 +570,6 @@ A: Yes — rename the files and edit the labels in index.html and faq.html.
 6. Push: git push origin feature/my-feature
 7. Open a Pull Request
 
-Before submitting
-
-☐ No new console errors in browser
-☐ No new warnings in server logs
-☐ Tested on mobile viewport (< 500px width)
-☐ Tested both admin and guest flows
-☐ npm start still works
-☐ Still no ads — no ad scripts added
-☐ FAQ page still loads
-☐ Support QR grid renders
-
 ---
 
 <a id="support-the-developer"></a>
@@ -619,8 +579,6 @@ Before submitting
 VIDEoke YT is built and maintained by Steve as a free gift to the karaoke-loving community.
 
 No fees. No ads. No paywall. No signup. Forever.
-
-If you'd like to say thank you:
 
 <div align="center">
 
@@ -646,13 +604,6 @@ If you'd like to say thank you:
 💝 Every tip — no matter how small — keeps the servers running and the songs playing.
 
 </div>
-
-Other ways to support:
-
-· ⭐ Star this repo on GitHub
-· 🐛 Report bugs or suggest features via GitHub Issues
-· 📣 Share it with friends who love karaoke
-· 🎤 Use it — honestly, that's the whole point
 
 Thank you! 🙏🎶
 
@@ -698,12 +649,6 @@ SOFTWARE.
 · QR codes: QR Server
 · Voice announcements: Web Speech API
 · Hosting: Render (backend) + Vercel (frontend)
-
-Special thanks
-
-· Every videoke night in the Philippines — for the inspiration
-· The Piped team — for open-source YouTube search APIs
-· Everyone who's ever belted "Tadhana" at 2am 🎤
 
 ---
 
