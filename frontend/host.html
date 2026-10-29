@@ -11,10 +11,61 @@
     * { box-sizing:border-box; margin:0; padding:0; }
     html, body { height:100%; }
     body { background:var(--bg); color:#fff; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; height:100vh; height:100dvh; height:-webkit-fill-available; width:100vw; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent; }
-    #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; }
+    
+    #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; transition: all 0.3s ease; }
     #player { position:absolute; inset:0; }
     #player iframe { position:absolute; top:-15%; left:-15%; width:130%; height:130%; display:block; border:0; pointer-events:none; }
     #playerBlocker { position:absolute; inset:0; z-index:10; background:transparent; }
+    
+    /* FLOATING MINI PLAYER STYLES */
+    #playerWrap.minimized {
+      inset: auto;
+      bottom: 20px;
+      right: 20px;
+      width: 320px;
+      height: 180px;
+      border-radius: 12px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 9000;
+      cursor: pointer;
+      background: #000;
+    }
+    #playerWrap.minimized #player iframe {
+      top: -15%; left: -15%; width: 130%; height: 130%;
+    }
+    
+    /* Itago ang mga controls kapag naka-minimize */
+    #playerWrap.minimized #topBar,
+    #playerWrap.minimized #miniQr,
+    #playerWrap.minimized #connStatus,
+    #playerWrap.minimized #ttsBtn,
+    #playerWrap.minimized #fsBtn,
+    #playerWrap.minimized #minBtn {
+      display: none !important;
+    }
+    
+    #restoreOverlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: rgba(0,0,0,0.4);
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #playerWrap.minimized #restoreOverlay { display: flex; }
+    #playerWrap.minimized #restoreOverlay:hover { opacity: 1; }
+    #playerWrap.minimized #restoreOverlay span:first-child { font-size: 32px; }
+
     #focusTrap { position:absolute; inset:0; z-index:1; outline:none; pointer-events:none; }
     #idleScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#1a0033,#0a0512); z-index:100; text-align:center; padding:40px 20px; overflow-y:auto; }
     #idleScreen.hidden { display:none; }
@@ -57,11 +108,17 @@
     #miniQrInfo { display:flex; flex-direction:column; gap:2px; justify-content:center; }
     #miniQrCodeText { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; font-weight:800; color:var(--gold); letter-spacing:1px; line-height:1.1; text-shadow:0 2px 4px rgba(0,0,0,0.9),0 0 2px #000; }
     #miniQrHint { font-size:9px; color:#fff; line-height:1.1; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; text-shadow:0 2px 4px rgba(0,0,0,0.9),0 0 2px #000; }
+    
     #fsBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(12px,env(safe-area-inset-right)); z-index:500; width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity:0.6; }
     #fsBtn:hover { opacity:1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
-    #ttsBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(54px,calc(env(safe-area-inset-right)+42px)); z-index:500; width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity:0.6; }
+    
+    #minBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(54px,calc(env(safe-area-inset-right)+42px)); z-index:500; width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity:0.6; }
+    #minBtn:hover { opacity:1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
+
+    #ttsBtn { position:absolute; bottom:max(12px,env(safe-area-inset-bottom)); right:max(96px,calc(env(safe-area-inset-right)+84px)); z-index:500; width:34px; height:34px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); transition:all 0.2s; -webkit-appearance:none; opacity:0.6; }
     #ttsBtn:hover { opacity:1; background:rgba(255,215,0,0.9); color:#000; border-color:var(--gold); }
     #ttsBtn.off { opacity:0.2; }
+    
     #connStatus { position:absolute; bottom:14px; left:14px; bottom:max(14px,env(safe-area-inset-bottom)); left:max(14px,env(safe-area-inset-left)); z-index:60; padding:6px 14px; background:rgba(0,0,0,0.7); border-radius:14px; font-size:11px; display:flex; align-items:center; gap:5px; pointer-events:none; transition:opacity 0.3s; }
     #connDot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); }
     #connDot.offline { background:var(--red); box-shadow:0 0 8px var(--red); }
@@ -104,6 +161,12 @@
     <div id="focusTrap" tabindex="0"></div>
     <div id="playerBlocker"></div>
 
+    <!-- FLOATING MINI PLAYER OVERLAY -->
+    <div id="restoreOverlay" onclick="toggleMinimize(event)">
+      <span>⛶</span>
+      <span>Click to Expand</span>
+    </div>
+
     <div id="resNotif">
       <div class="res-icon">🔔</div>
       <div class="res-content">
@@ -145,6 +208,9 @@
       <span id="connText">Connected</span>
     </div>
 
+    <button id="minBtn" onclick="toggleMinimize(event)" title="Minimize Video">
+      <span id="minIcon">🗗</span>
+    </button>
     <button id="ttsBtn" onclick="toggleTTS()" title="AI Voice Announcements">
       <span id="ttsIcon">🔊</span>
     </button>
@@ -269,12 +335,31 @@
       }
     }
 
+    // FLOATING MINIMIZE TOGGLE
+    function toggleMinimize(e) {
+      if (e) e.stopPropagation();
+      const wrap = document.getElementById('playerWrap');
+      wrap.classList.toggle('minimized');
+      
+      if (wrap.classList.contains('minimized')) {
+        // Exit fullscreen if currently fullscreen so it can float
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(()=>{});
+        }
+      } else {
+        // If expanding, try to go fullscreen again
+        tryAutoFullscreen();
+      }
+    }
+
     async function tryAutoFullscreen() {
       if (isIOS || isFullscreen() || !firstInteractionDone) return;
+      const wrap = document.getElementById('playerWrap');
+      if (wrap.classList.contains('minimized')) return; // Don't auto-fullscreen if minimized
+      
       try {
-        const w = document.getElementById('playerWrap');
-        const req = w.requestFullscreen || w.webkitRequestFullscreen || w.mozRequestFullScreen || w.msRequestFullscreen;
-        if (req) await req.call(w);
+        const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen || wrap.mozRequestFullScreen || wrap.msRequestFullscreen;
+        if (req) await req.call(wrap);
         autoFullscreenAttempted = true;
       } catch (e) { autoFullscreenAttempted = true; }
     }
@@ -602,10 +687,8 @@
     function playVideo(song, isSync = false, retry = 0) {
       if (!song?.videoId) return;
       
-      // Iwasan ang doble-dobleng pag-play ng parehong kanta
       if (currentVideoId === song.videoId) return;
 
-      // Isalita ang AI Voice ONCE lang bago mag-play
       if (!isSync && retry === 0) announceNextSong(song);
 
       if (!ytPlayer || !ytReady) {
@@ -641,7 +724,6 @@
         }, 1200);
       }
       
-      // BAGONG WATCHDOG TIMER: Kapag hindi nag-play sa loob ng 6s dahil sa restriction, auto-skip!
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         try {
@@ -749,6 +831,7 @@
       }
       if ((e.key === 's' || e.key === 'S') && hostAdminToken) socket.emit('skip', { adminToken: hostAdminToken });
       if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+      if (e.key === 'm' || e.key === 'M') toggleMinimize();
     });
 
     function esc(s) {
