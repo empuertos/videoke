@@ -40,7 +40,8 @@
     #playerWrap.minimized #connStatus,
     #playerWrap.minimized #ttsBtn,
     #playerWrap.minimized #fsBtn,
-    #playerWrap.minimized #minBtn {
+    #playerWrap.minimized #minBtn,
+    #playerWrap.minimized #tapToPlayBtn {
       display: none !important;
     }
     
@@ -64,6 +65,28 @@
     #playerWrap.minimized #restoreOverlay { display: flex; }
     #playerWrap.minimized #restoreOverlay:hover { opacity: 1; }
     #playerWrap.minimized #restoreOverlay span:first-child { font-size: 32px; }
+
+    /* BAGONG TAP TO PLAY BUTTON */
+    #tapToPlayBtn {
+      display: none;
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      background: linear-gradient(135deg, #ff2e55, #ff0044);
+      color: #fff;
+      border: 2px solid #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 800;
+      box-shadow: 0 10px 30px rgba(255,46,85,0.6);
+      cursor: pointer;
+      animation: pulseBtn 1.5s infinite;
+      -webkit-appearance: none;
+    }
+    @keyframes pulseBtn { 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.05);} }
 
     #focusTrap { position:absolute; inset:0; z-index:1; outline:none; pointer-events:none; }
     #idleScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#1a0033,#0a0512); z-index:100; text-align:center; padding:40px 20px; overflow-y:auto; }
@@ -159,6 +182,8 @@
     <div id="player"></div>
     <div id="focusTrap" tabindex="0"></div>
     <div id="playerBlocker"></div>
+
+    <button id="tapToPlayBtn" onclick="forcePlay()">▶ Tap to Play Video</button>
 
     <div id="restoreOverlay" onclick="toggleMinimize(event)">
       <span>⛶</span>
@@ -602,9 +627,10 @@
           onStateChange: (e) => {
             if (e.data === 0 && currentVideoId) socket.emit('songEnded');
             if (e.data === 1 && currentVideoId && !autoFullscreenAttempted && !isIOS) { autoFullscreenAttempted = true; tryAutoFullscreen(); }
-            if (e.data === 1) resetHudVisibility();
-            
-            // KANSELAHIN ANG WATCHDOG KAPAG NAG-PLAY O NAG-BUFFER NA ANG VIDEO
+            if (e.data === 1) {
+              resetHudVisibility();
+              document.getElementById('tapToPlayBtn').style.display = 'none';
+            }
             if (e.data === 1 || e.data === 3) {
               clearTimeout(errorCheckTimeout);
             }
@@ -732,14 +758,24 @@
       errorCheckTimeout = setTimeout(() => {
         try {
           const st = ytPlayer.getPlayerState();
-          // Kung hindi pa rin nagpe-play o nag-b-buffer after 10 seconds, saka lang natin i-skip
+          // Kung after 10s hindi pa rin nag-play, saka lang mag-skip
           if (st === -1 || st === 5) {
             console.warn('Video stuck or restricted. Skipping...');
             socket.emit('videoFailed', { videoId: currentVideoId, title: song.title || '' });
             stopVideo();
+          } else if (st === 2) {
+            // Naka-pause, ipakita ang Tap to Play button
+            document.getElementById('tapToPlayBtn').style.display = 'block';
           }
         } catch {}
-      }, 10000); // Pinalitan natin ng 10 seconds (dating 6s)
+      }, 10000);
+    }
+
+    function forcePlay() {
+      if (ytPlayer && ytReady) {
+        try { ytPlayer.playVideo(); } catch {}
+        document.getElementById('tapToPlayBtn').style.display = 'none';
+      }
     }
 
     function stopVideo() {
@@ -747,6 +783,7 @@
       if (ytPlayer && ytReady) { try { ytPlayer.stopVideo(); } catch {} }
       
       document.getElementById('player').style.display = 'none';
+      document.getElementById('tapToPlayBtn').style.display = 'none';
 
       document.getElementById('topBar').classList.remove('show');
       document.getElementById('miniQr').classList.remove('show');
