@@ -1,9 +1,9 @@
 // =====================================================
-// VIDEOKE YT — Multi-tenant backend (hardened v3.6)
-// Changes in v3.6:
-//   • Optimized /api/recommend using Promise.all (Parallel)
-//   • Reduced dynamic searches to 3 for faster response
-//   • Better handling of videoFailed event
+// VIDEOKE YT — Multi-tenant backend (hardened v3.7)
+// Changes in v3.7:
+//   • Optimized searchYT using Promise.any (Parallel fetch)
+//   • Faster fallback to YouTube API
+//   • Reduced Piped timeout to 4s
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -380,6 +380,7 @@ const RECOMMEND_TTL = 15 * 60 * 1000;
 const searchCache   = new Map();
 const SEARCH_TTL    = 5 * 60 * 1000;
 
+// --- PARALLEL SEARCH FUNCTION ---
 async function searchYT(query, maxResults = 25) {
   const hosts = [
     'https://pipedapi.kavin.rocks',
@@ -387,13 +388,15 @@ async function searchYT(query, maxResults = 25) {
     'https://api.piped.private.coffee',
     'https://pipedapi.reallyaweso.me',
   ];
-  for (const h of hosts) {
+
+  const fetchHost = async (h) => {
     try {
       const r = await fetch(`${h}/search?q=${encodeURIComponent(query)}&filter=videos`,
-        { signal: AbortSignal.timeout(10000) });
-      if (!r.ok) continue;
+        { signal: AbortSignal.timeout(4000) }); // 4s timeout per host
+      if (!r.ok) throw new Error('HTTP');
       const d = await r.json();
-      if (!Array.isArray(d.items)) continue;
+      if (!Array.isArray(d.items)) throw new Error('No items');
+      
       const items = d.items
         .filter(it => it.type === 'stream' && it.url)
         .map(it => {
@@ -409,30 +412,42 @@ async function searchYT(query, maxResults = 25) {
           };
         })
         .filter(Boolean).slice(0, maxResults);
-      if (items.length) return items;
-    } catch (e) {}
-  }
+        
+      if (items.length > 0) return items;
+      throw new Error('Empty');
+    } catch (e) {
+      throw e;
+    }
+  };
 
-  const key = process.env.YOUTUBE_API_KEY;
-  if (key) {
-    try {
-      const r = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=${maxResults}&q=${encodeURIComponent(query)}&key=${key}`,
-        { signal: AbortSignal.timeout(8000) }
-      );
-      if (r.ok) {
-        const d = await r.json();
-        return (d.items || []).map(it => ({
-          videoId: it.id.videoId,
-          title: it.snippet.title,
-          author: it.snippet.channelTitle,
-          thumbnail: it.snippet.thumbnails?.medium?.url || '',
-          durationText: '', viewsText: '',
-        }));
-      }
-    } catch (e) {}
+  try {
+    // Promise.any waits for the FIRST resolved promise (fastest server wins)
+    const result = await Promise.any(hosts.map(fetchHost));
+    return result;
+  } catch (e) {
+    // If all Piped hosts fail, fallback to YouTube Data API
+    console.warn(`[Search] Piped failed for "${query}". Trying YouTube API...`);
+    const key = process.env.YOUTUBE_API_KEY;
+    if (key) {
+      try {
+        const r = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=${maxResults}&q=${encodeURIComponent(query)}&key=${key}`,
+          { signal: AbortSignal.timeout(5000) }
+        );
+        if (r.ok) {
+          const d = await r.json();
+          return (d.items || []).map(it => ({
+            videoId: it.id.videoId,
+            title: it.snippet.title,
+            author: it.snippet.channelTitle,
+            thumbnail: it.snippet.thumbnails?.medium?.url || '',
+            durationText: '', viewsText: '',
+          }));
+        }
+      } catch (err) {}
+    }
+    return [];
   }
-  return [];
 }
 
 app.get('/', (req, res) => res.json({ ok: true, sessions: sessions.size }));
