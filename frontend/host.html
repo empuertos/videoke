@@ -13,7 +13,7 @@
     body { background:var(--bg); color:#fff; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; height:100vh; height:100dvh; height:-webkit-fill-available; width:100vw; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent; }
     
     #playerWrap { position:fixed; inset:0; background:#000; overflow:hidden; transition: all 0.3s ease; }
-    #player { position:absolute; inset:0; }
+    #player { position:absolute; inset:0; display: none; /* Nakatago by default */ }
     #player iframe { position:absolute; top:-15%; left:-15%; width:130%; height:130%; display:block; border:0; pointer-events:none; }
     #playerBlocker { position:absolute; inset:0; z-index:10; background:transparent; }
     
@@ -35,7 +35,6 @@
       top: -15%; left: -15%; width: 130%; height: 130%;
     }
     
-    /* Itago ang mga controls kapag naka-minimize */
     #playerWrap.minimized #topBar,
     #playerWrap.minimized #miniQr,
     #playerWrap.minimized #connStatus,
@@ -161,7 +160,6 @@
     <div id="focusTrap" tabindex="0"></div>
     <div id="playerBlocker"></div>
 
-    <!-- FLOATING MINI PLAYER OVERLAY -->
     <div id="restoreOverlay" onclick="toggleMinimize(event)">
       <span>⛶</span>
       <span>Click to Expand</span>
@@ -335,19 +333,16 @@
       }
     }
 
-    // FLOATING MINIMIZE TOGGLE
     function toggleMinimize(e) {
       if (e) e.stopPropagation();
       const wrap = document.getElementById('playerWrap');
       wrap.classList.toggle('minimized');
       
       if (wrap.classList.contains('minimized')) {
-        // Exit fullscreen if currently fullscreen so it can float
         if (document.fullscreenElement) {
           document.exitFullscreen().catch(()=>{});
         }
       } else {
-        // If expanding, try to go fullscreen again
         tryAutoFullscreen();
       }
     }
@@ -355,7 +350,7 @@
     async function tryAutoFullscreen() {
       if (isIOS || isFullscreen() || !firstInteractionDone) return;
       const wrap = document.getElementById('playerWrap');
-      if (wrap.classList.contains('minimized')) return; // Don't auto-fullscreen if minimized
+      if (wrap.classList.contains('minimized')) return;
       
       try {
         const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen || wrap.mozRequestFullScreen || wrap.msRequestFullscreen;
@@ -614,6 +609,8 @@
             if ([2, 5, 100, 101, 150].includes(e.data)) {
               const failedId = currentVideoId;
               socket.emit('videoFailed', { videoId: failedId, title: document.getElementById('nowSong').textContent || '' });
+              // AGAD NA ITAGO ANG PLAYER PARA HINDI MAKITA ANG ERROR SCREEN
+              stopVideo(); 
             }
           },
         },
@@ -698,6 +695,10 @@
         }
         return setTimeout(() => playVideo(song, isSync, retry + 1), 500);
       }
+      
+      // IPAKITA ANG PLAYER KAPAG MAY KANTA
+      document.getElementById('player').style.display = 'block';
+
       currentVideoId = song.videoId;
       updateNowHUD(song);
       hideIdle();
@@ -731,6 +732,7 @@
           if (st === -1 || st === 5) {
             console.warn('Video stuck or restricted. Skipping...');
             socket.emit('videoFailed', { videoId: currentVideoId, title: song.title || '' });
+            stopVideo(); // ITAGO AGAD KAPAG STUCK
           }
         } catch {}
       }, 6000);
@@ -739,6 +741,10 @@
     function stopVideo() {
       currentVideoId = null;
       if (ytPlayer && ytReady) { try { ytPlayer.stopVideo(); } catch {} }
+      
+      // ITAGO ANG BUONG PLAYER PARA HINDI MAKITA ANG "Video Unavailable"
+      document.getElementById('player').style.display = 'none';
+
       document.getElementById('topBar').classList.remove('show');
       document.getElementById('miniQr').classList.remove('show');
       document.getElementById('connStatus').style.display = 'flex';
