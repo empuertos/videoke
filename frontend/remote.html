@@ -281,7 +281,7 @@
     </button>
 
     <!-- PWA INSTALL BUTTON SA REMOTE -->
-    <button id="installBtnRemote" style="display: none;">📲 Install App to Home Screen</button>
+    <button id="installBtnRemote" style="display: none;">📲 Install Videoke Remote</button>
 
     <a href="/faq" class="inline-help-link">
       <span>❓</span> Need help? How to reserve and use the remote
@@ -512,6 +512,11 @@
     // --- PWA INSTALL LOGIC (REMOTE) ---
     let deferredPrompt;
     const installBtnRemote = document.getElementById('installBtnRemote');
+    
+    const isStandaloneRemote = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!isStandaloneRemote) {
+      installBtnRemote.style.display = 'block';
+    }
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -520,10 +525,6 @@
     });
 
     if (installBtnRemote) {
-      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-        installBtnRemote.style.display = 'block';
-      }
-
       installBtnRemote.addEventListener('click', async () => {
         if (deferredPrompt) {
           deferredPrompt.prompt();
