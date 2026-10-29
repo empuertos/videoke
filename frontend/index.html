@@ -14,7 +14,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="VIDEoke">
 
-  <!-- OPEN GRAPH META TAGS (For Messenger/Facebook Link Preview) -->
+  <!-- OPEN GRAPH META TAGS -->
   <meta property="og:title" content="🎤 VIDEoke YT — Free Karaoke">
   <meta property="og:description" content="Start a free karaoke party! Scan the QR, pick a song, and sing. 100% free, no ads, no signup.">
   <meta property="og:image" content="https://videoke-frontend.vercel.app/preview.jpg">
@@ -24,7 +24,7 @@
 
   <script src="/config.js"></script>
   <style>
-    :root { --gold: #ffd700; --red: #ff2e55; --green: #4ade80; --bg: #0a0512; --card: #16101f; --dim: #8888a0; }
+    :root { --gold: #ffd700; --red: #ff2e55; --green: #4ade80; --purple: #a855f7; --bg: #0a0512; --card: #16101f; --dim: #8888a0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
     .logo { font-size: 64px; margin-bottom: 10px; animation: float 2.4s ease-in-out infinite; }
@@ -51,6 +51,9 @@
     .btn-start { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35); }
     .btn-join { background: linear-gradient(135deg, var(--red), #ff0044); box-shadow: 0 6px 24px rgba(255, 46, 85, 0.35); }
     
+    /* NEW: PWA INSTALL & APK BUTTONS */
+    .btn-pwa { background: linear-gradient(135deg, var(--purple), #7e22ce); box-shadow: 0 6px 24px rgba(168, 85, 247, 0.35); margin-top: 10px; display: none; }
+    .btn-pwa.show { display: inline-flex; }
     .btn-download { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35); margin-top: 10px; border: 1px solid rgba(255,255,255,0.2); font-size: 14px; }
     
     .tv-note { margin-top: 12px; margin-bottom: 24px; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; max-width: 340px; width: 100%; font-size: 11px; color: #a0a0b0; line-height: 1.5; text-align: left; }
@@ -132,11 +135,14 @@
     </div>
   </div>
 
+  <!-- BAGONG PWA INSTALL BUTTON -->
+  <button id="installBtn" class="btn btn-pwa" style="display: none;">📲 Install App (PWA)</button>
+
   <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
   <button class="btn btn-join" onclick="openJoinModal()">📱 Join a Party</button>
   
   <!-- DOWNLOAD APK BUTTON -->
-  <a href="/videoke.apk" download class="btn btn-download">📥 Download APK (Android Phones Only)</a>
+  <a href="/videoke.apk" download class="btn btn-download">📥 Download APK (Android Only)</a>
 
   <!-- TV NOTE -->
   <div class="tv-note">
@@ -213,6 +219,45 @@
   <script>
     const API = (window.VIDEOKE_CONFIG?.BACKEND_URL) || 'http://localhost:3000';
     let currentSession = null;
+
+    // --- PWA INSTALL LOGIC ---
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Ipakita ang button kapag pwede nang i-install
+      if (installBtn) installBtn.style.display = 'inline-flex';
+    });
+
+    if (installBtn) {
+      // Ipakita rin sa iOS kahit walang beforeinstallprompt
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+        installBtn.style.display = 'inline-flex';
+      }
+
+      installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') installBtn.style.display = 'none';
+          deferredPrompt = null;
+        } else {
+          // Fallback instruction para sa iOS at iba pang browser
+          if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            alert("📱 To install this app on your iPhone:\n1. Tap the 'Share' button (square with an arrow) at the bottom of Safari.\n2. Scroll down and tap 'Add to Home Screen'.");
+          } else {
+            alert("📱 To install this app:\n1. Tap the browser menu (3 dots).\n2. Select 'Install App' or 'Add to Home Screen'.");
+          }
+        }
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      if (installBtn) installBtn.style.display = 'none';
+    });
+    // --- END PWA INSTALL LOGIC ---
 
     function guestLink() {
       if (!currentSession) return '';
