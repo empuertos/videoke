@@ -17,6 +17,27 @@
     #player iframe { position:absolute; top:-15%; left:-15%; width:130%; height:130%; display:block; border:0; pointer-events:none; }
     #playerBlocker { position:absolute; inset:0; z-index:10; background:transparent; }
     
+    #tapToPlayBtn {
+      display: none;
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      background: linear-gradient(135deg, #ff2e55, #ff0044);
+      color: #fff;
+      border: 2px solid #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 800;
+      box-shadow: 0 10px 30px rgba(255,46,85,0.6);
+      cursor: pointer;
+      animation: pulseBtn 1.5s infinite;
+      -webkit-appearance: none;
+    }
+    @keyframes pulseBtn { 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.05);} }
+
     /* FLOATING MINI PLAYER STYLES */
     #playerWrap.minimized {
       inset: auto;
@@ -66,39 +87,28 @@
     #playerWrap.minimized #restoreOverlay:hover { opacity: 1; }
     #playerWrap.minimized #restoreOverlay span:first-child { font-size: 32px; }
 
-    /* BAGONG TAP TO PLAY BUTTON */
-    #tapToPlayBtn {
-      display: none;
-      position: absolute;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 2000;
-      background: linear-gradient(135deg, #ff2e55, #ff0044);
-      color: #fff;
-      border: 2px solid #fff;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-size: 16px;
-      font-weight: 800;
-      box-shadow: 0 10px 30px rgba(255,46,85,0.6);
-      cursor: pointer;
-      animation: pulseBtn 1.5s infinite;
-      -webkit-appearance: none;
-    }
-    @keyframes pulseBtn { 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.05);} }
-
     #focusTrap { position:absolute; inset:0; z-index:1; outline:none; pointer-events:none; }
-    #idleScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#1a0033,#0a0512); z-index:100; text-align:center; padding:40px 20px; overflow-y:auto; }
+    
+    /* IDLE SCREEN WITH BACKGROUND VIDEO */
+    #idleScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; text-align:center; padding:40px 20px; overflow-y:auto; background:#000; }
     #idleScreen.hidden { display:none; }
-    #idleScreen .logo { font-size:clamp(48px,8vw,72px); font-weight:900; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:20px; letter-spacing:-2px; }
-    #idleScreen .subtitle { font-size:clamp(14px,2vw,20px); color:#a0a0b0; margin-bottom:30px; font-weight:500; }
-    #qrOverlay { margin-top:20px; padding:clamp(16px,3vw,30px); background:rgba(0,0,0,0.6); border:2px solid var(--gold); border-radius:24px; -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); box-shadow:0 0 60px rgba(255,215,0,0.3); max-width:90vw; }
+    
+    #idleVideo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; opacity:0.5; }
+    #idleOverlay { position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(10,5,18,0.2) 0%, rgba(10,5,18,0.85) 100%); z-index:2; pointer-events:none; }
+    
+    .idle-content { position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; width:100%; max-width:100%; }
+    
+    .idle-content .logo { font-size:clamp(48px,8vw,72px); font-weight:900; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:10px; letter-spacing:-2px; text-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+    .idle-content .subtitle { font-size:clamp(22px,3vw,32px); color:var(--gold); margin-bottom:8px; font-weight:900; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+    .idle-content .subtitle-small { font-size:clamp(14px,2vw,18px); color:#a0a0b0; margin-bottom:30px; font-weight:500; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+
+    #qrOverlay { margin-top:10px; padding:clamp(16px,3vw,30px); background:rgba(0,0,0,0.7); border:2px solid var(--gold); border-radius:24px; -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); box-shadow:0 0 60px rgba(255,215,0,0.3); max-width:90vw; }
     #qrOverlay.hidden { display:none; }
     #qrOverlay .title { font-size:clamp(16px,2vw,22px); font-weight:800; color:var(--gold); margin-bottom:16px; }
     #qrImg { width:clamp(180px,30vw,260px); height:auto; aspect-ratio:1; background:#fff; padding:12px; border-radius:16px; display:block; margin:0 auto; }
     #qrCode { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:clamp(28px,4vw,40px); font-weight:900; color:var(--gold); letter-spacing:10px; margin-top:16px; text-shadow:0 0 20px rgba(255,215,0,0.6); }
     #qrUrl { font-size:11px; color:var(--dim); margin-top:10px; word-break:break-all; max-width:280px; margin-left:auto; margin-right:auto; }
+    
     #topBar { position:absolute; top:0; left:0; right:0; z-index:50; padding:6px 8px; padding-top:max(6px,env(safe-area-inset-top)); display:none; align-items:flex-start; justify-content:space-between; gap:6px; pointer-events:none; transition:opacity 0.5s ease; }
     #topBar.show { display:flex; }
     #topBar.faded { opacity:0.55; }
@@ -249,26 +259,37 @@
   </div>
 
   <div id="idleScreen">
-    <div class="logo">🎤 VIDEoke</div>
-    <div class="subtitle" id="subText">Let's sing! Scan the QR code to join.</div>
-    <div id="qrOverlay" class="hidden">
-      <div class="title">📱 Scan to join</div>
-      <img id="qrImg" src="" alt="QR Code">
-      <div id="qrCode">------</div>
-      <div id="qrUrl"></div>
+    <!-- BACKGROUND VIDEO -->
+    <video id="idleVideo" autoplay loop muted playsinline>
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-disco-ball-in-a-club-1227-large.mp4" type="video/mp4">
+    </video>
+    <div id="idleOverlay"></div>
+    
+    <div class="idle-content">
+      <div class="logo">🎤 VIDEoke</div>
+      <div class="subtitle" id="subText">Please select a song</div>
+      <div class="subtitle-small">Scan the QR code to reserve</div>
+      
+      <div id="qrOverlay" class="hidden">
+        <div class="title">📱 Scan to join</div>
+        <img id="qrImg" src="" alt="QR Code">
+        <div id="qrCode">------</div>
+        <div id="qrUrl"></div>
+      </div>
+      
+      <div id="noPartyMsg" style="margin-top:20px;color:var(--dim);font-size:15px;">⏳ Waiting for the host to start the party...</div>
+      <div id="hostControls" style="margin-top:24px; display:none; gap:10px; flex-wrap:wrap; justify-content:center;">
+        <button id="stopPartyBtn" onclick="endParty()" style="padding:12px 24px; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#6b7280,#4b5563); -webkit-appearance:none;">🚫 End Party</button>
+      </div>
+      <div id="hostAdminInfo" style="display:none;margin-top:20px;padding:12px 20px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,215,0,0.3); border-radius:10px; font-size:13px; color:#a0a0b0;">
+        🔑 Admin Password: <span id="hostAdminPw" style="color:var(--gold); font-family:ui-monospace,monospace; font-weight:800; letter-spacing:1px;">--------</span>
+      </div>
+      <div id="ttsControl">
+        <button id="ttsStatusBtn" onclick="toggleTTS()">🔊 AI Voice: On</button>
+        <button id="ttsTestBtn" onclick="testTTS()">▶ Test Voice</button>
+      </div>
+      <a id="faqLink" href="/faq" target="_blank" rel="noopener">❓ Help / FAQ</a>
     </div>
-    <div id="noPartyMsg" style="margin-top:20px;color:var(--dim);font-size:15px;">⏳ Waiting for the host to start the party...</div>
-    <div id="hostControls" style="margin-top:24px; display:none; gap:10px; flex-wrap:wrap; justify-content:center;">
-      <button id="stopPartyBtn" onclick="endParty()" style="padding:12px 24px; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#6b7280,#4b5563); -webkit-appearance:none;">🚫 End Party</button>
-    </div>
-    <div id="hostAdminInfo" style="display:none;margin-top:20px;padding:12px 20px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,215,0,0.3); border-radius:10px; font-size:13px; color:#a0a0b0;">
-      🔑 Admin Password: <span id="hostAdminPw" style="color:var(--gold); font-family:ui-monospace,monospace; font-weight:800; letter-spacing:1px;">--------</span>
-    </div>
-    <div id="ttsControl">
-      <button id="ttsStatusBtn" onclick="toggleTTS()">🔊 AI Voice: On</button>
-      <button id="ttsTestBtn" onclick="testTTS()">▶ Test Voice</button>
-    </div>
-    <a id="faqLink" href="/faq" target="_blank" rel="noopener">❓ Help / FAQ</a>
   </div>
 
   <div id="hostGate">
@@ -758,13 +779,11 @@
       errorCheckTimeout = setTimeout(() => {
         try {
           const st = ytPlayer.getPlayerState();
-          // Kung after 10s hindi pa rin nag-play, saka lang mag-skip
           if (st === -1 || st === 5) {
             console.warn('Video stuck or restricted. Skipping...');
             socket.emit('videoFailed', { videoId: currentVideoId, title: song.title || '' });
             stopVideo();
           } else if (st === 2) {
-            // Naka-pause, ipakita ang Tap to Play button
             document.getElementById('tapToPlayBtn').style.display = 'block';
           }
         } catch {}
@@ -821,8 +840,16 @@
       document.getElementById('topBar').classList.add('show');
     }
 
-    function showIdle() { document.getElementById('idleScreen').classList.remove('hidden'); }
-    function hideIdle() { document.getElementById('idleScreen').classList.add('hidden'); }
+    function showIdle() { 
+      document.getElementById('idleScreen').classList.remove('hidden');
+      const vid = document.getElementById('idleVideo');
+      if (vid) vid.play().catch(()=>{});
+    }
+    function hideIdle() { 
+      document.getElementById('idleScreen').classList.add('hidden');
+      const vid = document.getElementById('idleVideo');
+      if (vid) vid.pause();
+    }
 
     function updateQRCodeDisplay(code) {
       const overlay = document.getElementById('qrOverlay');
