@@ -786,6 +786,11 @@
       localStorage.removeItem('videoke:partyCode');
       clearStaleAdmin(true);
       
+      // Tell socket to leave the room cleanly
+      socket.emit('leaveParty');
+      socket.disconnect();
+      socket.connect();
+      
       document.getElementById('headerPartyCode').style.display = 'none';
       document.getElementById('shareSection').classList.remove('show');
       document.getElementById('partyEndedBanner').classList.remove('show');
@@ -1654,12 +1659,17 @@
         qEl.innerHTML = '<div class="empty-state">No reservations</div>';
         return;
       }
+      
+      // FIXED: Exact match instead of startsWith to avoid "John" matching "John Doe"
       function matchesMe(singer) {
         if (!myName) return false;
-        const sl = singer.toLowerCase();
+        const sl = singer.toLowerCase().trim();
         if (sl === myName) return true;
-        return sl.startsWith(myName + ' ') || sl.startsWith(myName + '(');
+        // Match duet formats exactly: "John (👦 Boy)" or "John (👧 Girl)"
+        if (sl === `${myName} (👦 boy)` || sl === `${myName} (👧 girl)`) return true;
+        return false;
       }
+      
       const baseWait = s.nowPlaying ? 1 : 0;
       qEl.innerHTML = s.queue.map((q, i) => {
         const isMe = matchesMe(q.singer);
