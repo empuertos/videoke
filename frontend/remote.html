@@ -24,15 +24,15 @@
     
     .header-actions { display:flex; gap:8px; align-items: center; }
     
-    /* MALINAW NA HELP BUTTON SA HEADER */
     .help-btn-header { background:linear-gradient(135deg, #3b82f6, #2563eb); color:#fff; padding:0 12px; height:38px; border-radius:10px; font-size:13px; font-weight:800; text-decoration:none; display:flex; align-items:center; gap:4px; box-shadow:0 2px 10px rgba(59,130,246,0.3); transition: transform 0.15s; }
     .help-btn-header:active { transform: scale(0.95); }
-    
     .icon-btn { background:var(--card);border:1px solid var(--border);color:#fff;width:38px;height:38px;border-radius:10px;font-size:16px;cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;text-decoration:none; }
     
+    /* CLICKABLE PARTY CODE */
+    #headerPartyCode { font-family:monospace; color:var(--gold); font-weight:bold; margin-left:6px; display:none; cursor:pointer; background:rgba(255,215,0,0.1); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,215,0,0.3); }
+    #headerPartyCode:active { background:rgba(255,215,0,0.2); }
+
     .container { padding:18px; max-width:560px; margin:0 auto; }
-    
-    /* NAME INPUT DESIGN */
     #singerInputGroup { margin-bottom:14px; transition:all 0.25s; }
     .input-group.collapsed { display:none; }
     .input-group label { display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase; }
@@ -47,7 +47,6 @@
     #guestHint { display:none; font-size:11px; color:var(--dim); margin-top:6px; letter-spacing:0.3px; line-height: 1.4; }
     #guestHint.show { display:block; }
 
-    /* MALIIT NA HELP LINK SA ILALIM NG PANGALAN */
     .inline-help-link { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; text-align:center; margin-top:8px; margin-bottom:16px; font-size:12px; color:#a0b0c0; text-decoration:none; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); padding:10px; border-radius:10px; font-weight:600; transition: all 0.2s; }
     .inline-help-link:active { background:rgba(59,130,246,0.2); color:#fff; }
 
@@ -227,6 +226,11 @@
     #shareSection .share-btns .share { background:linear-gradient(135deg,#ff2e55,#ff0044); box-shadow:0 4px 15px rgba(255,46,85,0.3); }
     #shareSection .host-btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#3b82f6,#2563eb); box-shadow:0 4px 15px rgba(59,130,246,0.3); display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px; transition:transform 0.15s; }
     #shareSection .host-btn:active { transform:scale(0.98); }
+    
+    /* CHANGE PARTY BUTTON */
+    #shareSection .leave-btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 4px 15px rgba(239,68,68,0.3); display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; transition:transform 0.15s; }
+    #shareSection .leave-btn:active { transform:scale(0.98); }
+    
     #shareSection .hint { font-size:11px; color:var(--dim); font-style:italic; }
     #partyGate { display:none; position:fixed; inset:0; z-index:9000; background:radial-gradient(ellipse at top,#2a0a1a,#0a0512); padding:24px; flex-direction:column; align-items:center; justify-content:center; text-align:center; overflow-y:auto; }
     #partyGate.show { display:flex; }
@@ -253,11 +257,11 @@
       <div class="status">
         <span class="dot" id="statusDot"></span>
         <span id="statusText">Connected</span>
-        <span id="headerPartyCode" style="font-family:monospace;color:var(--gold);font-weight:bold;margin-left:6px;display:none">• ---</span>
+        <!-- CLICKABLE PARTY CODE -->
+        <span id="headerPartyCode" onclick="leaveParty()" title="Change Party Code">• --- ✏️</span>
       </div>
     </div>
     <div class="header-actions">
-      <!-- MALINAW NA HELP BUTTON SA HEADER -->
       <a class="help-btn-header" href="/faq">❓ Help</a>
       <button class="icon-btn" onclick="openAdmin()" title="Admin">⚙️</button>
     </div>
@@ -277,7 +281,6 @@
       <span class="edit">✏️</span>
     </button>
 
-    <!-- MALIIT NA HELP LINK SA ILALIM NG PANGALAN -->
     <a href="/faq" class="inline-help-link">
       <span>❓</span> Need help? How to reserve and use the remote
     </a>
@@ -402,6 +405,8 @@
         <button class="share" onclick="sharePartyLink()">📤 Share</button>
       </div>
       <button class="host-btn" onclick="viewHostScreen()">📺 View TV Display</button>
+      <!-- BAGONG BUTTON PARA SA CHANGE PARTY -->
+      <button class="leave-btn" onclick="leaveParty()">🚪 Change Party Code</button>
       <div class="hint">Let friends scan this to join</div>
     </div>
 
@@ -656,7 +661,7 @@
         'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(url);
       document.getElementById('shareCode').textContent = partyCode;
       sec.classList.add('show');
-      hCode.textContent = '• ' + partyCode;
+      hCode.textContent = '• ' + partyCode + ' ✏️';
       hCode.style.display = 'inline-block';
     }
 
@@ -733,6 +738,34 @@
       await restoreAdminAuth();
       refreshFavorites();
       toast('✓ Joined the party!', 'success');
+    }
+
+    // BAGONG FUNCTION PARA UMALIS SA PARTY
+    function leaveParty() {
+      if (!confirm('Are you sure you want to leave this party and enter a new code?')) return;
+      
+      partyCode = null;
+      partyVerified = false;
+      localStorage.removeItem('videoke:partyCode');
+      clearStaleAdmin(true);
+      
+      // Reset UI
+      document.getElementById('headerPartyCode').style.display = 'none';
+      document.getElementById('shareSection').classList.remove('show');
+      document.getElementById('partyEndedBanner').classList.remove('show');
+      document.body.classList.remove('party-ended');
+      document.getElementById('partyCodeInput').value = '';
+      document.getElementById('partyGateErr').textContent = '';
+      
+      // Clear queue display
+      document.getElementById('queueList').innerHTML = '<div class="empty-state">No reservations</div>';
+      document.getElementById('nowContent').innerHTML = '<div class="empty">Nothing playing</div>';
+      document.getElementById('queueCount').textContent = '0';
+      document.getElementById('qTabBadge').textContent = '0';
+      document.getElementById('singerStats').style.display = 'none';
+      
+      showPartyGate('Enter a new party code to join.');
+      toast('Left the party.', 'success');
     }
 
     (async function initPartyAccess() {
@@ -1533,6 +1566,8 @@
     });
 
     socket.on('state', s => {
+      if (!partyVerified) return; // Ignore updates if user left the party
+      
       lastState = s;
       if (typeof s.partyActive === 'boolean' && !s.partyActive && partyVerified) {
         partyVerified = false;
