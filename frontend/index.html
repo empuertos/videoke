@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0a0512">
-  <title>VIDEoke YT — Free Karaoke</title>
+  <title>VIDEoke — Start</title>
   <meta name="description" content="Free multi-tenant YouTube karaoke. No ads, no fees, forever.">
   
+  <!-- OPEN GRAPH META TAGS (For Messenger/Facebook Link Preview) -->
   <meta property="og:title" content="🎤 VIDEoke YT — Free Karaoke">
   <meta property="og:description" content="Start a free karaoke party! Scan the QR, pick a song, and sing. 100% free, no ads, no signup.">
   <meta property="og:image" content="https://videoke-frontend.vercel.app/preview.jpg">
@@ -24,13 +25,10 @@
     h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, var(--gold), var(--red)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
     .subtitle { color: var(--dim); font-size: 14px; margin-bottom: 16px; max-width: 340px; line-height: 1.6; }
     
-    /* MGA BAGONG DESIGN PARA SA HELP BUTTON */
-    .help-float-btn { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; align-items: center; gap: 6px; padding: 12px 18px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border-radius: 30px; text-decoration: none; font-size: 14px; font-weight: 800; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5); transition: transform 0.2s; }
-    .help-float-btn:hover { transform: scale(1.05); }
-    
     .free-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; margin-bottom: 24px; background: linear-gradient(135deg, rgba(74,222,128,0.12), rgba(255,215,0,0.08)); border: 1.5px solid rgba(74,222,128,0.4); border-radius: 24px; font-size: 12px; font-weight: 800; color: #fff; letter-spacing: 0.3px; box-shadow: 0 4px 20px rgba(74,222,128,0.15); }
     .free-badge .pill-icon { font-size: 15px; }
     .free-badge .pill-tag { color: var(--green); text-transform: uppercase; font-size: 10px; letter-spacing: 1.5px; padding: 2px 8px; background: rgba(74,222,128,0.15); border-radius: 10px; }
+    
     .stats-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
     .stat-chip { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff; transition: all 0.3s; }
     .stat-chip.highlight { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
@@ -39,11 +37,16 @@
     .stat-chip .stat-icon { font-size: 14px; }
     .stat-chip .stat-label { color: var(--dim); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
     .stat-chip .stat-num { font-variant-numeric: tabular-nums; min-width: 12px; display: inline-block; }
-    .btn { padding: 16px 32px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; color: #fff; margin: 6px; transition: transform 0.15s, opacity 0.2s; width: 100%; max-width: 340px; -webkit-appearance: none; }
+    
+    .btn { padding: 16px 32px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; color: #fff; margin: 6px; transition: transform 0.15s, opacity 0.2s; width: 100%; max-width: 340px; -webkit-appearance: none; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
     .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-start { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35); }
     .btn-join { background: linear-gradient(135deg, var(--red), #ff0044); box-shadow: 0 6px 24px rgba(255, 46, 85, 0.35); }
+    
+    /* BAGONG DOWNLOAD BUTTON */
+    .btn-download { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35); margin-top: 10px; border: 1px solid rgba(255,255,255,0.2); }
+    
     .result-card { margin-top: 28px; padding: 24px; background: var(--card); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 20px; max-width: 420px; width: 100%; display: none; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4); }
     .result-card.show { display: block; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
@@ -56,6 +59,7 @@
     .result-card button:active { transform: scale(0.98); }
     .btn-open-host { background: linear-gradient(135deg, #22c55e, #16a34a); }
     .btn-copy { background: #2a1a1a; border: 1px solid #444; margin-top: 8px; }
+    
     .support-card { margin-top: 40px; padding: 24px 20px; background: linear-gradient(180deg, rgba(255,215,0,0.06) 0%, rgba(10,5,18,0.4) 100%); border: 1px solid rgba(255,215,0,0.22); border-radius: 20px; max-width: 420px; width: 100%; text-align: center; }
     .support-title { font-size: 15px; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; margin-bottom: 10px; }
     .support-text { font-size: 12px; line-height: 1.7; color: #c0c0d0; margin-bottom: 18px; }
@@ -72,11 +76,13 @@
     .support-hint { font-size: 11px; color: var(--dim); font-style: italic; line-height: 1.5; }
     .support-thanks { margin-top: 14px; font-size: 11px; color: #a0a0b0; letter-spacing: 0.3px; }
     .support-thanks b { color: var(--gold); }
+    
     .footer { margin-top: 36px; padding: 24px 20px 20px; border-top: 1px solid rgba(255, 255, 255, 0.06); text-align: center; font-size: 12px; color: #666; letter-spacing: 0.5px; line-height: 1.9; max-width: 420px; width: 100%; }
     .footer b { color: var(--gold); font-weight: 800; }
     .footer .no-ads { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 12px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3); border-radius: 20px; font-size: 10px; font-weight: 700; color: var(--green); letter-spacing: 0.5px; text-transform: uppercase; }
     .faq-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 10px 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; text-decoration: none; font-size: 13px; font-weight: 700; transition: all 0.15s; }
     .faq-btn:hover { border-color: var(--gold); background: rgba(255,215,0,0.06); }
+    
     .modal-bg { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-bg.show { display: flex; }
     .modal { background: var(--card); padding: 24px; border-radius: 20px; max-width: 360px; width: 100%; border: 1px solid #333; }
@@ -89,9 +95,6 @@
   </style>
 </head>
 <body>
-  <!-- ITO YUNG FLOATING HELP BUTTON NA LAGING NAKIKITA -->
-  <a href="/faq" class="help-float-btn">❓ Need Help?</a>
-
   <div class="logo">🎤</div>
   <h1>VIDEoke YT</h1>
   <div class="subtitle">Start your own karaoke party or join one</div>
@@ -122,6 +125,9 @@
 
   <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
   <button class="btn btn-join" onclick="openJoinModal()">📱 Join a Party</button>
+  
+  <!-- BAGONG DOWNLOAD APK BUTTON -->
+  <a href="/videoke.apk" download class="btn btn-download">📥 Download APK (Android)</a>
 
   <div class="result-card" id="resultCard">
     <h2>🎉 Your Party is Ready!</h2>
@@ -160,9 +166,9 @@
       </div>
       <div class="support-qr-item">
         <div class="support-qr-wrap">
-          <img src="/support-qr-paypal.png" alt="PayPal QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
+          <img src="/support-qr-palawanpay.png" alt="PalawanPay QR" class="support-qr" onerror="this.closest('.support-qr-item').style.display='none'">
         </div>
-        <div class="support-qr-label">🌐 PayPal</div>
+        <div class="support-qr-label">💜 PalawanPay</div>
       </div>
     </div>
 
@@ -175,8 +181,7 @@
     <div>Created with <span style="color:var(--red)">❤️</span> by <b>Steve</b></div>
     <div class="no-ads">✅ 0 ads · 0 trackers · Always free</div>
     <div>
-      <!-- BINAGO NATIN ANG TEXT DITO -->
-      <a class="faq-btn" href="/faq">❓ Help / Guide</a>
+      <a class="faq-btn" href="/faq">❓ FAQ &amp; About</a>
     </div>
     <div style="margin-top:8px; font-size:10px; opacity:0.55; letter-spacing:1px; text-transform:uppercase;">© <span id="copyrightYear"></span> · All rights reserved</div>
   </div>
