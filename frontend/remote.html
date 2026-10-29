@@ -28,7 +28,6 @@
     .help-btn-header:active { transform: scale(0.95); }
     .icon-btn { background:var(--card);border:1px solid var(--border);color:#fff;width:38px;height:38px;border-radius:10px;font-size:16px;cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;text-decoration:none; }
     
-    /* CLICKABLE PARTY CODE */
     #headerPartyCode { font-family:monospace; color:var(--gold); font-weight:bold; margin-left:6px; display:none; cursor:pointer; background:rgba(255,215,0,0.1); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,215,0,0.3); }
     #headerPartyCode:active { background:rgba(255,215,0,0.2); }
 
@@ -227,7 +226,6 @@
     #shareSection .host-btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#3b82f6,#2563eb); box-shadow:0 4px 15px rgba(59,130,246,0.3); display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px; transition:transform 0.15s; }
     #shareSection .host-btn:active { transform:scale(0.98); }
     
-    /* CHANGE PARTY BUTTON */
     #shareSection .leave-btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; color:#fff; background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 4px 15px rgba(239,68,68,0.3); display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; transition:transform 0.15s; }
     #shareSection .leave-btn:active { transform:scale(0.98); }
     
@@ -257,7 +255,6 @@
       <div class="status">
         <span class="dot" id="statusDot"></span>
         <span id="statusText">Connected</span>
-        <!-- CLICKABLE PARTY CODE -->
         <span id="headerPartyCode" onclick="leaveParty()" title="Change Party Code">• --- ✏️</span>
       </div>
     </div>
@@ -405,7 +402,6 @@
         <button class="share" onclick="sharePartyLink()">📤 Share</button>
       </div>
       <button class="host-btn" onclick="viewHostScreen()">📺 View TV Display</button>
-      <!-- BAGONG BUTTON PARA SA CHANGE PARTY -->
       <button class="leave-btn" onclick="leaveParty()">🚪 Change Party Code</button>
       <div class="hint">Let friends scan this to join</div>
     </div>
@@ -740,7 +736,6 @@
       toast('✓ Joined the party!', 'success');
     }
 
-    // BAGONG FUNCTION PARA UMALIS SA PARTY
     function leaveParty() {
       if (!confirm('Are you sure you want to leave this party and enter a new code?')) return;
       
@@ -1122,7 +1117,8 @@
     async function loadRecommendations() {
       if (recommendLoaded) return;
       try {
-        const r = await fetch(API + '/api/recommend', { signal: AbortSignal.timeout(15000) });
+        // 30 seconds timeout
+        const r = await fetch(API + '/api/recommend', { signal: AbortSignal.timeout(30000) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const data = await r.json();
         renderRecommendChips(data.chips || []);
@@ -1185,7 +1181,7 @@
       try {
         const r = await fetch(
           API + `/api/search?q=${encodeURIComponent(q)}&filter=${encodeURIComponent(currentFilter)}&offset=0`,
-          { signal: AbortSignal.timeout(15000) }
+          { signal: AbortSignal.timeout(20000) } // Increased to 20s
         );
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const data = await r.json();
@@ -1226,7 +1222,7 @@
       try {
         const r = await fetch(
           API + `/api/search?q=${encodeURIComponent(currentQuery)}&filter=${encodeURIComponent(currentFilter)}&offset=${currentOffset}`,
-          { signal: AbortSignal.timeout(15000) }
+          { signal: AbortSignal.timeout(20000) } // Increased to 20s
         );
         if (myReq !== searchRequestId) return;
         if (!r.ok) throw new Error('HTTP ' + r.status);
