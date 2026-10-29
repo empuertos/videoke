@@ -1,9 +1,8 @@
 // =====================================================
-// VIDEOKE YT — Multi-tenant backend (hardened v3.5)
-// Changes in v3.5:
-//   • Random dynamic queries for Recommendations
-//   • Shuffled results for "Popular Karaoke"
-//   • 15-minute cache for faster updates
+// VIDEOKE YT — Multi-tenant backend (hardened v3.6)
+// Changes in v3.6:
+//   • Optimized /api/recommend using Promise.all (Parallel)
+//   • Reduced dynamic searches to 3 for faster response
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -14,7 +13,6 @@ const path       = require('path');
 const helmet     = require('helmet');
 const compression= require('compression');
 
-// ---------- CONFIG ----------
 const PORT           = process.env.PORT || 3000;
 const DATA_DIR       = process.env.DATA_DIR || path.join(__dirname, 'data');
 const FRONTEND_URL   = process.env.FRONTEND_URL || '*';
@@ -27,7 +25,6 @@ const PARTY_CHARS    = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-// ---------- UTILS ----------
 const now     = () => Date.now();
 const genCode = (len, abc = PARTY_CHARS) => {
   const b = crypto.randomBytes(len);
@@ -43,7 +40,6 @@ const safeEq   = (a, b) => {
 const clamp    = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const cleanStr = (s, max) => String(s ?? '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, max);
 
-// Shuffle array (for dynamic recommendations)
 const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -52,7 +48,6 @@ const shuffleArray = (array) => {
   return array;
 };
 
-// ---------- ADMIN PASSWORD ENCRYPTION (at rest) ----------
 const SECRET_FILE = path.join(DATA_DIR, '.secret');
 let ENC_KEY;
 try {
@@ -83,7 +78,6 @@ function decryptPw(b64) {
   } catch { return null; }
 }
 
-// ---------- EXPRESS + SOCKET.IO ----------
 const app    = express();
 const server = http.createServer(app);
 
@@ -115,7 +109,6 @@ const io = new Server(server, {
   transports: ['polling', 'websocket'],
 });
 
-// ---------- SESSION STORE ----------
 const sessions   = new Map();
 const partyIndex = new Map();
 const hostIndex  = new Map();
@@ -302,7 +295,6 @@ setInterval(() => {
 loadSessions();
 setInterval(broadcastStats, 10_000);
 
-// ---------- RATE LIMIT ----------
 const rl = new Map();
 function limit(key, max, win) {
   const t = now();
@@ -316,7 +308,6 @@ setInterval(() => {
   for (const [k, b] of rl) if (b.start < cutoff) rl.delete(k);
 }, 60 * 1000);
 
-// ---------- YOUTUBE ----------
 async function ytInfo(id) {
   try {
     const r = await fetch(
@@ -364,7 +355,6 @@ const RECOMMEND_CHIPS = [
   { emoji: '💔', label: 'Heartbreak',    query: 'heartbreak karaoke',         filter: 'karaoke' },
 ];
 
-// Dynamic Search Queries Pool
 const RECOMMEND_SEARCH_POOL = [
   'trending karaoke songs this week',
   'most requested karaoke songs',
@@ -385,7 +375,7 @@ const RECOMMEND_SEARCH_POOL = [
 ];
 
 let recommendCache = null;
-const RECOMMEND_TTL = 15 * 60 * 1000; // 15 minutes (dynamic refresh)
+const RECOMMEND_TTL = 15 * 60 * 1000;
 const searchCache   = new Map();
 const SEARCH_TTL    = 5 * 60 * 1000;
 
@@ -399,7 +389,7 @@ async function searchYT(query, maxResults = 25) {
   for (const h of hosts) {
     try {
       const r = await fetch(`${h}/search?q=${encodeURIComponent(query)}&filter=videos`,
-        { signal: AbortSignal.timeout(8000) });
+        { signal: AbortSignal.timeout(10000) }); // Increased timeout to 10s
       if (!r.ok) continue;
       const d = await r.json();
       if (!Array.isArray(d.items)) continue;
@@ -444,9 +434,6 @@ async function searchYT(query, maxResults = 25) {
   return [];
 }
 
-// =====================================================
-// REST — PUBLIC
-// =====================================================
 app.get('/', (req, res) => res.json({ ok: true, sessions: sessions.size }));
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
@@ -576,13 +563,14 @@ app.get('/api/recommend', async (req, res) => {
   if (recommendCache && now() - recommendCache.ts < RECOMMEND_TTL)
     return res.json(recommendCache.data);
 
-  // Pick 4 random search queries from the pool
-  const dynamicSearches = shuffleArray([...RECOMMEND_SEARCH_POOL]).slice(0, 4);
+  // Fetch 3 search queries IN PARALLEL for speed
+  const dynamicSearches = shuffleArray([...RECOMMEND_SEARCH_POOL]).slice(0, 3);
   
-  const allRaw = [];
-  for (const s of dynamicSearches) {
-    try { const r = await searchYT(s, 20); if (Array.isArray(r)) allRaw.push(...r); } catch {}
-  }
+  const results = await Promise.all(
+    dynamicSearches.map(s => searchYT(s, 15).catch(() => []))
+  );
+  
+  const allRaw = results.flat();
 
   const seen = new Set();
   let items = allRaw
@@ -593,7 +581,6 @@ app.get('/api/recommend', async (req, res) => {
     })
     .map(it => ({ ...it, isDuet: isDuetVideo(it.title, it.author) }));
 
-  // Shuffle the results so the order and top picks change constantly
   items = shuffleArray(items).slice(0, 12);
 
   const data = { chips: RECOMMEND_CHIPS, items };
@@ -624,9 +611,6 @@ app.get('/api/failed-videos', (req, res) => {
   res.json(s ? s.failedVideos : []);
 });
 
-// =====================================================
-// ADMIN AUTH
-// =====================================================
 app.post('/api/admin/login', (req, res) => {
   if (!limit('adminlogin:' + (req.ip || 'anon'), 10, 60_000))
     return res.status(429).json({ error: 'Too many attempts' });
@@ -701,9 +685,6 @@ app.post('/api/admin/clear-failed', adminAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// =====================================================
-// STATE HELPERS
-// =====================================================
 function buildState(s) {
   return {
     sessionId: s.id,
@@ -749,9 +730,6 @@ function startNext(s) {
   persistSoon();
 }
 
-// =====================================================
-// SOCKET.IO — SESSION-SCOPED
-// =====================================================
 io.on('connection', (socket) => {
   socket.data.sessionId = null;
   socket.data.role      = null;
