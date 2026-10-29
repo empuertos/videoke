@@ -529,7 +529,6 @@
             if ([2, 5, 100, 101, 150].includes(e.data)) {
               const failedId = currentVideoId;
               socket.emit('videoFailed', { videoId: failedId, title: document.getElementById('nowSong').textContent || '' });
-              // Inalis natin ang setTimeout(() => stopVideo(), 1000); dito para hindi maputol ang susunod na kanta.
             }
           },
         },
@@ -623,12 +622,16 @@
       document.getElementById('connStatus').style.display = 'none';
       resetHudVisibility();
       if (!isIOS) tryAutoFullscreen();
+      
       try { ytPlayer.loadVideoById({ videoId: song.videoId, suggestedQuality: 'default' }); }
       catch { ytPlayer.loadVideoById(song.videoId); }
+      
       setTimeout(() => { try { if (ytPlayer && ytReady) ytPlayer.setPlaybackQuality('default'); } catch {} }, 800);
       try { ytPlayer.setVolume(80); } catch {}
+      
       const attemptPlay = () => { try { ytPlayer.playVideo(); } catch {} };
       attemptPlay();
+      
       if (isMobile) {
         setTimeout(() => {
           try {
@@ -637,17 +640,18 @@
           } catch {}
         }, 1200);
       }
+      
+      // BAGONG WATCHDOG TIMER: Kapag hindi nag-play sa loob ng 6s dahil sa restriction, auto-skip!
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         try {
           const st = ytPlayer.getPlayerState();
           if (st === -1 || st === 5) {
-            const failedId = currentVideoId;
-            socket.emit('videoFailed', { videoId: failedId, title: song.title || '' });
-            // Inalis din natin ang stopVideo() dito para hindi mapatay ang next video.
+            console.warn('Video stuck or restricted. Skipping...');
+            socket.emit('videoFailed', { videoId: currentVideoId, title: song.title || '' });
           }
         } catch {}
-      }, 8000);
+      }, 6000);
     }
 
     function stopVideo() {
@@ -659,6 +663,7 @@
       showIdle();
       autoFullscreenAttempted = false;
       clearTimeout(hudFadeTimer);
+      clearTimeout(errorCheckTimeout);
     }
 
     function updateNowHUD(song) {
