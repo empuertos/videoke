@@ -7,14 +7,12 @@
   <title>VIDEoke YT — Free Karaoke</title>
   <meta name="description" content="Free multi-tenant YouTube karaoke. No ads, no fees, forever.">
   
-  <!-- PWA MANIFEST & ICONS (HOME) -->
   <link rel="manifest" href="/manifest-home.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="VIDEoke">
 
-  <!-- OPEN GRAPH META TAGS -->
   <meta property="og:title" content="🎤 VIDEoke YT — Free Karaoke">
   <meta property="og:description" content="Start a free karaoke party! Scan the QR, pick a song, and sing. 100% free, no ads, no signup.">
   <meta property="og:image" content="https://videoke-frontend.vercel.app/preview.jpg">
@@ -134,7 +132,7 @@
   </div>
 
   <!-- PWA INSTALL BUTTON -->
-  <button id="installBtn" class="btn btn-pwa" style="display: none;">📲 Install App (PWA)</button>
+  <button id="installBtn" class="btn btn-pwa" style="display: none;">📲 Install VIDEoke (Home)</button>
 
   <button class="btn btn-start" id="startBtn" onclick="createSession()">🎉 Start New Karaoke</button>
   <button class="btn btn-join" onclick="openJoinModal()">📱 Join a Party</button>
@@ -215,39 +213,42 @@
     const API = (window.VIDEOKE_CONFIG?.BACKEND_URL) || 'http://localhost:3000';
     let currentSession = null;
 
-    // --- PWA INSTALL LOGIC ---
+    // --- PWA INSTALL LOGIC (HOME) ---
     let deferredPrompt;
     const installBtn = document.getElementById('installBtn');
+    
+    // Check if already installed as standalone
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      installBtn.style.display = 'none';
+    } else {
+      // Ipakita ang button by default, kahit walang beforeinstallprompt (para may fallback instructions)
+      installBtn.style.display = 'inline-flex';
+    }
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      if (installBtn) installBtn.style.display = 'inline-flex';
+      installBtn.style.display = 'inline-flex';
     });
 
-    if (installBtn) {
-      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-        installBtn.style.display = 'inline-flex';
-      }
-
-      installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          if (outcome === 'accepted') installBtn.style.display = 'none';
-          deferredPrompt = null;
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') installBtn.style.display = 'none';
+        deferredPrompt = null;
+      } else {
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+          alert("📱 To install on iPhone:\n1. Tap the 'Share' button at the bottom.\n2. Scroll down and tap 'Add to Home Screen'.");
         } else {
-          if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-            alert("📱 To install this app on your iPhone:\n1. Tap the 'Share' button (square with an arrow) at the bottom of Safari.\n2. Scroll down and tap 'Add to Home Screen'.");
-          } else {
-            alert("📱 To install this app:\n1. Tap the browser menu (3 dots).\n2. Select 'Install App' or 'Add to Home Screen'.");
-          }
+          alert("📱 To install:\n1. Tap the browser menu (3 dots).\n2. Select 'Install App' or 'Add to Home Screen'.");
         }
-      });
-    }
+      }
+    });
 
     window.addEventListener('appinstalled', () => {
-      if (installBtn) installBtn.style.display = 'none';
+      installBtn.style.display = 'none';
     });
     // --- END PWA INSTALL LOGIC ---
 
