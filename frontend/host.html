@@ -15,10 +15,10 @@
     #player { position:absolute; inset:0; }
     #player iframe { position:absolute; top:-15%; left:-15%; width:130%; height:130%; display:block; border:0; pointer-events:none; }
     #playerBlocker { position:absolute; inset:0; z-index:10; background:transparent; }
-    /* FIX #2: was z-index:9999 with default pointer-events → blocked every UI button.
-       Its only job is to steal keyboard focus away from the YouTube iframe,
-       so pointer-events:none is safe. z-index only needs to be above the iframe. */
+    
+    /* FIX: focusTrap no longer blocks the UI */
     #focusTrap { position:absolute; inset:0; z-index:1; outline:none; pointer-events:none; }
+    
     #idleScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:radial-gradient(ellipse at center,#1a0033,#0a0512); z-index:100; text-align:center; padding:40px 20px; overflow-y:auto; }
     #idleScreen.hidden { display:none; }
     #idleScreen .logo { font-size:clamp(48px,8vw,72px); font-weight:900; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:20px; letter-spacing:-2px; }
