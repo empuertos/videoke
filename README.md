@@ -1,3 +1,10 @@
+Heto na ang kumpletong updated README.md.
+
+Inalis ko na ang lahat ng nabanggit tungkol sa "APK" at pinalitan ito ng mga detalye tungkol sa PWA (Progressive Web App), kasama na ang bagong manifest-home.json setup. Naka-set na rin ang license year sa 2026.
+
+I-overwrite mo lang ito sa README.md mo sa GitHub:
+
+```markdown
 # 🎤 VIDEoke YT
 
 <div align="center">
@@ -30,6 +37,7 @@ Created with ❤️ by **Steve**
 - ✅ **No limits on parties**
 - ✅ **Open source (MIT)** — fork it, self-host it, do whatever you want
 - ✅ **Any device** — phone, tablet, laptop, smart TV
+- ✅ **Installable (PWA)** — add to home screen on Android and iOS
 
 If this app made your karaoke night better and you'd like to say thank you, you're welcome to send a small tip via **GCash**, **Maya**, or **PalawanPay**. **It's totally optional** — VIDEoke YT will always be free.
 
@@ -110,6 +118,13 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 - **Open source** — MIT licensed, self-host or fork freely
 - **No data collection** — no analytics trackers, no cookies, no user profiles
 
+### 📲 Installable PWA (No APK needed)
+
+- **Install to Home Screen** — native app experience on Android and iOS
+- **Separate manifests** — Home and Remote pages install as distinct apps
+- **Always updated** — runs entirely in the browser, no need to download new files
+- **Safe & secure** — no APK warnings; passes all PWA validation criteria
+
 ### 📖 FAQ Page
 
 - **Dedicated `/faq` page** — clean, styled, mobile-friendly
@@ -134,7 +149,7 @@ The system is **multi-tenant** — a single backend can host up to **300 simulta
 ### 🎵 Host Screen (TV / PC / Laptop)
 
 - **Auto-play** — as soon as a song is added, it starts
-- **Auto-skip (Watchdog)** — deleted, blocked, or restricted videos are skipped automatically within 6 seconds
+- **Auto-skip (Watchdog)** — deleted, blocked, or restricted videos are skipped automatically within 10 seconds
 - **Floating Mini-Player** — tap the minimize button to keep the video playing in the corner while showing the QR code and queue behind it
 - **AI Voice Announcer** — TTS announces "Next up, Juan, singing Tadhana by Moira"
 - **Smart HUD fade** — "Now Singing" and "Reserved" boxes fade to 55% after 5 seconds so lyrics stay visible
@@ -384,10 +399,13 @@ videoke/
 │   ├── remote.html           # Mobile guest controller
 │   ├── config.js             # Backend URL (edit after deploy)
 │   ├── i18n.js               # English-only translations
-│   ├── manifest.json         # PWA manifest
+│   ├── manifest.json         # PWA manifest (Remote)
+│   ├── manifest-home.json    # PWA manifest (Home)
 │   ├── service-worker.js     # Cache-busting SW
 │   ├── vercel.json           # Frontend routing rules
 │   ├── preview.jpg           # Facebook Messenger link preview
+│   ├── icon-192.png          # PWA Icon
+│   ├── icon-512.png          # PWA Icon
 │   ├── support-qr-gcash.png      # GCash tip QR
 │   ├── support-qr-maya.png       # Maya tip QR
 │   └── support-qr-palawanpay.png # PalawanPay tip QR
@@ -482,14 +500,15 @@ What's NOT in the code (privacy)
 
 📝 Changelog
 
-v3.7 — Speed & Polish
+v3.8 — PWA First & Search Speed
 
 · 🚀 Ultra-fast Search — Parallel API fetching (Promise.any), drops search time from 30s to ~2s.
 · 🆕 Floating Mini-Player — Host screen can minimize video to a corner overlay while keeping audio playing.
 · 🆕 3 tip QR codes — GCash · Maya · PalawanPay side by side.
 · 🆕 Prominent Help Button — Blue ❓ Help button on Remote header + inline link.
 · 🆕 Change Party Code — Easily switch to a different party via the header or share section.
-· 🆕 Bilingual FAQ — English / Tagalog toggle.
+· 🆕 PWA Installable — Dedicated manifest for Home and Remote pages, plus a visible "Install App" button.
+· 🗑️ Removed APK Download — Fully transitioned to PWA for safety, auto-updates, and cross-platform compatibility (iOS/Android).
 · 🐛 FIX — Auto-skip watchdog timer ensures broken/restricted videos never stall the queue.
 · 🐛 FIX — service-worker.js reload loop fixed.
 · 🐛 FIX — Admin passwords survive server restarts.
@@ -529,11 +548,15 @@ Support QR not showing
 
 Videos won't play or stuck on "Video Unavailable"
 
-→ The watchdog timer will auto-skip restricted videos within 6 seconds. Ensure your backend is updated to v3.7.
+→ The watchdog timer will auto-skip restricted videos within 10 seconds. Ensure your backend is updated to v3.7+.
 
 Admin login fails
 
 "Wrong password" — Case-sensitive; copy-paste directly.
+
+"Install App" button not showing
+
+→ Confirm manifest-home.json exists in the frontend folder. Ensure your site is loaded over HTTPS (Vercel does this automatically). If testing locally, use localhost.
 
 ---
 
@@ -554,7 +577,7 @@ Q: Do I need an Admin Password to request a song?
 A: No. Anyone can reserve a song. The Admin Password is only needed to Pause, Skip, Stop, or move/delete songs.
 
 Q: Can I use the app in the background (e.g., while on Messenger)?
-A: Browsers automatically pause video playback when you switch apps to save battery. You can use Android's Split Screen feature to keep the video playing while chatting. True background play requires an APK built with Android Studio.
+A: Browsers automatically pause video playback when you switch apps to save battery. You can use Android's Split Screen feature to keep the video playing while chatting. True background play requires a native app wrapper (not included).
 
 ---
 
