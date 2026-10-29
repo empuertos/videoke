@@ -3,6 +3,7 @@
 // Changes in v3.6:
 //   • Optimized /api/recommend using Promise.all (Parallel)
 //   • Reduced dynamic searches to 3 for faster response
+//   • Better handling of videoFailed event
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -389,7 +390,7 @@ async function searchYT(query, maxResults = 25) {
   for (const h of hosts) {
     try {
       const r = await fetch(`${h}/search?q=${encodeURIComponent(query)}&filter=videos`,
-        { signal: AbortSignal.timeout(10000) }); // Increased timeout to 10s
+        { signal: AbortSignal.timeout(10000) });
       if (!r.ok) continue;
       const d = await r.json();
       if (!Array.isArray(d.items)) continue;
@@ -563,7 +564,6 @@ app.get('/api/recommend', async (req, res) => {
   if (recommendCache && now() - recommendCache.ts < RECOMMEND_TTL)
     return res.json(recommendCache.data);
 
-  // Fetch 3 search queries IN PARALLEL for speed
   const dynamicSearches = shuffleArray([...RECOMMEND_SEARCH_POOL]).slice(0, 3);
   
   const results = await Promise.all(
