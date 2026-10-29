@@ -1,7 +1,7 @@
 {
-  "name": "Videoke YouTube — Remote",
-  "short_name": "Videoke",
-  "description": "Free professional karaoke remote control — no ads, no fees, forever",
+  "name": "Videoke Remote",
+  "short_name": "Videoke Remote",
+  "description": "Professional karaoke remote control",
   "start_url": "/remote",
   "scope": "/",
   "display": "standalone",
