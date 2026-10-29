@@ -1,9 +1,3 @@
-Heto na ang kumpletong updated README.md.
-
-Inalis ko na ang lahat ng nabanggit tungkol sa "APK" at pinalitan ito ng mga detalye tungkol sa PWA (Progressive Web App), kasama na ang bagong manifest-home.json setup. Naka-set na rin ang license year sa 2026.
-
-I-overwrite mo lang ito sa README.md mo sa GitHub:
-
 ```markdown
 # 🎤 VIDEoke YT
 
