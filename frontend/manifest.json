@@ -3,7 +3,7 @@
   "short_name": "Videoke Remote",
   "description": "Professional karaoke remote control",
   "start_url": "/remote",
-  "scope": "/",
+  "scope": "/remote",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0a0512",
