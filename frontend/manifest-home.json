@@ -1,0 +1,17 @@
+{
+  "name": "VIDEoke YT — Home",
+  "short_name": "VIDEoke",
+  "description": "Free YouTube Karaoke System",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0512",
+  "theme_color": "#0a0512",
+  "categories": ["entertainment", "music"],
+  "lang": "en",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
