@@ -19,7 +19,7 @@ const compression= require('compression');
 const PORT           = process.env.PORT || 3000;
 const DATA_DIR       = process.env.DATA_DIR || path.join(__dirname, 'data');
 const FRONTEND_URL   = process.env.FRONTEND_URL || '*';
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours exact
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // Eksaktong 24 oras
 const TOKEN_TTL_MS   = 24 * 60 * 60 * 1000;
 const MAX_SESSIONS   = 300;
 const MAX_QUEUE      = 50;
@@ -295,7 +295,7 @@ setInterval(() => {
       }
     }
   } catch (e) { console.error('[interval-ttl]', e.message); }
-}, 60 * 1000); // Chini-check every 1 minute para precise
+}, 60 * 1000);
 
 // 🛡️ CRASH GUARD: Token cleanup
 setInterval(() => {
@@ -433,7 +433,7 @@ const RECOMMEND_TTL = 15 * 60 * 1000;
 const searchCache   = new Map();
 const SEARCH_TTL    = 5 * 60 * 1000;
 
-// 🧹 MEMORY LEAK FIX: Search cache cleanup (prevents OOM on Fly.io)
+// 🧹 MEMORY LEAK FIX
 setInterval(() => {
   try {
     const t = now();
