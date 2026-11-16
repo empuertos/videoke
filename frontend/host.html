@@ -555,6 +555,35 @@
     function showHostGate() { document.getElementById('hostGate').classList.add('show'); }
     function hideHostGate() { document.getElementById('hostGate').classList.remove('show'); }
 
+    // 🔧 FIX #2/#3 — helper para i-re-verify bago mag-wipe ng session
+    async function reverifySession() {
+      if (hostCode) {
+        try {
+          const res = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(hostCode));
+          const data = await res.json();
+          return !!data.valid;
+        } catch { return true; }   // network error → assume valid, huwag i-wipe
+      }
+      if (hostPartyCode) {
+        try {
+          const res = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(hostPartyCode));
+          const data = await res.json();
+          return !!data.valid;
+        } catch { return true; }
+      }
+      return false;
+    }
+    function rejoinSession() {
+      if (hostCode) socket.emit('registerHost', { hostCode });
+      else if (hostPartyCode) socket.emit('registerHost', { partyCode: hostPartyCode });
+    }
+    function clearSessionAndGate() {
+      localStorage.removeItem('videoke:hostCode');
+      localStorage.removeItem('videoke:hostPartyCode');
+      hostCode = null; hostPartyCode = null;
+      showHostGate();
+    }
+
     function startAdminTokenRefresh() {
       if (adminTokenRefreshInterval) clearInterval(adminTokenRefreshInterval);
       adminTokenRefreshInterval = setInterval(async () => {
@@ -601,6 +630,7 @@
       } catch (e) { return false; }
     }
 
+    // 🔧 FIX #3 — retry bago mag-show ng gate, huwag i-wipe localStorage
     async function initHost() {
       const urlParams = new URLSearchParams(window.location.search);
       const sessionCode = urlParams.get('session');
@@ -608,14 +638,20 @@
       const savedHost = localStorage.getItem('videoke:hostCode');
       const savedParty = localStorage.getItem('videoke:hostPartyCode');
 
+      async function tryLoad(code, isParty) {
+        if (await verifyAndLoadHost(code, isParty)) return true;
+        await new Promise(r => setTimeout(r, 1500));   // isang retry (Render waking up)
+        return await verifyAndLoadHost(code, isParty);
+      }
+
       if (sessionCode) {
-        if (!await verifyAndLoadHost(sessionCode, false)) { localStorage.removeItem('videoke:hostCode'); showHostGate(); }
+        if (!await tryLoad(sessionCode, false)) showHostGate();
       } else if (partyCode) {
-        if (!await verifyAndLoadHost(partyCode, true)) { showHostGate(); }
+        if (!await tryLoad(partyCode, true)) showHostGate();
       } else if (savedHost) {
-        if (!await verifyAndLoadHost(savedHost, false)) { localStorage.removeItem('videoke:hostCode'); showHostGate(); }
+        if (!await tryLoad(savedHost, false)) showHostGate();
       } else if (savedParty) {
-        if (!await verifyAndLoadHost(savedParty, true)) { localStorage.removeItem('videoke:hostPartyCode'); showHostGate(); }
+        if (!await tryLoad(savedParty, true)) showHostGate();
       } else {
         showHostGate();
       }
@@ -647,12 +683,15 @@
             try { e.target.setPlaybackQuality('default'); } catch {}
           },
           onStateChange: (e) => {
+            // 🔧 FIX #1 — capture endedVideoId bago mag-setTimeout
             if (e.data === 0 && currentVideoId) {
-              socket.emit('songEnded');
-              // Fallback: Kung walang nangyari sa loob ng 3 segundo, ibalik sa idle
+              const endedVideoId = currentVideoId;
+              // 🔧 FIX #5 — huwag mag-emit ng songEnded kung disconnected
+              if (socket.connected) socket.emit('songEnded');
+              // Fallback: kung same pa rin ang current song after 4s, i-stop
               setTimeout(() => {
-                if (currentVideoId) stopVideo();
-              }, 3000);
+                if (currentVideoId === endedVideoId) stopVideo();
+              }, 4000);
             }
             if (e.data === 1 && currentVideoId && !autoFullscreenAttempted && !isIOS) { autoFullscreenAttempted = true; tryAutoFullscreen(); }
             if (e.data === 1) {
@@ -665,6 +704,8 @@
           },
           onError: (e) => {
             if (!currentVideoId) return;
+            // 🔧 FIX #5 — huwag mag-emit ng videoFailed kung disconnected
+            if (!socket.connected) return;
             if ([2, 5, 100, 101, 150].includes(e.data)) {
               const failedId = currentVideoId;
               socket.emit('videoFailed', { videoId: failedId, title: document.getElementById('nowSong').textContent || '' });
@@ -678,19 +719,19 @@
     socket.on('connect', () => {
       document.getElementById('connDot').classList.remove('offline');
       document.getElementById('connText').textContent = 'Connected';
-      if (hostCode) socket.emit('registerHost', { hostCode });
-      else if (hostPartyCode) socket.emit('registerHost', { partyCode: hostPartyCode });
+      rejoinSession();
     });
     socket.on('disconnect', () => {
       document.getElementById('connDot').classList.add('offline');
       document.getElementById('connText').textContent = 'Disconnected';
     });
-    socket.on('hostRejected', () => {
-      localStorage.removeItem('videoke:hostCode');
-      localStorage.removeItem('videoke:hostPartyCode');
-      hostCode = null; hostPartyCode = null;
-      showHostGate();
+
+    // 🔧 FIX #2 — re-verify bago mag-wipe ng localStorage
+    socket.on('hostRejected', async () => {
+      if (await reverifySession()) { rejoinSession(); return; }
+      clearSessionAndGate();
     });
+
     socket.on('command', (cmd) => {
       switch (cmd.type) {
         case 'play': playVideo(cmd.song); break;
@@ -720,8 +761,17 @@
         if (!currentVideoId) showIdle();
       }
     });
-    socket.on('partyChanged', ({ active }) => {
+
+    // 🔧 FIX #2 — double-check bago mag-hide ng QR (transient glitch)
+    socket.on('partyChanged', async ({ active }) => {
       if (!active) {
+        if (hostPartyCode) {
+          try {
+            const res = await fetch(API + '/api/party?party=' + encodeURIComponent(hostPartyCode));
+            const data = await res.json();
+            if (data.active) { updateQRCodeDisplay(data.code); return; }
+          } catch { return; }   // network error → huwag mag-rely sa event
+        }
         document.getElementById('topBar').classList.remove('show');
         document.getElementById('qrOverlay').classList.add('hidden');
         document.getElementById('noPartyMsg').textContent = '🎉 Party has ended.';
@@ -731,12 +781,12 @@
         stopVideo();
       }
     });
-    socket.on('sessionEnded', () => {
-      localStorage.removeItem('videoke:hostCode');
-      localStorage.removeItem('videoke:hostPartyCode');
-      hostCode = null; hostPartyCode = null;
+
+    // 🔧 FIX #2 — re-verify bago mag-wipe sa sessionEnded
+    socket.on('sessionEnded', async () => {
+      if (await reverifySession()) { rejoinSession(); return; }
+      clearSessionAndGate();
       stopVideo();
-      showHostGate();
     });
 
     function playVideo(song, isSync = false, retry = 0) {
@@ -788,7 +838,7 @@
           const st = ytPlayer.getPlayerState();
           if (st === -1 || st === 5) {
             console.warn('Video stuck or restricted. Skipping...');
-            socket.emit('videoFailed', { videoId: currentVideoId, title: song.title || '' });
+            if (socket.connected) socket.emit('videoFailed', { videoId: currentVideoId, title: song.title || '' });
             stopVideo();
           } else if (st === 2) {
             document.getElementById('tapToPlayBtn').style.display = 'block';
