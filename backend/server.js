@@ -1,16 +1,12 @@
 // =====================================================
-// VIDEOKE YT — Multi-tenant backend (hardened v3.8)
-// Changes in v3.8:
-//   • 🔧 Watchdog: auto-skip stuck nowPlaying (>10 min)
-//   • 🔧 playStartedAt timestamp for stuck detection
-//   • 🔧 /api/party + /api/verify-party touch session (prevents false idle)
-//   • 🔧 songEnded debounce (2s idempotency guard — prevents double-skip)
-//   • 🔧 Loaded sessions get fresh playStartedAt on restart
-//   • 🔧 Optional [health] logger for diagnostics
-// Changes in v3.7:
-//   • Optimized searchYT using Promise.any (Parallel fetch)
-//   • Faster fallback to YouTube API
-//   • Reduced Piped timeout to 4s
+// VIDEOKE YT — Multi-tenant backend (hardened v3.9 - Fly.io Ready)
+// Changes in v3.9:
+//   • 🧹 Fixed memory leak in searchCache (prevents OOM crashes on Fly.io)
+//   • 🛡️ Wrapped setInterval & socket handlers in try...catch (prevents Node crash)
+//   • 🛡️ Added uncaughtException handler
+//   • ⏱️ Watchdog: Auto-skips stuck nowPlaying (>10 mins)
+//   • 💾 Session Touching: /api/party prevents false session expiry
+//   • 🔄 Idempotent songEnded (2s debounce)
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -30,8 +26,6 @@ const MAX_SESSIONS   = 300;
 const MAX_QUEUE      = 50;
 const MAX_HISTORY    = 200;
 const PARTY_CHARS    = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-
-// 🔧 FIX #2 — stuck-song watchdog threshold
 const STUCK_SONG_MS  = 10 * 60 * 1000;   // 10 minutes
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -212,7 +206,6 @@ function loadSessions() {
         connectedHosts: 0,
         connectedGuests: 0,
       };
-      // 🔧 FIX #2 — reset stuck-detection timer on restart so watchdog gets a clean slate
       if (s.nowPlaying) s.nowPlaying.playStartedAt = now();
       sessions.set(id, s);
       partyIndex.set(s.partyCode, id);
@@ -292,48 +285,58 @@ function verifyToken(t) {
 
 const touch = (s) => { if (s) s.lastActivity = now(); };
 
+// 🛡️ CRASH GUARD: TTL cleanup
 setInterval(() => {
-  const cutoff = now() - SESSION_TTL_MS;
-  for (const s of Array.from(sessions.values()))
-    if (s.lastActivity < cutoff) endSession(s, 'expired');
+  try {
+    const cutoff = now() - SESSION_TTL_MS;
+    for (const s of Array.from(sessions.values()))
+      if (s.lastActivity < cutoff) endSession(s, 'expired');
+  } catch (e) { console.error('[interval-ttl]', e.message); }
 }, 5 * 60 * 1000);
 
+// 🛡️ CRASH GUARD: Token cleanup
 setInterval(() => {
-  const t = now();
-  for (const [tok, meta] of tokenIndex) {
-    if (meta.expiry < t) tokenIndex.delete(tok);
-  }
+  try {
+    const t = now();
+    for (const [tok, meta] of tokenIndex) {
+      if (meta.expiry < t) tokenIndex.delete(tok);
+    }
+  } catch (e) { console.error('[interval-token]', e.message); }
 }, 60 * 60 * 1000);
 
-// 🔧 FIX #2 — Watchdog: auto-skip stuck nowPlaying (>10 min) kahit walang event
+// 🛡️ CRASH GUARD: Watchdog for stuck songs
 setInterval(() => {
-  for (const s of sessions.values()) {
-    if (!s.nowPlaying) continue;
-    const started = s.nowPlaying.playStartedAt || s.nowPlaying.addedAt || now();
-    const ageMs = now() - started;
-    if (ageMs > STUCK_SONG_MS) {
-      console.warn(`[watchdog] ${s.partyCode}: stuck "${s.nowPlaying.title || s.nowPlaying.videoId}" for ${Math.round(ageMs/60000)}min — auto-skip`);
-      addHistory(s, s.nowPlaying);
-      s.nowPlaying = null;
-      startNext(s);
+  try {
+    for (const s of sessions.values()) {
+      if (!s.nowPlaying) continue;
+      const started = s.nowPlaying.playStartedAt || s.nowPlaying.addedAt || now();
+      const ageMs = now() - started;
+      if (ageMs > STUCK_SONG_MS) {
+        console.warn(`[watchdog] ${s.partyCode}: stuck "${s.nowPlaying.title || s.nowPlaying.videoId}" for ${Math.round(ageMs/60000)}min — auto-skip`);
+        addHistory(s, s.nowPlaying);
+        s.nowPlaying = null;
+        startNext(s);
+      }
     }
-  }
+  } catch (e) { console.error('[interval-watchdog]', e.message); }
 }, 60 * 1000);
 
-// 🔧 FIX #2 — Optional health logger (helps diagnose "why did it expire?")
+// 🛡️ CRASH GUARD: Health Logger
 setInterval(() => {
-  for (const s of sessions.values()) {
-    const idleMin = Math.round((now() - s.lastActivity) / 60000);
-    const playAgeMin = s.nowPlaying
-      ? Math.round((now() - (s.nowPlaying.playStartedAt || s.nowPlaying.addedAt || now())) / 60000)
-      : null;
-    if (idleMin > 60 || (playAgeMin !== null && playAgeMin > 5)) {
-      console.log(
-        `[health] ${s.partyCode}: idle=${idleMin}m nowPlaying=${s.nowPlaying?.videoId || 'none'}` +
-        ` playAge=${playAgeMin}m queue=${s.queue.length} hosts=${s.connectedHosts} guests=${s.connectedGuests}`
-      );
+  try {
+    for (const s of sessions.values()) {
+      const idleMin = Math.round((now() - s.lastActivity) / 60000);
+      const playAgeMin = s.nowPlaying
+        ? Math.round((now() - (s.nowPlaying.playStartedAt || s.nowPlaying.addedAt || now())) / 60000)
+        : null;
+      if (idleMin > 60 || (playAgeMin !== null && playAgeMin > 5)) {
+        console.log(
+          `[health] ${s.partyCode}: idle=${idleMin}m nowPlaying=${s.nowPlaying?.videoId || 'none'}` +
+          ` playAge=${playAgeMin}m queue=${s.queue.length} hosts=${s.connectedHosts} guests=${s.connectedGuests}`
+        );
+      }
     }
-  }
+  } catch (e) {}
 }, 60 * 1000);
 
 loadSessions();
@@ -347,9 +350,13 @@ function limit(key, max, win) {
   b.count++;
   return b.count <= max;
 }
+
+// 🛡️ CRASH GUARD: Rate limit cleanup
 setInterval(() => {
-  const cutoff = now() - 10 * 60 * 1000;
-  for (const [k, b] of rl) if (b.start < cutoff) rl.delete(k);
+  try {
+    const cutoff = now() - 10 * 60 * 1000;
+    for (const [k, b] of rl) if (b.start < cutoff) rl.delete(k);
+  } catch (e) {}
 }, 60 * 1000);
 
 async function ytInfo(id) {
@@ -423,7 +430,16 @@ const RECOMMEND_TTL = 15 * 60 * 1000;
 const searchCache   = new Map();
 const SEARCH_TTL    = 5 * 60 * 1000;
 
-// --- PARALLEL SEARCH FUNCTION ---
+// 🧹 MEMORY LEAK FIX: Search cache cleanup (prevents OOM on Fly.io)
+setInterval(() => {
+  try {
+    const t = now();
+    for (const [k, v] of searchCache) {
+      if (t - v.ts > SEARCH_TTL) searchCache.delete(k);
+    }
+  } catch (e) {}
+}, 10 * 60 * 1000);
+
 async function searchYT(query, maxResults = 25) {
   const hosts = [
     'https://pipedapi.kavin.rocks',
@@ -464,8 +480,7 @@ async function searchYT(query, maxResults = 25) {
   };
 
   try {
-    const result = await Promise.any(hosts.map(fetchHost));
-    return result;
+    return await Promise.any(hosts.map(fetchHost));
   } catch (e) {
     console.warn(`[Search] Piped failed for "${query}". Trying YouTube API...`);
     const key = process.env.YOUTUBE_API_KEY;
@@ -495,30 +510,32 @@ app.get('/', (req, res) => res.json({ ok: true, sessions: sessions.size }));
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
 app.get('/api/stats', (req, res) => {
-  const t = now();
-  if (req.ip) {
-    if (analytics.uniqueVisitors.size < 100_000) {
-      analytics.uniqueVisitors.add(req.ip);
+  try {
+    const t = now();
+    if (req.ip) {
+      if (analytics.uniqueVisitors.size < 100_000) {
+        analytics.uniqueVisitors.add(req.ip);
+      }
+      recentVisitors.set(req.ip, t);
     }
-    recentVisitors.set(req.ip, t);
-  }
-  const cutoff = t - 5 * 60 * 1000;
-  for (const [ip, ts] of recentVisitors) if (ts < cutoff) recentVisitors.delete(ip);
+    const cutoff = t - 5 * 60 * 1000;
+    for (const [ip, ts] of recentVisitors) if (ts < cutoff) recentVisitors.delete(ip);
 
-  const stats = getGlobalStats();
-  stats.onlineVisitors = recentVisitors.size;
-  stats.totalVisitors  = analytics.uniqueVisitors.size;
-  res.json(stats);
+    const stats = getGlobalStats();
+    stats.onlineVisitors = recentVisitors.size;
+    stats.totalVisitors  = analytics.uniqueVisitors.size;
+    res.json(stats);
+  } catch (e) { res.status(500).json({ error: 'Stats error' }); }
 });
 
 app.post('/api/session/create', (req, res) => {
-  const ip = req.ip || 'anon';
-  if (req.ip && analytics.uniqueVisitors.size < 100_000) {
-    analytics.uniqueVisitors.add(req.ip);
-  }
-  if (!limit('create:' + ip, 5, 60_000))
-    return res.status(429).json({ error: 'Too many sessions from your IP. Wait a minute.' });
   try {
+    const ip = req.ip || 'anon';
+    if (req.ip && analytics.uniqueVisitors.size < 100_000) {
+      analytics.uniqueVisitors.add(req.ip);
+    }
+    if (!limit('create:' + ip, 5, 60_000))
+      return res.status(429).json({ error: 'Too many sessions from your IP. Wait a minute.' });
     const s = newSession();
     const reqOrigin = req.get('origin');
     const base = reqOrigin && reqOrigin !== 'null'
@@ -536,168 +553,190 @@ app.post('/api/session/create', (req, res) => {
 });
 
 app.get('/api/host/verify', (req, res) => {
-  if (!limit('hostverify:' + (req.ip || 'anon'), 30, 60_000))
-    return res.status(429).json({ valid: false, error: 'Too many requests' });
+  try {
+    if (!limit('hostverify:' + (req.ip || 'anon'), 30, 60_000))
+      return res.status(429).json({ valid: false, error: 'Too many requests' });
 
-  const s = resolveSession({ host: String(req.query.host || '').trim() });
-  if (!s) return res.json({ valid: false });
-  touch(s);   // 🔧 FIX #3 — host verify keeps session alive
-  res.json({
-    valid: true,
-    sessionId: s.id,
-    partyCode: s.partyCode,
-    adminPassword: s.adminPasswordPlain,
-    token: issueToken(s),
-    createdAt: s.createdAt,
-  });
+    const s = resolveSession({ host: String(req.query.host || '').trim() });
+    if (!s) return res.json({ valid: false });
+    touch(s);
+    res.json({
+      valid: true,
+      sessionId: s.id,
+      partyCode: s.partyCode,
+      adminPassword: s.adminPasswordPlain,
+      token: issueToken(s),
+      createdAt: s.createdAt,
+    });
+  } catch (e) { res.status(500).json({ valid: false }); }
 });
 
 app.get('/api/verify-party', (req, res) => {
-  if (!limit('verifyparty:' + (req.ip || 'anon'), 60, 60_000))
-    return res.status(429).json({ valid: false, error: 'Too many requests' });
+  try {
+    if (!limit('verifyparty:' + (req.ip || 'anon'), 60, 60_000))
+      return res.status(429).json({ valid: false, error: 'Too many requests' });
 
-  const code = String(req.query.code || '').toUpperCase().trim();
-  const s = resolveSession({ party: code });
-  if (s) touch(s);   // 🔧 FIX #3 — verify keeps session alive
-  res.json({ valid: !!s, partyCode: s?.partyCode });
+    const code = String(req.query.code || '').toUpperCase().trim();
+    const s = resolveSession({ party: code });
+    if (s) touch(s);
+    res.json({ valid: !!s, partyCode: s?.partyCode });
+  } catch (e) { res.status(500).json({ valid: false }); }
 });
 
 app.get('/api/party', (req, res) => {
-  if (!limit('partystatus:' + (req.ip || 'anon'), 60, 60_000))
-    return res.status(429).json({ active: false });
+  try {
+    if (!limit('partystatus:' + (req.ip || 'anon'), 60, 60_000))
+      return res.status(429).json({ active: false });
 
-  const s = resolveSession({
-    host:  String(req.query.host  || '').trim(),
-    party: String(req.query.party || '').toUpperCase().trim(),
-  });
-  if (!s) return res.json({ active: false });
-  touch(s);   // 🔧 FIX #3 — critical: host polls every 5s, keeps idle sessions alive
-  res.json({ active: true, code: s.partyCode, queueLength: s.queue.length });
+    const s = resolveSession({
+      host:  String(req.query.host  || '').trim(),
+      party: String(req.query.party || '').toUpperCase().trim(),
+    });
+    if (!s) return res.json({ active: false });
+    touch(s);
+    res.json({ active: true, code: s.partyCode, queueLength: s.queue.length });
+  } catch (e) { res.status(500).json({ active: false }); }
 });
 
 app.get('/api/yt-info/:videoId', async (req, res) => {
-  if (!limit('ytinfo:' + (req.ip || 'anon'), 30, 60_000))
-    return res.status(429).json({ error: 'Slow down.' });
-  const vid = String(req.params.videoId || '');
-  if (!/^[\w-]{11}$/.test(vid)) return res.status(400).json({ error: 'bad id' });
-  const info = await ytInfo(vid);
-  info ? res.json(info) : res.status(404).json({ error: 'not found' });
+  try {
+    if (!limit('ytinfo:' + (req.ip || 'anon'), 30, 60_000))
+      return res.status(429).json({ error: 'Slow down.' });
+    const vid = String(req.params.videoId || '');
+    if (!/^[\w-]{11}$/.test(vid)) return res.status(400).json({ error: 'bad id' });
+    const info = await ytInfo(vid);
+    info ? res.json(info) : res.status(404).json({ error: 'not found' });
+  } catch (e) { res.status(500).json({ error: 'error' }); }
 });
 
 app.get('/api/search', async (req, res) => {
-  const q      = String(req.query.q || '').trim();
-  const filter = String(req.query.filter || 'karaoke').toLowerCase();
-  const offset = Math.max(0, parseInt(req.query.offset) || 0);
-  const limitPer = 20;
+  try {
+    const q      = String(req.query.q || '').trim();
+    const filter = String(req.query.filter || 'karaoke').toLowerCase();
+    const offset = Math.max(0, parseInt(req.query.offset) || 0);
+    const limitPer = 20;
 
-  if (q.length < 2) return res.json({ items: [], hasMore: false, offset: 0, total: 0 });
-  if (!limit('search:' + (req.ip || 'anon'), 40, 60_000))
-    return res.status(429).json({ error: 'Slow down. Try again in a minute.' });
+    if (q.length < 2) return res.json({ items: [], hasMore: false, offset: 0, total: 0 });
+    if (!limit('search:' + (req.ip || 'anon'), 40, 60_000))
+      return res.status(429).json({ error: 'Slow down. Try again in a minute.' });
 
-  const cacheKey = `${filter}|${q.toLowerCase()}`;
-  let cache = searchCache.get(cacheKey);
+    const cacheKey = `${filter}|${q.toLowerCase()}`;
+    let cache = searchCache.get(cacheKey);
 
-  if (!cache || now() - cache.ts > SEARCH_TTL) {
-    const hasKaraoke = /karaoke|ktv|minus[\s-]?one|instrumental|videoke/i.test(q);
-    let query = q;
-    if (filter === 'duet') query = hasKaraoke ? `${q} duet` : `${q} karaoke duet`;
-    else                   query = hasKaraoke ? q           : `${q} karaoke`;
-    const raw = await searchYT(query, 100);
-    let all = raw
-      .filter(it => isKaraokeVideo(it.title, it.author))
-      .map(it => ({ ...it, isDuet: isDuetVideo(it.title, it.author) }));
-    if (filter === 'duet') all = all.filter(it => it.isDuet);
-    cache = { all, ts: now() };
-    searchCache.set(cacheKey, cache);
-  }
+    if (!cache || now() - cache.ts > SEARCH_TTL) {
+      const hasKaraoke = /karaoke|ktv|minus[\s-]?one|instrumental|videoke/i.test(q);
+      let query = q;
+      if (filter === 'duet') query = hasKaraoke ? `${q} duet` : `${q} karaoke duet`;
+      else                   query = hasKaraoke ? q           : `${q} karaoke`;
+      const raw = await searchYT(query, 100);
+      let all = raw
+        .filter(it => isKaraokeVideo(it.title, it.author))
+        .map(it => ({ ...it, isDuet: isDuetVideo(it.title, it.author) }));
+      if (filter === 'duet') all = all.filter(it => it.isDuet);
+      cache = { all, ts: now() };
+      searchCache.set(cacheKey, cache);
+    }
 
-  res.json({
-    items:   cache.all.slice(offset, offset + limitPer),
-    offset,
-    hasMore: cache.all.length > offset + limitPer,
-    total:   cache.all.length,
-  });
+    res.json({
+      items:   cache.all.slice(offset, offset + limitPer),
+      offset,
+      hasMore: cache.all.length > offset + limitPer,
+      total:   cache.all.length,
+    });
+  } catch (e) { res.status(500).json({ items: [], hasMore: false, offset: 0, total: 0 }); }
 });
 
 app.get('/api/recommend', async (req, res) => {
-  if (recommendCache && now() - recommendCache.ts < RECOMMEND_TTL)
-    return res.json(recommendCache.data);
+  try {
+    if (recommendCache && now() - recommendCache.ts < RECOMMEND_TTL)
+      return res.json(recommendCache.data);
 
-  const dynamicSearches = shuffleArray([...RECOMMEND_SEARCH_POOL]).slice(0, 3);
+    const dynamicSearches = shuffleArray([...RECOMMEND_SEARCH_POOL]).slice(0, 3);
+    const results = await Promise.all(
+      dynamicSearches.map(s => searchYT(s, 15).catch(() => []))
+    );
 
-  const results = await Promise.all(
-    dynamicSearches.map(s => searchYT(s, 15).catch(() => []))
-  );
+    const allRaw = results.flat();
+    const seen = new Set();
+    let items = allRaw
+      .filter(it => {
+        if (!it?.videoId || seen.has(it.videoId)) return false;
+        if (!isKaraokeVideo(it.title, it.author)) return false;
+        seen.add(it.videoId); return true;
+      })
+      .map(it => ({ ...it, isDuet: isDuetVideo(it.title, it.author) }));
 
-  const allRaw = results.flat();
+    items = shuffleArray(items).slice(0, 12);
 
-  const seen = new Set();
-  let items = allRaw
-    .filter(it => {
-      if (!it?.videoId || seen.has(it.videoId)) return false;
-      if (!isKaraokeVideo(it.title, it.author)) return false;
-      seen.add(it.videoId); return true;
-    })
-    .map(it => ({ ...it, isDuet: isDuetVideo(it.title, it.author) }));
-
-  items = shuffleArray(items).slice(0, 12);
-
-  const data = { chips: RECOMMEND_CHIPS, items };
-  recommendCache = { data, ts: now() };
-  res.json(data);
+    const data = { chips: RECOMMEND_CHIPS, items };
+    recommendCache = { data, ts: now() };
+    res.json(data);
+  } catch (e) { res.status(500).json({ chips: [], items: [] }); }
 });
 
 app.get('/api/history', (req, res) => {
-  const s = resolveSession({
-    host:  String(req.query.host  || '').trim(),
-    party: String(req.query.party || '').toUpperCase().trim(),
-  });
-  if (!s) return res.json([]);
-  res.json(s.history.slice(0, Math.min(parseInt(req.query.limit) || 50, 100)));
+  try {
+    const s = resolveSession({
+      host:  String(req.query.host  || '').trim(),
+      party: String(req.query.party || '').toUpperCase().trim(),
+    });
+    if (!s) return res.json([]);
+    res.json(s.history.slice(0, Math.min(parseInt(req.query.limit) || 50, 100)));
+  } catch (e) { res.json([]); }
 });
+
 app.get('/api/favorites', (req, res) => {
-  const s = resolveSession({
-    host:  String(req.query.host  || '').trim(),
-    party: String(req.query.party || '').toUpperCase().trim(),
-  });
-  res.json(s ? s.favorites : []);
+  try {
+    const s = resolveSession({
+      host:  String(req.query.host  || '').trim(),
+      party: String(req.query.party || '').toUpperCase().trim(),
+    });
+    res.json(s ? s.favorites : []);
+  } catch (e) { res.json([]); }
 });
+
 app.get('/api/failed-videos', (req, res) => {
-  const s = resolveSession({
-    host:  String(req.query.host  || '').trim(),
-    party: String(req.query.party || '').toUpperCase().trim(),
-  });
-  res.json(s ? s.failedVideos : []);
+  try {
+    const s = resolveSession({
+      host:  String(req.query.host  || '').trim(),
+      party: String(req.query.party || '').toUpperCase().trim(),
+    });
+    res.json(s ? s.failedVideos : []);
+  } catch (e) { res.json([]); }
 });
 
 app.post('/api/admin/login', (req, res) => {
-  if (!limit('adminlogin:' + (req.ip || 'anon'), 10, 60_000))
-    return res.status(429).json({ error: 'Too many attempts' });
+  try {
+    if (!limit('adminlogin:' + (req.ip || 'anon'), 10, 60_000))
+      return res.status(429).json({ error: 'Too many attempts' });
 
-  const { host, party, password } = req.body || {};
-  let s = null;
-  if (host) {
-    s = resolveSession({ host: String(host).trim() });
-    if (!s) return res.status(401).json({ error: 'Invalid host code' });
-  } else if (party && password) {
-    s = resolveSession({ party: String(party).toUpperCase().trim() });
-    if (!s) return res.status(401).json({ error: 'Invalid party code' });
-    if (!safeEq(hashPw(password), s.adminPasswordHash))
-      return res.status(401).json({ error: 'Wrong password' });
-  } else {
-    return res.status(400).json({ error: 'host or party+password required' });
-  }
-  res.json({ token: issueToken(s), partyCode: s.partyCode, sessionId: s.id });
+    const { host, party, password } = req.body || {};
+    let s = null;
+    if (host) {
+      s = resolveSession({ host: String(host).trim() });
+      if (!s) return res.status(401).json({ error: 'Invalid host code' });
+    } else if (party && password) {
+      s = resolveSession({ party: String(party).toUpperCase().trim() });
+      if (!s) return res.status(401).json({ error: 'Invalid party code' });
+      if (!safeEq(hashPw(password), s.adminPasswordHash))
+        return res.status(401).json({ error: 'Wrong password' });
+    } else {
+      return res.status(400).json({ error: 'host or party+password required' });
+    }
+    res.json({ token: issueToken(s), partyCode: s.partyCode, sessionId: s.id });
+  } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
 function adminAuth(req, res, next) {
-  const t = req.get('X-Admin-Token') || req.body?.token || req.query?.token;
-  const s = verifyToken(t);
-  if (!s) return res.status(401).json({ error: 'Invalid or expired token' });
-  req.session = s;
-  req.token = t;
-  touch(s);
-  next();
+  try {
+    const t = req.get('X-Admin-Token') || req.body?.token || req.query?.token;
+    const s = verifyToken(t);
+    if (!s) return res.status(401).json({ error: 'Invalid or expired token' });
+    req.session = s;
+    req.token = t;
+    touch(s);
+    next();
+  } catch (e) { res.status(500).json({ error: 'Auth error' }); }
 }
 
 app.post('/api/admin/ping', adminAuth, (req, res) =>
@@ -783,7 +822,7 @@ function startNext(s) {
     return;
   }
   const next = s.queue.shift();
-  next.playStartedAt = now();   // 🔧 FIX #2 — for stuck-song watchdog
+  next.playStartedAt = now();
   s.nowPlaying = next;
   io.to('host:' + s.id).emit('command', { type: 'play', song: next });
   broadcast(s);
@@ -793,55 +832,63 @@ function startNext(s) {
 io.on('connection', (socket) => {
   socket.data.sessionId = null;
   socket.data.role      = null;
-  socket._lastEndedAt   = 0;   // 🔧 FIX #4 — per-socket debounce for songEnded
+  socket._lastEndedAt   = 0;
 
   socket.on('registerHost', ({ hostCode, partyCode } = {}) => {
-    let s = null, role = null;
-    if (hostCode) {
-      s = resolveSession({ host: String(hostCode || '').trim() });
-      role = 'host';
-    } else if (partyCode) {
-      s = resolveSession({ party: String(partyCode || '').toUpperCase().trim() });
-      role = 'display';
-    }
-    if (!s) return socket.emit('hostRejected', { reason: 'invalid_host' });
+    try {
+      let s = null, role = null;
+      if (hostCode) {
+        s = resolveSession({ host: String(hostCode || '').trim() });
+        role = 'host';
+      } else if (partyCode) {
+        s = resolveSession({ party: String(partyCode || '').toUpperCase().trim() });
+        role = 'display';
+      }
+      if (!s) return socket.emit('hostRejected', { reason: 'invalid_host' });
 
-    socket.data.sessionId = s.id;
-    socket.data.role = role;
-    socket.join('sess:' + s.id);
-    socket.join('host:' + s.id);
-    s.connectedHosts++;
-    touch(s);
+      socket.data.sessionId = s.id;
+      socket.data.role = role;
+      socket.join('sess:' + s.id);
+      socket.join('host:' + s.id);
+      s.connectedHosts++;
+      touch(s);
 
-    broadcast(s);
-    broadcastStats();
+      broadcast(s);
+      broadcastStats();
 
-    socket.emit('partyStatus', { active: true, code: s.partyCode });
-    console.log(`[${role}] joined ${s.partyCode}`);
+      socket.emit('partyStatus', { active: true, code: s.partyCode });
+      console.log(`[${role}] joined ${s.partyCode}`);
+    } catch (e) { console.error('[registerHost]', e.message); }
   });
 
   socket.on('joinParty', ({ code } = {}) => {
-    const s = resolveSession({ party: String(code || '').toUpperCase().trim() });
-    if (!s) return socket.emit('partyJoined', { ok: false, reason: 'no_party' });
-    socket.data.sessionId = s.id;
-    socket.data.role = 'guest';
-    socket.join('sess:' + s.id);
-    s.connectedGuests++;
-    touch(s);
+    try {
+      const s = resolveSession({ party: String(code || '').toUpperCase().trim() });
+      if (!s) return socket.emit('partyJoined', { ok: false, reason: 'no_party' });
+      socket.data.sessionId = s.id;
+      socket.data.role = 'guest';
+      socket.join('sess:' + s.id);
+      s.connectedGuests++;
+      touch(s);
 
-    socket.emit('partyJoined', { ok: true });
-    broadcast(s);
-    broadcastStats();
+      socket.emit('partyJoined', { ok: true });
+      broadcast(s);
+      broadcastStats();
+    } catch (e) { console.error('[joinParty]', e.message); }
   });
 
   const withSession = (fn) => (payload) => {
-    const sid = socket.data.sessionId;
-    if (!sid) return;
-    const s = sessions.get(sid);
-    if (!s) return;
-    touch(s);
-    try { fn(s, payload || {}); }
-    catch (e) { console.warn('[sock]', e.message); socket.emit('error', 'Action failed'); }
+    try {
+      const sid = socket.data.sessionId;
+      if (!sid) return;
+      const s = sessions.get(sid);
+      if (!s) return;
+      touch(s);
+      fn(s, payload || {});
+    } catch (e) {
+      console.warn('[sock]', e.message);
+      socket.emit('error', 'Action failed');
+    }
   };
 
   const requireAdmin = (s, payload) => {
@@ -926,7 +973,6 @@ io.on('connection', (socket) => {
     startNext(s);
   }));
 
-  // 🔧 FIX #4 — Debounce songEnded (2s) to prevent double-skip on retries/reconnects
   socket.on('songEnded', withSession((s) => {
     if (!isPlaybackController()) return;
     const t = now();
@@ -956,16 +1002,18 @@ io.on('connection', (socket) => {
   }));
 
   socket.on('disconnect', () => {
-    const sid = socket.data.sessionId;
-    if (!sid) return;
-    const s = sessions.get(sid);
-    if (!s) return;
-    if (socket.data.role === 'host' || socket.data.role === 'display')
-      s.connectedHosts = Math.max(0, s.connectedHosts - 1);
-    else
-      s.connectedGuests = Math.max(0, s.connectedGuests - 1);
-    broadcast(s);
-    broadcastStats();
+    try {
+      const sid = socket.data.sessionId;
+      if (!sid) return;
+      const s = sessions.get(sid);
+      if (!s) return;
+      if (socket.data.role === 'host' || socket.data.role === 'display')
+        s.connectedHosts = Math.max(0, s.connectedHosts - 1);
+      else
+        s.connectedGuests = Math.max(0, s.connectedGuests - 1);
+      broadcast(s);
+      broadcastStats();
+    } catch (e) {}
   });
 });
 
@@ -978,5 +1026,6 @@ function shutdown(sig) {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT',  () => shutdown('SIGINT'));
 process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e));
+process.on('uncaughtException', (e) => console.error('[uncaughtException]', e));
 
 server.listen(PORT, () => console.log(`🎤 Videoke backend listening on :${PORT}`));
