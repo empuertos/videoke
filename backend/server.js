@@ -1,5 +1,12 @@
 // =====================================================
-// VIDEOKE YT — Multi-tenant backend (hardened v3.7)
+// VIDEOKE YT — Multi-tenant backend (hardened v3.8)
+// Changes in v3.8:
+//   • 🔧 Watchdog: auto-skip stuck nowPlaying (>10 min)
+//   • 🔧 playStartedAt timestamp for stuck detection
+//   • 🔧 /api/party + /api/verify-party touch session (prevents false idle)
+//   • 🔧 songEnded debounce (2s idempotency guard — prevents double-skip)
+//   • 🔧 Loaded sessions get fresh playStartedAt on restart
+//   • 🔧 Optional [health] logger for diagnostics
 // Changes in v3.7:
 //   • Optimized searchYT using Promise.any (Parallel fetch)
 //   • Faster fallback to YouTube API
@@ -23,6 +30,9 @@ const MAX_SESSIONS   = 300;
 const MAX_QUEUE      = 50;
 const MAX_HISTORY    = 200;
 const PARTY_CHARS    = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+// 🔧 FIX #2 — stuck-song watchdog threshold
+const STUCK_SONG_MS  = 10 * 60 * 1000;   // 10 minutes
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -202,6 +212,8 @@ function loadSessions() {
         connectedHosts: 0,
         connectedGuests: 0,
       };
+      // 🔧 FIX #2 — reset stuck-detection timer on restart so watchdog gets a clean slate
+      if (s.nowPlaying) s.nowPlaying.playStartedAt = now();
       sessions.set(id, s);
       partyIndex.set(s.partyCode, id);
       hostIndex.set(s.hostCode, id);
@@ -292,6 +304,37 @@ setInterval(() => {
     if (meta.expiry < t) tokenIndex.delete(tok);
   }
 }, 60 * 60 * 1000);
+
+// 🔧 FIX #2 — Watchdog: auto-skip stuck nowPlaying (>10 min) kahit walang event
+setInterval(() => {
+  for (const s of sessions.values()) {
+    if (!s.nowPlaying) continue;
+    const started = s.nowPlaying.playStartedAt || s.nowPlaying.addedAt || now();
+    const ageMs = now() - started;
+    if (ageMs > STUCK_SONG_MS) {
+      console.warn(`[watchdog] ${s.partyCode}: stuck "${s.nowPlaying.title || s.nowPlaying.videoId}" for ${Math.round(ageMs/60000)}min — auto-skip`);
+      addHistory(s, s.nowPlaying);
+      s.nowPlaying = null;
+      startNext(s);
+    }
+  }
+}, 60 * 1000);
+
+// 🔧 FIX #2 — Optional health logger (helps diagnose "why did it expire?")
+setInterval(() => {
+  for (const s of sessions.values()) {
+    const idleMin = Math.round((now() - s.lastActivity) / 60000);
+    const playAgeMin = s.nowPlaying
+      ? Math.round((now() - (s.nowPlaying.playStartedAt || s.nowPlaying.addedAt || now())) / 60000)
+      : null;
+    if (idleMin > 60 || (playAgeMin !== null && playAgeMin > 5)) {
+      console.log(
+        `[health] ${s.partyCode}: idle=${idleMin}m nowPlaying=${s.nowPlaying?.videoId || 'none'}` +
+        ` playAge=${playAgeMin}m queue=${s.queue.length} hosts=${s.connectedHosts} guests=${s.connectedGuests}`
+      );
+    }
+  }
+}, 60 * 1000);
 
 loadSessions();
 setInterval(broadcastStats, 10_000);
@@ -392,11 +435,11 @@ async function searchYT(query, maxResults = 25) {
   const fetchHost = async (h) => {
     try {
       const r = await fetch(`${h}/search?q=${encodeURIComponent(query)}&filter=videos`,
-        { signal: AbortSignal.timeout(4000) }); // 4s timeout per host
+        { signal: AbortSignal.timeout(4000) });
       if (!r.ok) throw new Error('HTTP');
       const d = await r.json();
       if (!Array.isArray(d.items)) throw new Error('No items');
-      
+
       const items = d.items
         .filter(it => it.type === 'stream' && it.url)
         .map(it => {
@@ -412,7 +455,7 @@ async function searchYT(query, maxResults = 25) {
           };
         })
         .filter(Boolean).slice(0, maxResults);
-        
+
       if (items.length > 0) return items;
       throw new Error('Empty');
     } catch (e) {
@@ -421,11 +464,9 @@ async function searchYT(query, maxResults = 25) {
   };
 
   try {
-    // Promise.any waits for the FIRST resolved promise (fastest server wins)
     const result = await Promise.any(hosts.map(fetchHost));
     return result;
   } catch (e) {
-    // If all Piped hosts fail, fallback to YouTube Data API
     console.warn(`[Search] Piped failed for "${query}". Trying YouTube API...`);
     const key = process.env.YOUTUBE_API_KEY;
     if (key) {
@@ -500,6 +541,7 @@ app.get('/api/host/verify', (req, res) => {
 
   const s = resolveSession({ host: String(req.query.host || '').trim() });
   if (!s) return res.json({ valid: false });
+  touch(s);   // 🔧 FIX #3 — host verify keeps session alive
   res.json({
     valid: true,
     sessionId: s.id,
@@ -516,6 +558,7 @@ app.get('/api/verify-party', (req, res) => {
 
   const code = String(req.query.code || '').toUpperCase().trim();
   const s = resolveSession({ party: code });
+  if (s) touch(s);   // 🔧 FIX #3 — verify keeps session alive
   res.json({ valid: !!s, partyCode: s?.partyCode });
 });
 
@@ -528,6 +571,7 @@ app.get('/api/party', (req, res) => {
     party: String(req.query.party || '').toUpperCase().trim(),
   });
   if (!s) return res.json({ active: false });
+  touch(s);   // 🔧 FIX #3 — critical: host polls every 5s, keeps idle sessions alive
   res.json({ active: true, code: s.partyCode, queueLength: s.queue.length });
 });
 
@@ -580,11 +624,11 @@ app.get('/api/recommend', async (req, res) => {
     return res.json(recommendCache.data);
 
   const dynamicSearches = shuffleArray([...RECOMMEND_SEARCH_POOL]).slice(0, 3);
-  
+
   const results = await Promise.all(
     dynamicSearches.map(s => searchYT(s, 15).catch(() => []))
   );
-  
+
   const allRaw = results.flat();
 
   const seen = new Set();
@@ -739,6 +783,7 @@ function startNext(s) {
     return;
   }
   const next = s.queue.shift();
+  next.playStartedAt = now();   // 🔧 FIX #2 — for stuck-song watchdog
   s.nowPlaying = next;
   io.to('host:' + s.id).emit('command', { type: 'play', song: next });
   broadcast(s);
@@ -748,6 +793,7 @@ function startNext(s) {
 io.on('connection', (socket) => {
   socket.data.sessionId = null;
   socket.data.role      = null;
+  socket._lastEndedAt   = 0;   // 🔧 FIX #4 — per-socket debounce for songEnded
 
   socket.on('registerHost', ({ hostCode, partyCode } = {}) => {
     let s = null, role = null;
@@ -880,8 +926,12 @@ io.on('connection', (socket) => {
     startNext(s);
   }));
 
+  // 🔧 FIX #4 — Debounce songEnded (2s) to prevent double-skip on retries/reconnects
   socket.on('songEnded', withSession((s) => {
     if (!isPlaybackController()) return;
+    const t = now();
+    if (t - socket._lastEndedAt < 2000) return;
+    socket._lastEndedAt = t;
     if (s.nowPlaying) { addHistory(s, s.nowPlaying); s.nowPlaying = null; }
     startNext(s);
   }));
