@@ -660,7 +660,6 @@
             if (e.data === 1 || e.data === 3) {
               clearTimeout(errorCheckTimeout);
             }
-            // Autoplay blocked detection (state 5 = cued, needs user tap)
             if (e.data === 5 || e.data === 2) {
               const vid = currentVideoId;
               setTimeout(() => {
