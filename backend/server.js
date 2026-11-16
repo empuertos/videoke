@@ -1,12 +1,11 @@
 // =====================================================
-// VIDEOKE YT — Multi-tenant backend (hardened v3.9 - Fly.io Ready)
-// Changes in v3.9:
-//   • 🧹 Fixed memory leak in searchCache (prevents OOM crashes on Fly.io)
-//   • 🛡️ Wrapped setInterval & socket handlers in try...catch (prevents Node crash)
-//   • 🛡️ Added uncaughtException handler
+// VIDEOKE YT — Multi-tenant backend (hardened v4.0)
+// Changes in v4.0:
+//   • ⏱️ Strict 24-hour TTL: Uses createdAt (not lastActivity)
+//   • 🛡️ Checked every 60s (precise expiry)
+//   • 🧹 Fixed memory leak in searchCache (prevents OOM)
+//   • 🛡️ Wrapped setInterval & socket handlers in try...catch
 //   • ⏱️ Watchdog: Auto-skips stuck nowPlaying (>10 mins)
-//   • 💾 Session Touching: /api/party prevents false session expiry
-//   • 🔄 Idempotent songEnded (2s debounce)
 // =====================================================
 const express    = require('express');
 const http       = require('http');
@@ -20,7 +19,7 @@ const compression= require('compression');
 const PORT           = process.env.PORT || 3000;
 const DATA_DIR       = process.env.DATA_DIR || path.join(__dirname, 'data');
 const FRONTEND_URL   = process.env.FRONTEND_URL || '*';
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours exact
 const TOKEN_TTL_MS   = 24 * 60 * 60 * 1000;
 const MAX_SESSIONS   = 300;
 const MAX_QUEUE      = 50;
@@ -285,14 +284,18 @@ function verifyToken(t) {
 
 const touch = (s) => { if (s) s.lastActivity = now(); };
 
-// 🛡️ CRASH GUARD: TTL cleanup
+// 🛡️ STRICT 24-HOUR TTL: Eksaktong 24 oras mula nang gawin (createdAt)
 setInterval(() => {
   try {
-    const cutoff = now() - SESSION_TTL_MS;
-    for (const s of Array.from(sessions.values()))
-      if (s.lastActivity < cutoff) endSession(s, 'expired');
+    const t = now();
+    for (const s of Array.from(sessions.values())) {
+      if (t - s.createdAt > SESSION_TTL_MS) {
+        console.log(`[ttl] Session ${s.partyCode} expired (age: ${Math.round((t - s.createdAt) / 3600000)} hours)`);
+        endSession(s, 'expired');
+      }
+    }
   } catch (e) { console.error('[interval-ttl]', e.message); }
-}, 5 * 60 * 1000);
+}, 60 * 1000); // Chini-check every 1 minute para precise
 
 // 🛡️ CRASH GUARD: Token cleanup
 setInterval(() => {
