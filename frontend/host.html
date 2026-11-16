@@ -261,7 +261,6 @@
 
     let ytPlayer = null, ytReady = false;
     let currentVideoId = null;
-    // 🔧 FIX #A — track by queue item id (allows same videoId to replay as new queue entry)
     let currentSongId = null;
     let errorCheckTimeout = null;
     let hostCode = null, hostPartyCode = null, hostAdminToken = null;
@@ -359,7 +358,6 @@
       if (currentVideoId) { try { ytPlayer.playVideo(); } catch {} }
       const overlay = document.getElementById('autoplayOverlay');
       if (overlay) overlay.style.display = 'none';
-      // 🔧 FIX #A — after user interaction, clear "tap to play" if it appears
       document.getElementById('tapToPlayBtn').style.display = 'none';
     }
     ['click', 'touchstart', 'keydown'].forEach(e => document.addEventListener(e, markFirstInteraction, { passive: true }));
@@ -496,25 +494,41 @@
     initTTS();
     updateTTSButton();
 
-    function showHostGate() { document.getElementById('hostGate').classList.add('show'); }
+    function showHostGate() { 
+      const input = document.getElementById('hostCodeInput');
+      if (input && !input.value) {
+        input.value = hostCode || hostPartyCode || '';
+      }
+      document.getElementById('hostGate').classList.add('show'); 
+    }
     function hideHostGate() { document.getElementById('hostGate').classList.remove('show'); }
 
     async function reverifySession() {
-      if (hostCode) {
-        try {
-          const res = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(hostCode));
-          const data = await res.json();
-          return !!data.valid;
-        } catch { return true; }
+      for (let i = 0; i < 3; i++) {
+        let definitiveFalse = false;
+        if (hostCode) {
+          try {
+            const res = await fetch(API + '/api/host/verify?host=' + encodeURIComponent(hostCode));
+            if (res.ok) {
+              const data = await res.json();
+              if (data.valid) return true;
+              definitiveFalse = true;
+            }
+          } catch (e) {}
+        } else if (hostPartyCode) {
+          try {
+            const res = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(hostPartyCode));
+            if (res.ok) {
+              const data = await res.json();
+              if (data.valid) return true;
+              definitiveFalse = true;
+            }
+          } catch (e) {}
+        }
+        if (definitiveFalse && i === 2) return false;
+        await new Promise(r => setTimeout(r, 2000));
       }
-      if (hostPartyCode) {
-        try {
-          const res = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(hostPartyCode));
-          const data = await res.json();
-          return !!data.valid;
-        } catch { return true; }
-      }
-      return false;
+      return true;
     }
     function rejoinSession() {
       if (hostCode) socket.emit('registerHost', { hostCode });
@@ -625,19 +639,16 @@
             try { e.target.setPlaybackQuality('default'); } catch {}
           },
           onStateChange: (e) => {
-            // Song ended
             if (e.data === 0 && currentVideoId) {
               const endedVideoId = currentVideoId;
               const endedSongId = currentSongId;
               if (socket.connected) socket.emit('songEnded');
-              // Fallback: kung HINDI pa nag-advance, i-stop
               setTimeout(() => {
                 if (currentVideoId === endedVideoId && currentSongId === endedSongId) {
                   stopVideo();
                 }
               }, 4000);
             }
-            // Video started playing
             if (e.data === 1) {
               resetHudVisibility();
               document.getElementById('tapToPlayBtn').style.display = 'none';
@@ -646,11 +657,10 @@
                 tryAutoFullscreen();
               }
             }
-            // Clear error check on successful playback
             if (e.data === 1 || e.data === 3) {
               clearTimeout(errorCheckTimeout);
             }
-            // 🔧 FIX #A — Autoplay blocked detection (state 5 = cued, needs user tap)
+            // Autoplay blocked detection (state 5 = cued, needs user tap)
             if (e.data === 5 || e.data === 2) {
               const vid = currentVideoId;
               setTimeout(() => {
@@ -658,7 +668,6 @@
                   if (currentVideoId === vid) {
                     const st = ytPlayer.getPlayerState();
                     if (st === 5 || st === 2) {
-                      console.warn('[state] Video needs tap to play (state ' + st + ')');
                       document.getElementById('tapToPlayBtn').style.display = 'block';
                     }
                   }
@@ -695,38 +704,41 @@
     });
 
     socket.on('command', (cmd) => {
-      switch (cmd.type) {
-        case 'play': playVideo(cmd.song); break;
-        case 'pause': if (ytReady && ytPlayer) ytPlayer.pauseVideo(); break;
-        case 'resume': if (ytReady && ytPlayer) ytPlayer.playVideo(); break;
-        case 'stop': stopVideo(); break;
-        case 'volume': if (ytReady && ytPlayer) ytPlayer.setVolume(cmd.value); break;
-        case 'idle': showIdle(); break;
-      }
+      try {
+        switch (cmd.type) {
+          case 'play': playVideo(cmd.song); break;
+          case 'pause': if (ytReady && ytPlayer) ytPlayer.pauseVideo(); break;
+          case 'resume': if (ytReady && ytPlayer) ytPlayer.playVideo(); break;
+          case 'stop': stopVideo(); break;
+          case 'volume': if (ytReady && ytPlayer) ytPlayer.setVolume(cmd.value); break;
+          case 'idle': showIdle(); break;
+        }
+      } catch (err) { console.warn('[cmd]', err); }
     });
 
     socket.on('state', (s) => {
-      const queueLength = (s.queue || []).length;
-      if (lastQueueLen >= 0 && queueLength > lastQueueLen) {
-        const qh = document.getElementById('queueHud');
-        qh.classList.remove('flash'); void qh.offsetWidth; qh.classList.add('flash');
-        setTimeout(() => qh.classList.remove('flash'), 1200);
-        const newestSong = s.queue[s.queue.length - 1];
-        if (newestSong) showReservationNotification(newestSong.singer, newestSong.title);
-        resetHudVisibility();
-      }
-      lastQueueLen = queueLength;
-      updateQueueHUD(s);
-      if (s.nowPlaying) {
-        updateNowHUD(s.nowPlaying);
-        // 🔧 FIX #B — i-compare by queue item id, not just videoId
-        const nowKey = (s.nowPlaying.id != null) ? s.nowPlaying.id : s.nowPlaying.videoId;
-        if (currentSongId == null || currentSongId !== nowKey) {
-          playVideo(s.nowPlaying, true);
+      try {
+        const queueLength = (s.queue || []).length;
+        if (lastQueueLen >= 0 && queueLength > lastQueueLen) {
+          const qh = document.getElementById('queueHud');
+          qh.classList.remove('flash'); void qh.offsetWidth; qh.classList.add('flash');
+          setTimeout(() => qh.classList.remove('flash'), 1200);
+          const newestSong = s.queue[s.queue.length - 1];
+          if (newestSong) showReservationNotification(newestSong.singer, newestSong.title);
+          resetHudVisibility();
         }
-      } else {
-        if (!currentVideoId) showIdle();
-      }
+        lastQueueLen = queueLength;
+        updateQueueHUD(s);
+        if (s.nowPlaying) {
+          updateNowHUD(s.nowPlaying);
+          const nowKey = (s.nowPlaying.id != null) ? s.nowPlaying.id : s.nowPlaying.videoId;
+          if (currentSongId == null || currentSongId !== nowKey) {
+            playVideo(s.nowPlaying, true);
+          }
+        } else {
+          if (!currentVideoId) showIdle();
+        }
+      } catch (err) { console.warn('[state]', err); }
     });
 
     socket.on('partyChanged', async ({ active }) => {
@@ -757,7 +769,6 @@
     function playVideo(song, isSync = false, retry = 0) {
       if (!song?.videoId) return;
 
-      // 🔧 FIX #B — skip only if SAME queue item is already playing/loading
       const songKey = (song.id != null) ? song.id : song.videoId;
       if (currentSongId != null && currentSongId === songKey && currentVideoId === song.videoId) {
         return;
@@ -775,14 +786,13 @@
 
       document.getElementById('player').style.display = 'block';
 
-      // 🔧 FIX #B — set BOTH ids after ytPlayer ready check
       currentVideoId = song.videoId;
       currentSongId = songKey;
       updateNowHUD(song);
       hideIdle();
       document.getElementById('miniQr').classList.add('show');
       document.getElementById('connStatus').style.display = 'none';
-      document.getElementById('tapToPlayBtn').style.display = 'none';   // 🔧 clear stale tap btn
+      document.getElementById('tapToPlayBtn').style.display = 'none';
       resetHudVisibility();
       if (!isIOS) tryAutoFullscreen();
 
@@ -804,30 +814,23 @@
         }, 1200);
       }
 
-      // 🔧 FIX #A — error check: DON'T treat state 5 (cued) as failure
       clearTimeout(errorCheckTimeout);
       errorCheckTimeout = setTimeout(() => {
         try {
-          if (currentVideoId !== song.videoId) return;   // song changed, ignore
+          if (currentVideoId !== song.videoId) return;
           const st = ytPlayer.getPlayerState();
-          // 1=playing, 3=buffering, 0=ended → all fine
           if (st === 1 || st === 3 || st === 0) return;
-          // 2=paused, 5=cued → autoplay needs user tap. DON'T fail.
           if (st === 2 || st === 5) {
-            console.warn('[playVideo] Video at state ' + st + ' (autoplay blocked?) — showing tap button');
             document.getElementById('tapToPlayBtn').style.display = 'block';
             return;
           }
-          // -1=unstarted → try one retry, then fail
           if (st === -1) {
-            console.warn('[playVideo] Unstarted after 10s, retrying play...');
             try { ytPlayer.playVideo(); } catch {}
             setTimeout(() => {
               try {
                 if (currentVideoId !== song.videoId) return;
                 const st2 = ytPlayer.getPlayerState();
                 if (st2 === -1) {
-                  console.warn('[playVideo] Still unstarted after retry, failing.');
                   if (socket.connected) socket.emit('videoFailed', { videoId: song.videoId, title: song.title || '' });
                   stopVideo();
                 } else if (st2 === 2 || st2 === 5) {
@@ -849,7 +852,7 @@
 
     function stopVideo() {
       currentVideoId = null;
-      currentSongId = null;   // 🔧 reset queue item tracking
+      currentSongId = null;
       if (ytPlayer && ytReady) { try { ytPlayer.stopVideo(); } catch {} }
 
       document.getElementById('player').style.display = 'none';
