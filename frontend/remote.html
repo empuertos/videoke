@@ -507,7 +507,6 @@
     const BACKEND_URL = window.VIDEOKE_CONFIG?.BACKEND_URL || 'http://localhost:3000';
     const API = BACKEND_URL;
 
-    // --- PWA INSTALL LOGIC (REMOTE) ---
     let deferredPrompt;
     const installBtnRemote = document.getElementById('installBtnRemote');
 
@@ -542,7 +541,6 @@
     window.addEventListener('appinstalled', () => {
       if (installBtnRemote) installBtnRemote.style.display = 'none';
     });
-    // --- END PWA INSTALL LOGIC ---
 
     const socket = io(BACKEND_URL, {
       transports: ['websocket', 'polling'],
@@ -562,7 +560,7 @@
 
     let partyCode = null;
     let partyVerified = false;
-    let isJoining = false; // 🔧 FIX: Track if user just clicked join
+    let isJoining = false; // Flag for join state
 
     let controlsUnlocked = false;
     const AUTO_LOCK_MS = 10 * 60 * 1000;
@@ -757,7 +755,6 @@
       document.getElementById('partyGateErr').style.color = 'var(--gold)';
       isJoining = true;
       
-      // Timeout fallback kung hindi mag-respond ang socket
       setTimeout(() => {
         if (isJoining) {
           isJoining = false;
@@ -782,7 +779,6 @@
 
       if (!socket.connected) socket.connect();
       socket.emit('joinParty', { code });
-      // Hintayin natin ang `partyJoined` event para isara ang gate
     }
 
     function leaveParty() {
@@ -856,7 +852,6 @@
       document.getElementById('statusText').textContent = 'Disconnected';
     });
 
-    // 🔧 FIX: Handle join response properly
     socket.on('partyJoined', async ({ ok, reason }) => {
       if (!ok) {
         isJoining = false;
@@ -870,7 +865,6 @@
         document.getElementById('partyGateErr').textContent = ''; 
         document.getElementById('partyGateErr').style.color = '#ff6b6b';
       } else {
-        // Success! I-set ang state at isara ang gate
         const code = document.getElementById('partyCodeInput').value.trim().toUpperCase() || partyCode;
         partyCode = code;
         partyVerified = true;
@@ -1692,12 +1686,10 @@
         return;
       }
 
-      // FIXED: Exact match instead of startsWith to avoid "John" matching "John Doe"
       function matchesMe(singer) {
         if (!myName) return false;
         const sl = singer.toLowerCase().trim();
         if (sl === myName) return true;
-        // Match duet formats exactly: "John (👦 Boy)" or "John (👧 Girl)"
         if (sl === `${myName} (👦 boy)` || sl === `${myName} (👧 girl)`) return true;
         return false;
       }
