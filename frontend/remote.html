@@ -560,7 +560,7 @@
 
     let partyCode = null;
     let partyVerified = false;
-    let isJoining = false; // Flag for join state
+    let isJoining = false; // Track if user just clicked join
 
     let controlsUnlocked = false;
     const AUTO_LOCK_MS = 10 * 60 * 1000;
@@ -735,12 +735,14 @@
     }
     function hidePartyGate() { document.getElementById('partyGate').classList.remove('show'); }
 
+    // 🔧 FIX: Return null on network error, true/false for valid/invalid
     async function verifyPartyCode(code) {
       try {
         const r = await fetch(API + '/api/verify-party?code=' + encodeURIComponent(code));
+        if (!r.ok) return null;
         const data = await r.json();
         return data.valid === true;
-      } catch { return false; }
+      } catch { return null; }
     }
 
     function submitPartyCode() {
@@ -751,6 +753,8 @@
         document.getElementById('partyGateErr').style.color = '#ff6b6b';
         return;
       }
+      // 🔧 FIX: Reset previous messages
+      document.getElementById('partyGateMsg').textContent = 'Scan the QR code shown on the host, or type the 6-character party code.';
       document.getElementById('partyGateErr').textContent = 'Checking...';
       document.getElementById('partyGateErr').style.color = 'var(--gold)';
       isJoining = true;
@@ -758,22 +762,32 @@
       setTimeout(() => {
         if (isJoining) {
           isJoining = false;
-          document.getElementById('partyGateErr').textContent = '❌ Connection timeout. Please try again.';
+          document.getElementById('partyGateErr').textContent = '❌ Connection timeout. Please check your internet and try again.';
           document.getElementById('partyGateErr').style.color = '#ff6b6b';
         }
-      }, 8000);
+      }, 10000);
 
       joinWithCode(code);
     }
 
     async function joinWithCode(code) {
       const valid = await verifyPartyCode(code);
-      if (!valid) {
+      
+      // 🔧 FIX: Handle network error vs invalid code
+      if (valid === null) {
+        isJoining = false;
+        document.getElementById('partyGateErr').textContent = '❌ Server unreachable. Please wait a moment and try again.';
+        document.getElementById('partyGateErr').style.color = '#ff6b6b';
+        return;
+      }
+      
+      if (valid === false) {
         isJoining = false;
         document.getElementById('partyGateErr').textContent = '❌ Invalid or expired party code.';
         document.getElementById('partyGateErr').style.color = '#ff6b6b';
         return;
       }
+      
       const prevParty = localStorage.getItem('videoke:partyCode');
       if (prevParty && prevParty !== code) clearStaleAdmin(true);
 
@@ -799,6 +813,7 @@
       document.body.classList.remove('party-ended');
       document.getElementById('partyCodeInput').value = '';
       document.getElementById('partyGateErr').textContent = '';
+      document.getElementById('partyGateMsg').textContent = 'Scan the QR code shown on the host, or type the 6-character party code.';
 
       document.getElementById('queueList').innerHTML = '<div class="empty-state">No reservations</div>';
       document.getElementById('nowContent').innerHTML = '<div class="empty">Nothing playing</div>';
@@ -806,7 +821,7 @@
       document.getElementById('qTabBadge').textContent = '0';
       document.getElementById('singerStats').style.display = 'none';
 
-      showPartyGate('Enter a new party code to join.');
+      showPartyGate();
       toast('Left the party.', 'success');
     }
 
@@ -816,8 +831,9 @@
       const savedCode = localStorage.getItem('videoke:partyCode');
       const codeToTry = ((urlCode || savedCode) || '').toUpperCase();
       if (!codeToTry) { showPartyGate(); return; }
+      
       const valid = await verifyPartyCode(codeToTry);
-      if (valid) {
+      if (valid === true) {
         partyCode = codeToTry;
         partyVerified = true;
         localStorage.setItem('videoke:partyCode', codeToTry);
@@ -827,9 +843,13 @@
         updateShareSection();
         await restoreAdminAuth();
         refreshFavorites();
-      } else {
+      } else if (valid === false) {
         localStorage.removeItem('videoke:partyCode');
         showPartyGate('❌ Expired or invalid party code. Please get a new one from the host.');
+      } else {
+        // Network error on init, just show gate with code filled in
+        showPartyGate('⚠️ Cannot connect to server. Please check your internet.');
+        document.getElementById('partyCodeInput').value = codeToTry;
       }
     })();
 
